@@ -1,4 +1,3 @@
-import random
 import js
 from pyscript import document
 from pyodide.ffi import create_proxy
@@ -95,5 +94,5 @@ class HomeWidget(AbstractWidget):
     self.element.appendChild(self.footer)
     
 if __name__ == "__main__":
-  output = HomeWidget("container")
+  output = HomeWidget("app")
   output.drawWidget()
