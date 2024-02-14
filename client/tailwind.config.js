@@ -7,6 +7,9 @@ export default {
   ],
   theme: {
     extend: {},
+    fontFamily: {
+      signature: ["Dancing Script"]
+    },
   },
   plugins: [],
 }

@@ -19,80 +19,49 @@ class AbstractWidget(ABC):
   def drawWidget(self):
     pass
 
-class HomeWidget(AbstractWidget):
+class Navbar(AbstractWidget):
   def __init__(self, element_id):
     AbstractWidget.__init__(self, element_id)
-    self.rotate = 0
-    
-  def rotate_image(self, event):
-    if (self.rotate < 180):
-      self.rotate += 90
-    else:
-      self.rotate -= 90
-    self.cart.className = f"w-8 h-8 rotate-{self.rotate}"
-    self.cart_sound.play()
     
   def drawWidget(self):
     self.navbar = document.createElement("div")
-    self.navbar.className = "bg-orange-500 w-screen text-white flex justify-center items-center p-10"
-    self.navbar.innerHTML = "SukSaang"
+    self.navbar.className = "bg-gradient-to-tr from-zinc-800 via-gray-900 to-gray-700 w-screen text-white flex justify-center items-center"
+    self.title = document.createElement("a")
+    self.title.innerHTML = "SukSaang"
+    self.title.className = "font-signature font-extrabold text-5xl m-4"
+    self.navbar.appendChild(self.title)
     self.element.appendChild(self.navbar)
     
-    self.category = document.createElement("div")
-    self.category.className = "flex flex-col p-4 bg-zinc-200 border-b border-black gap-4"
-    self.category_title = document.createElement("h2")
-    self.category_title.innerHTML = "Categories"
-    self.category.appendChild(self.category_title)
-    self.category_images = document.createElement("div")
-    self.category_images.className = "flex flex-row gap-4"
-    for _ in range(5):
-      self.image = document.createElement("img")
-      self.image.className = "w-20 h-20 hover:scale-110 duration-300"
-      self.image.src = "https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg"
-      self.category_images.appendChild(self.image)
-    self.category.appendChild(self.category_images)
-    self.element.appendChild(self.category)
+class MainContent(AbstractWidget):
+  def __init__(self, element_id):
+    AbstractWidget.__init__(self, element_id)
     
-    self.recommend = document.createElement("div")
-    self.recommend.className = "flex flex-col p-4 bg-orange-200 border-b border-black gap-4"
-    self.recommend_title = document.createElement("h2")
-    self.recommend_title.innerHTML = "Recommended"
-    self.recommend.appendChild(self.recommend_title)
-    self.recommend_images = document.createElement("div")
-    self.recommend_images.className = "flex flex-row justify-evenly"
-    for _ in range(3):
-      self.image = document.createElement("img")
-      self.image.className = "w-40 h-40 hover:scale-110 duration-300"
-      self.image.src = "https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg"
-      self.recommend_images.appendChild(self.image)
-    self.recommend.appendChild(self.recommend_images)
-    self.element.appendChild(self.recommend)
+  def drawWidget(self, widgets):
+    self.content = document.createElement("div")
+    self.content.id = "content"
+    self.content.className = "flex flex-col gap-2 items-center h-screen w-screen bg-gradient-to-b from from-slate-800 via-slate-900 to-slate-700"
+    self.element.appendChild(self.content)
     
-    self.popular = document.createElement("div")
-    self.popular.className = "flex flex-col p-4 bg-orange-200 border-b border-black gap-4"
-    self.popular_title = document.createElement("h2")
-    self.popular_title.innerHTML = "Popular"
-    self.popular.appendChild(self.popular_title)
-    self.popular_images = document.createElement("div")
-    self.popular_images.className = "flex flex-row justify-evenly"
-    for _ in range(3):
-      self.image = document.createElement("img")
-      self.image.className = "w-40 h-40 hover:scale-110 duration-300"
-      self.image.src = "https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg"
-      self.popular_images.appendChild(self.image)
-    self.popular.appendChild(self.popular_images)
-    self.element.appendChild(self.popular)
+    for widget in widgets:
+      widget.drawWidget()
+
+class Home(AbstractWidget):
+  def __init__(self, element_id):
+    AbstractWidget.__init__(self, element_id)
     
-    self.footer = document.createElement("div")
-    self.footer.className = "flex p-6 bg-slate-200 border-b border-black gap-4 items-center justify-center"
-    self.cart = document.createElement("img")
-    self.cart.src = "https://www.freeiconspng.com/thumbs/cart-icon/basket-cart-icon-27.png"
-    self.cart.className = "w-8 h-8 hover:scale-110 duration-300"
-    self.cart_sound = js.Audio.new("./rabbit_hit.wav")
-    self.cart.onclick = self.rotate_image
-    self.footer.appendChild(self.cart)
-    self.element.appendChild(self.footer)
+  def drawWidget(self):
+    self.customer = document.createElement("div")
+    self.customer.className = "uppercase p-10 bg-gray-700 w-fit text-white"
+    self.customer.innerHTML = "customer"
+    self.element.appendChild(self.customer)
+    
+    self.admin = document.createElement("div")
+    self.admin.className = "uppercase p-10 bg-gray-700 w-fit text-white" 
+    self.admin.innerHTML = "admin"
+    self.element.appendChild(self.admin)
     
 if __name__ == "__main__":
-  output = HomeWidget("app")
-  output.drawWidget()
+  Navbar("app").drawWidget()
+  
+  content = MainContent("app")
+  content.drawWidget([Home("content")])
