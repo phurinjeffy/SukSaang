@@ -39,7 +39,7 @@ class MainContent(AbstractWidget):
   def drawWidget(self, widgets):
     self.content = document.createElement("div")
     self.content.id = "content"
-    self.content.className = "pt-28 flex flex-col gap-2 items-center h-screen w-screen bg-gradient-to-br from from-zinc-950 via-gray-800 to-gray-700"
+    self.content.className = "pt-28 h-screen w-screen bg-gradient-to-br from from-zinc-950 via-gray-800 to-gray-700"
     self.element.appendChild(self.content)
     
     for widget in widgets:
@@ -50,15 +50,21 @@ class Home(AbstractWidget):
     AbstractWidget.__init__(self, element_id)
     
   def drawWidget(self):
+    self.container = document.createElement("div")
+    self.container.className = "flex flex-col justify-center items-center gap-10"
+    
     self.customer = document.createElement("div")
-    self.customer.className = "uppercase p-10 bg-gray-700 w-fit text-white"
+    self.customer.className = "flex justify-center uppercase p-10 bg-gray-700 w-[400px] text-white cursor-pointer"
     self.customer.innerHTML = "customer"
-    self.element.appendChild(self.customer)
+    self.container.appendChild(self.customer)
     
     self.admin = document.createElement("div")
-    self.admin.className = "uppercase p-10 bg-gray-700 w-fit text-white" 
+    self.admin.className = "flex justify-center uppercase p-10 bg-gray-700 w-[400px] text-white cursor-pointer" 
     self.admin.innerHTML = "admin"
-    self.element.appendChild(self.admin)
+    self.container.appendChild(self.admin)
+    
+    self.element.appendChild(self.container)
+    
     
 if __name__ == "__main__":
   Navbar("app").drawWidget()
