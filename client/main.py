@@ -25,10 +25,10 @@ class Navbar(AbstractWidget):
     
   def drawWidget(self):
     self.navbar = document.createElement("div")
-    self.navbar.className = "bg-gradient-to-tr from-zinc-800 via-gray-900 to-gray-700 w-screen text-white flex justify-center items-center"
+    self.navbar.className = "backdrop-blur-lg w-screen h-24 text-white flex justify-center items-center fixed z-10"
     self.title = document.createElement("a")
     self.title.innerHTML = "SukSaang"
-    self.title.className = "font-signature font-extrabold text-5xl m-4"
+    self.title.className = "font-signature font-extrabold text-5xl"
     self.navbar.appendChild(self.title)
     self.element.appendChild(self.navbar)
     
@@ -39,7 +39,7 @@ class MainContent(AbstractWidget):
   def drawWidget(self, widgets):
     self.content = document.createElement("div")
     self.content.id = "content"
-    self.content.className = "flex flex-col gap-2 items-center h-screen w-screen bg-gradient-to-b from from-slate-800 via-slate-900 to-slate-700"
+    self.content.className = "pt-28 flex flex-col gap-2 items-center h-screen w-screen bg-gradient-to-br from from-zinc-950 via-gray-800 to-gray-700"
     self.element.appendChild(self.content)
     
     for widget in widgets:
