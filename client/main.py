@@ -1,6 +1,6 @@
 import js
 from pyscript import document
-from pyodide.ffi import create_proxy
+from pyodide.ffi import create_proxy, create_once_callable
 from abc import ABC, abstractmethod
 from datetime import datetime
 
@@ -53,8 +53,8 @@ class Home(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
 
-    # def redirect_to_login(self):
-    #     js.window.location.href = "/login"
+    def redirect_to_login(self, event):
+        js.window.location.href = "/login"
 
     def drawWidget(self):
         self.container = document.createElement("div")
@@ -63,12 +63,13 @@ class Home(AbstractWidget):
         self.customer = document.createElement("div")
         self.customer.className = "flex justify-center uppercase p-10 bg-gray-700 w-[400px] text-white cursor-pointer"
         self.customer.innerHTML = "customer"
-        # self.customer.addEventListener("click", self.redirect_to_login)
+        self.customer.onclick = self.redirect_to_login
         self.container.appendChild(self.customer)
 
         self.admin = document.createElement("div")
         self.admin.className = "flex justify-center uppercase p-10 bg-gray-700 w-[400px] text-white cursor-pointer"
         self.admin.innerHTML = "admin"
+        self.admin.onclick = self.redirect_to_login
         self.container.appendChild(self.admin)
 
         self.element.appendChild(self.container)
@@ -94,6 +95,6 @@ if __name__ == "__main__":
     if location_path == "/":
         content.drawWidget([Home("content")])
     elif location_path == "/login":
-        js.console.log("TEST")
+        content.drawWidget([NotFound("content")])
     else:
         content.drawWidget([NotFound("content")])
