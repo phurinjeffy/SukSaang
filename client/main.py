@@ -1,8 +1,6 @@
 import js
 from pyscript import document
-from pyodide.ffi import create_proxy, create_once_callable
 from abc import ABC, abstractmethod
-from datetime import datetime
 
 
 class AbstractWidget(ABC):
