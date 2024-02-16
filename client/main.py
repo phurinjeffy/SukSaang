@@ -33,7 +33,7 @@ class Layout(AbstractWidget):
             widget.drawWidget()
 
 
-class Home(AbstractWidget):
+class Welcome(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
 
@@ -62,6 +62,12 @@ class Home(AbstractWidget):
 class Login(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        
+    def redirect_to_home(self, event):
+        js.window.location.href = "/home"
+        
+    def redirect_to_register(self, event):
+        js.window.location.href = "/register"
 
     def drawWidget(self):
         self.login = document.createElement("div")
@@ -101,12 +107,14 @@ class Login(AbstractWidget):
         self.button_login = document.createElement("button")
         self.button_login.className = "w-96 h-16 bg-orange-500 shadow-md rounded-full text-white text-lg font-medium my-4"
         self.button_login.innerHTML = "Login"
+        self.button_login.onclick = self.redirect_to_home
 
         self.question_box = document.createElement("div")
         self.question_box.className = "flex flex-row justify-center"
         self.question_text = document.createElement("a")
         self.question_text.className = "text-gray-400 cursor-pointer"
         self.question_text.innerHTML = "Don't have an account?"
+        self.question_text.onclick = self.redirect_to_register
 
         self.username_box.appendChild(self.username_header)
         self.username_box.appendChild(self.username_input)
@@ -148,6 +156,10 @@ class NotFound(AbstractWidget):
         self.element.appendChild(self.text)
 
 
+class Home(AbstractWidget):
+    pass
+
+
 if __name__ == "__main__":
     location_path = js.window.location.pathname
 
@@ -155,8 +167,12 @@ if __name__ == "__main__":
 
     content = Layout("app")
     if location_path == "/":
-        content.drawWidget([Home("content")])
+        content.drawWidget([Welcome("content")])
     elif location_path == "/login":
         content.drawWidget([Login("content")])
+    elif location_path == "/register":
+        content.drawWidget([Login("content")])
+    elif location_path == "/home":
+        content.drawWidget([Home("content")])
     else:
         content.drawWidget([NotFound("content")])
