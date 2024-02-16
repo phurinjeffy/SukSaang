@@ -6,17 +6,17 @@ class User(ABC):
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        
+
     def __str__(self):
         return self.name
-    
+
     def login(self):
         pass
 
     def register(self):
         pass
 
-      
+
 class Customer(User, persistent.Persistent):
     def __init__(self, username, password, table=0, orders=0, address="SukSaang"):
         User.__init__(self, username, password)
@@ -43,7 +43,7 @@ class Customer(User, persistent.Persistent):
     def clear_cart(self):
         pass
 
-      
+
 class Admin(User, persistent.Persistent):
     def __init__(self, username, password, tables, statistic):
         User.__init__(self, username, password)
@@ -52,16 +52,16 @@ class Admin(User, persistent.Persistent):
 
     def add_menu(self):
         pass
-        
+
     def delete_menu(self):
         pass
-        
+
     def edit_menu(self, menu):
         pass
 
     def generate_payment(self):
         pass
-      
+
 
 class Table(persistent.Persistent):
     def __init__(self, customers):
@@ -70,7 +70,7 @@ class Table(persistent.Persistent):
     def add_customers(self, customer):
         pass
 
-      
+
 class Statistic(persistent.Persistent):
     def __init__(self, income, popular, cost):
         self.income = income
@@ -97,16 +97,14 @@ class MainDish(Food, persistent.Persistent):
     def __init__(self, name, ingredients, price, description, cost, type):
         Food.__init__(self, name, ingredients, price, description, cost)
         self.type = type
-        
-    
+
+
 class Drink(Food, persistent.Persistent):
     def __init__(self, name, ingredients, price, description, cost, sweetness):
         Food.__init__(self, name, ingredients, price, description, cost, sweetness)
         self.sweetness = sweetness
-        
-    
+
+
 class Dessert(Food, persistent.Persistent):
     def __init__(self, name, ingredients, price, description, cost):
         Food.__init__(self, name, ingredients, price, description, cost)
-        
-    
