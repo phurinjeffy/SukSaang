@@ -6,46 +6,47 @@ class Login(AbstractWidget):
 
     def drawWidget(self):
         self.login = document.createElement("div")
-        self.login.className = "flex flex-col w-screen p-4 gap-4 text-center text-xl"
-        self.login_title = document.createElement("p")
+        self.login.className = (
+            "flex flex-col justify-center items-center w-screen gap-4 pt-10"
+        )
+
+        self.login_title = document.createElement("h3")
         self.login_title.innerHTML = "Login"
-        self.login_title.className = "text-center text-2xl font-semibold font-varela font-medium break-words my-8"
+        self.login_title.className = "text-4xl font-semibold font-medium text-white"
         self.login.appendChild(self.login_title)
 
-        # box
         self.box = document.createElement("div")
-        self.box.className = "flex flex-col gap-4"
-        # box username
+        self.box.className = "flex flex-col gap-6"
+
         self.username_box = document.createElement("div")
-        self.username_box.className = ""
         self.username_header = document.createElement("p")
-        self.username_header.className = "text-center text-2xl font-semibold font-varela font-medium break-words my-8"
-        self.username_header.innerHTML = "username"
+        self.username_header.className = "text-base text-gray-300 font-light my-3"
+        self.username_header.innerHTML = "Username"
         self.username_input = document.createElement("input")
+        self.username_input.type = "text"
         self.username_input.className = (
-            "w-96 h-14 relative rounded-lg border border-gray-300 px-5"
+            "w-96 h-10 rounded-lg border border-gray-300 px-3"
         )
-        # box password
+
         self.password_box = document.createElement("div")
-        self.password_box.classname = ""
         self.password_header = document.createElement("p")
-        self.password_header.className = "text-center text-2xl font-semibold font-varela font-medium break-words my-8"
-        self.password_header.innerHTML = "password"
+        self.password_header.className = "text-base text-gray-300 font-light my-3"
+        self.password_header.innerHTML = "Password"
         self.password_input = document.createElement("input")
+        self.password_input.type = "password"
         self.password_input.className = (
-            "w-96 h-14 relative rounded-lg border border-gray-300 px-5"
+            "w-96 h-10 rounded-lg border border-gray-300 px-3"
         )
-        # box button
+
         self.button_box = document.createElement("div")
-        self.button_box.className = ""
         self.button_login = document.createElement("button")
-        self.button_login.className = "w-96 h-16 bg-orange-500 shadow-md rounded-full text-white text-lg font-varela font-medium my-8"
+        self.button_login.className = "w-96 h-16 bg-orange-500 shadow-md rounded-full text-white text-lg font-medium my-4"
         self.button_login.innerHTML = "Login"
-        # box question
+
         self.question_box = document.createElement("div")
-        self.question_box.className = ""
-        self.question_text = document.createElement("p")
-        self.question_text.className = "text-center"
+        self.question_box.className = "flex flex-row justify-center"
+        self.question_text = document.createElement("a")
+        self.question_text.className = "text-gray-400 cursor-pointer"
         self.question_text.innerHTML = "Don't have an account?"
 
         self.username_box.appendChild(self.username_header)
@@ -61,4 +62,3 @@ class Login(AbstractWidget):
         self.box.appendChild(self.question_box)
         self.login.appendChild(self.box)
         self.element.appendChild(self.login)
-
