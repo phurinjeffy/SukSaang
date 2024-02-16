@@ -62,10 +62,10 @@ class Welcome(AbstractWidget):
 class Login(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        
+
     def redirect_to_home(self, event):
         js.window.location.href = "/home"
-        
+
     def redirect_to_register(self, event):
         js.window.location.href = "/register"
 
@@ -135,12 +135,16 @@ class Navbar(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
 
+    def redirect_to_root(self, event):
+        js.window.location.href = "/"
+
     def drawWidget(self):
         self.navbar = document.createElement("div")
         self.navbar.className = "backdrop-blur-lg w-screen h-24 text-white flex justify-center items-center fixed z-10"
         self.title = document.createElement("a")
         self.title.innerHTML = "SukSaang"
-        self.title.className = "font-signature font-extrabold text-5xl"
+        self.title.className = "font-signature font-extrabold text-5xl cursor-pointer"
+        self.title.onclick = self.redirect_to_root
         self.navbar.appendChild(self.title)
         self.element.appendChild(self.navbar)
 
@@ -157,7 +161,30 @@ class NotFound(AbstractWidget):
 
 
 class Home(AbstractWidget):
-    pass
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+        self.restaurant_name = "Restaurant Name"
+        self.username = "John Doe"
+
+    def drawWidget(self):
+        self.container = document.createElement("div")
+        self.container.className = "flex flex-col justify-center items-center gap-6 text-white"
+        self.element.appendChild(self.container)
+
+        self.logo = document.createElement("img")
+        self.logo.src = "/restaurant.svg"
+        self.logo.className = "w-48 h-48"
+        self.container.appendChild(self.logo)
+
+        self.name = document.createElement("h2")
+        self.name.innerHTML = f"{self.restaurant_name}"
+        self.name.className = "text-2xl font-semibold"
+        self.container.appendChild(self.name)
+        
+        self.welcome_message = document.createElement("h3")
+        self.welcome_message.innerHTML = f"Welcome, {self.username}"
+        self.welcome_message.className = "text-lg font-base"
+        self.container.appendChild(self.welcome_message)
 
 
 if __name__ == "__main__":
