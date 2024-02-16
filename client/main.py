@@ -1,4 +1,4 @@
-import components
+import client.components.abs as abs
 
 if __name__ == "__main__":
     location_path = js.window.location.pathname
