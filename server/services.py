@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from database import *
 from models import *
 
@@ -30,7 +30,9 @@ async def register_customer(username: str, password: str):
 
 
 @router.post("/login/")
-async def login(username: str, password: str):
+async def login(request: Request, data: dict):
+    username = data.get("username")
+    password = data.get("password")
     if username in root.users:
         user = root.users[username]
         if user.password == password:
