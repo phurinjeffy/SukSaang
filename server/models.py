@@ -44,6 +44,19 @@ class Customer(User, persistent.Persistent):
     def clear_cart(self):
         self.orders.clear()
 
+class Menu(persistent.Persistent):
+    def __init__(self):
+        self.menus =  persistent.list.PersistentList()
+
+    def add_menu(self, food):
+        self.menus.append(food)
+    
+    def delete_menu(self, food):
+        self.menus.remove(food)
+    
+    def edit_menu(self, detail, amount = 0):
+        pass
+
 
 class Admin(User, persistent.Persistent):
     def __init__(self, username, password, tables = 0, statistic = 0):
@@ -81,9 +94,8 @@ class Statistic(persistent.Persistent):
     def generate_graph(self):
         pass
 
-
 class Food(ABC):
-    def __init__(self, name, ingredients, price, description, cost):
+    def __init__(self, name ,price, description, cost, ingredients = []):
         self.name = name
         self.ingredients = ingredients
         self.price = price
@@ -95,7 +107,7 @@ class Food(ABC):
 
 
 class MainDish(Food, persistent.Persistent):
-    def __init__(self, name, ingredients, price, description, cost, type):
+    def __init__(self, name, price, description, cost,  type, ingredients = []):
         Food.__init__(self, name, ingredients, price, description, cost)
         self.type = type
 
