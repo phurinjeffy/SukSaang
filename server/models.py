@@ -87,10 +87,11 @@ class Table(persistent.Persistent):
 
 
 class Statistic(persistent.Persistent):
-    def __init__(self, income, popular, cost):
+    def __init__(self, day, cost, income, popular):
+        self.day = day
+        self.cost = cost
         self.income = income
         self.popular = popular
-        self.cost = cost
 
     def generate_graph(self):
         pass
