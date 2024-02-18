@@ -13,12 +13,12 @@ async def get_users():
 
 
 @router.post("/register/")
-async def create_user(username: str = Body(...), password: str = Body(...)):
+async def create_user(username, password):
     return await _services.create_user(username, password)
 
 
 @router.post("/login/")
-async def login_user(username: str = Body(...), password: str = Body(...)):
+async def login_user(username, password):
     return await _services.login_user(username, password)
 
 
@@ -29,12 +29,12 @@ async def get_admins():
 
 
 @router.post("/admin/register/")
-async def create_admin(username: str = Body(...), password: str = Body(...)):
+async def create_admin(username, password):
     return await _services.create_admin(username, password)
 
 
 @router.post("/admin/login/")
-async def login_admin(username: str = Body(...), password: str = Body(...)):
+async def login_admin(username, password):
     return await _services.login_admin(username, password)
 
 
