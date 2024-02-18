@@ -1,7 +1,7 @@
 import jwt
 import os
 from dotenv import load_dotenv
-from fastapi import HTTPException, Body, status
+from fastapi import HTTPException, status
 from database import connection
 from models import *
 from datetime import datetime, timedelta
@@ -34,7 +34,7 @@ async def get_users():
         )
 
 
-async def create_user(username: str = Body(...), password: str = Body(...)):
+async def create_user(username: str, password: str):
     try:
         if username in connection.root.users:
             raise ValueError("User already exists")
@@ -56,7 +56,7 @@ async def create_user(username: str = Body(...), password: str = Body(...)):
         )
 
 
-async def login_user(username: str = Body(...), password: str = Body(...)):
+async def login_user(username: str, password: str):
     if username in connection.root.users:
         user = connection.root.users[username]
         if user.password == password:
@@ -81,7 +81,7 @@ async def get_admins():
         )
 
 
-async def create_admin(username: str = Body(...), password: str = Body(...)):
+async def create_admin(username: str, password: str):
     try:
         if username in connection.root.admins:
             raise ValueError("Admin already exists")
@@ -103,7 +103,7 @@ async def create_admin(username: str = Body(...), password: str = Body(...)):
         )
 
 
-async def login_admin(username: str = Body(...), password: str = Body(...)):
+async def login_admin(username: str, password: str):
     if username in connection.root.admins:
         user = connection.root.admins[username]
         if user.password == password:
