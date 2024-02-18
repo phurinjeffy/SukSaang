@@ -15,14 +15,14 @@ class User(Account, persistent.Persistent):
         username,
         password,
         hashed_password="",
-        table=0,
-        orders=0,
         address="",
+        table=0,
+        orders=[],
     ):
         Account.__init__(self, username, password, hashed_password)
+        self.address = address
         self.table = table
         self.orders = persistent.list.PersistentList(orders)
-        self.address = address
 
     def add_order(self, order):
         self.orders.append(order)
@@ -64,7 +64,7 @@ class Admin(Account, persistent.Persistent):
 
 
 class Menu(persistent.Persistent):
-    def __init__(self, menus):
+    def __init__(self, menus=[]):
         self.menus = persistent.list.PersistentList(menus)
 
     def add_menu(self, food):
@@ -78,7 +78,7 @@ class Menu(persistent.Persistent):
 
 
 class Table(persistent.Persistent):
-    def __init__(self, customers):
+    def __init__(self, customers=[]):
         self.customers = persistent.list.PersistentList(customers)
 
     def add_customers(self, customer):
