@@ -1,5 +1,6 @@
 import js
 from pyscript import document
+import requests
 from abc import ABC, abstractmethod
 
 
@@ -63,11 +64,33 @@ class Login(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
 
-    def redirect_to_home(self, event):
-        js.window.location.href = "/home"
-
     def redirect_to_register(self, event):
         js.window.location.href = "/register"
+        
+    def login_click(self, event):
+        username = self.username_input.value
+        password = self.password_input.value
+        
+        url = "http://localhost:8000/login/"
+        data = {
+            "username": username,
+            "password": password
+        }
+        headers = {
+            'Content-Type': 'application/json',
+        }
+        
+        response = requests.post(url, json=data, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+            if data["message"] == "Login successful":
+                print("Login successful!")
+                js.window.location.href = "/home"
+            else:
+                print("Login failed:", data["message"])
+        else:
+            print("Error:", response.text)
 
     def drawWidget(self):
         self.login = document.createElement("div")
@@ -107,7 +130,7 @@ class Login(AbstractWidget):
         self.button_login = document.createElement("button")
         self.button_login.className = "w-96 h-16 bg-orange-500 shadow-md rounded-full text-white text-lg font-medium my-4"
         self.button_login.innerHTML = "Login"
-        self.button_login.onclick = self.redirect_to_home
+        self.button_login.onclick = self.login_click
 
         self.question_box = document.createElement("div")
         self.question_box.className = "flex flex-row justify-center"

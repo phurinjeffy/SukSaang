@@ -10,11 +10,11 @@ class User(ABC):
     def __str__(self):
         return self.name
 
-    def login(self):
-        pass
+    # def login(self):
+    #     pass
 
-    def register(self):
-        pass
+    # def register(self):
+    #     pass
 
 
 class Customer(User, persistent.Persistent):
@@ -25,14 +25,15 @@ class Customer(User, persistent.Persistent):
         self.table = table
         self.address = address
 
-    def add_order(self):
-        pass
+    def add_order(self, order):
+        self.orders.append(order)
 
-    def delete_order(self):
-        pass
+    def delete_order(self, order):
+        if order in self.orders:
+            self.orders.remove(order)
 
     def view_cart(self):
-        pass
+        return self.orders
 
     def confirm_order(self):
         pass
@@ -41,11 +42,24 @@ class Customer(User, persistent.Persistent):
         pass
 
     def clear_cart(self):
+        self.orders.clear()
+
+class Menu(persistent.Persistent):
+    def __init__(self):
+        self.menus =  persistent.list.PersistentList()
+
+    def add_menu(self, food):
+        self.menus.append(food)
+    
+    def delete_menu(self, food):
+        self.menus.remove(food)
+    
+    def edit_menu(self, detail, amount = 0):
         pass
 
 
 class Admin(User, persistent.Persistent):
-    def __init__(self, username, password, tables, statistic):
+    def __init__(self, username, password, tables = 0, statistic = 0):
         User.__init__(self, username, password)
         self.tables = tables
         self.statistic = statistic
@@ -65,10 +79,10 @@ class Admin(User, persistent.Persistent):
 
 class Table(persistent.Persistent):
     def __init__(self, customers):
-        self.customers = customers
+        self.customers = persistent.list.PersistentList()
 
     def add_customers(self, customer):
-        pass
+        self.customers.append(customer)
 
 
 class Statistic(persistent.Persistent):
@@ -82,7 +96,7 @@ class Statistic(persistent.Persistent):
         pass
 
 class Food(ABC):
-    def __init__(self, name, ingredients, price, description, cost):
+    def __init__(self, name ,price, description, cost, ingredients = []):
         self.name = name
         self.ingredients = ingredients
         self.price = price
@@ -94,7 +108,7 @@ class Food(ABC):
 
 
 class MainDish(Food, persistent.Persistent):
-    def __init__(self, name, ingredients, price, description, cost, type):
+    def __init__(self, name, price, description, cost,  type, ingredients = []):
         Food.__init__(self, name, ingredients, price, description, cost)
         self.type = type
 
