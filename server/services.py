@@ -28,12 +28,11 @@ async def register_customer(username: str, password: str):
     
 
 @router.post("/login/")
-async def login(username: str, password: str):
+async def login(username: str = Body(...), password: str = Body(...)):
     if username in root.users:
         user = root.users[username]
         if user.password == password:
             return {"message": "Login successful"}
-            return RedirectResponse(url="/menu")
     raise HTTPException(status_code=401, detail="Invalid username or password")
 
 @router.get("/admins/")
@@ -88,4 +87,3 @@ async def add_menu(name : str = Body(...), price : int = Body(...), description 
         return {"message": "Menus registered successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
