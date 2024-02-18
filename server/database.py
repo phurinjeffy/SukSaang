@@ -14,7 +14,7 @@ def init_db():
     print("Initializing database.")
     try:
         if not hasattr(root, 'users'):
-            root.users = BTrees.OOBTree.BTree()
+            root.customers = BTrees.OOBTree.BTree()
             # root.users["default"] = Customer(username="default", password="default")
         if not hasattr(root, 'admins'):
             root.admins = BTrees.OOBTree.BTree()
@@ -29,6 +29,6 @@ def init_db():
         initialize_default_data(root)
         
 def initialize_default_data(root):
-    root.users = BTrees.OOBTree.BTree()
+    root.customers = BTrees.OOBTree.BTree()
     root.admins = BTrees.OOBTree.BTree()
     root.menus = BTrees.OOBTree.BTree()
