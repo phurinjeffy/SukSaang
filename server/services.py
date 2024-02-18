@@ -36,3 +36,4 @@ async def login(username: str, password: str):
         if user.password == password:
             return {"message": "Login successful"}
     raise HTTPException(status_code=401, detail="Invalid username or password")
+
