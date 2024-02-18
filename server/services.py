@@ -42,30 +42,30 @@ async def login(username: str = Body(...), password: str = Body(...)):
 async def get_admin():
     try:
         admins = []
-        for username, user in root.admin.items():
+        for username, user in root.admins.items():
             admins.append({"username": username, "password": user.password})
         return {"admins": admins}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/register/admin/")
+@router.post("/admin/register/")
 async def register_admin(username: str, password: str):
     try:
-        if username in root.admin:
+        if username in root.admins:
             raise HTTPException(status_code=400, detail="Admin already exists")
         admin = Admin(username, password)
-        root.admin[username] = admin
+        root.admins[username] = admin
         connection.transaction_manager.commit()
         return {"message": "Admin registered successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/login/admin/")
-async def login_admin(username: str, password: str):
-    if username in root.admin:
-        admin = root.admin[username]
+@router.post("/admin/login/")
+async def login_admin(username: str = Body(...), password: str = Body(...)):
+    if username in root.admins:
+        admin = root.admins[username]
         if isinstance(admin, Admin) and admin.password == password:
             return {"message": "Admin login successful"}
     raise HTTPException(
@@ -92,7 +92,7 @@ async def get_menus():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/admin/menu/")
+@router.post("/menu/")
 async def add_menu(
     name: str = Body(...),
     price: int = Body(...),

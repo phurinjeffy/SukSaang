@@ -13,12 +13,22 @@ def init_db():
     global root
     print("Initializing database.")
     try:
-        root = connection.root
+        if not hasattr(root, 'users'):
+            root.users = BTrees.OOBTree.BTree()
+            # root.users["default"] = Customer(username="default", password="default")
+        if not hasattr(root, 'admins'):
+            root.admins = BTrees.OOBTree.BTree()
+            # root.admins["default"] = Admin(username="default", password="default")
+        if not hasattr(root, 'menus'):
+            root.menus = BTrees.OOBTree.BTree()
+            # root.menus["veggie"] = MainDish(name="veggie", price=10, description="vegan", cost=100, type="vegan", ingredients=[])
         print("Database loaded from file.")
     except Exception as e:
         print("Error loading database from file:", e)
         print("Initializing database with default data.")
-        root.users = BTrees.OOBTree.BTree()
-        root.menus = BTrees.OOBTree.BTree()
-        root.users["default"] = Customer(username="default", password="default")
-        root.menus["vegtablePizza"] = MainDish("veg", 10, "jwfiokdc", 10, "maindish", [])
+        initialize_default_data(root)
+        
+def initialize_default_data(root):
+    root.users = BTrees.OOBTree.BTree()
+    root.admins = BTrees.OOBTree.BTree()
+    root.menus = BTrees.OOBTree.BTree()
