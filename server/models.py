@@ -3,9 +3,11 @@ from abc import ABC, abstractmethod
 
 
 class User(ABC):
-    def __init__(self, username, password):
+    def __init__(self, username, password, hashed_password=""):
         self.username = username
         self.password = password
+        self.hashed_password = hashed_password
+
 
     def __str__(self):
         return self.name
