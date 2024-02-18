@@ -84,11 +84,12 @@ class Login(AbstractWidget):
 
         if response.status_code == 200:
             data = response.json()
-            if data["message"] == "Login successful":
+            message = data.get("message", "Login successful")
+            if message == "Login successful":
                 print("Login successful!")
                 js.window.location.href = "/home"
             else:
-                print("Login failed:", data["message"])
+                print("Login failed:", message)
         else:
             print("Error:", response.text)
 
