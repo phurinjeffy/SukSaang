@@ -83,7 +83,7 @@ async def add_menu(name : str = Body(...), price : int = Body(...), description 
             raise HTTPException(status_code=400, detail="Menu already exists")
         dish = MainDish(name, price, description, cost, type, ingredients)
         root.menus[name] = dish
-        connection.transaction_managre.commit()
+        connection.transaction_manager.commit()
         return {"message": "Menus registered successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
