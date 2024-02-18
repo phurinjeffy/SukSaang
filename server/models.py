@@ -9,7 +9,7 @@ class Account(ABC):
         self.hashed_password = hashed_password
 
 
-class Customer(Account, persistent.Persistent):
+class User(Account, persistent.Persistent):
     def __init__(
         self,
         username,
@@ -17,7 +17,7 @@ class Customer(Account, persistent.Persistent):
         hashed_password="",
         table=0,
         orders=0,
-        address="SukSaang",
+        address="",
     ):
         Account.__init__(self, username, password, hashed_password)
         self.table = table
