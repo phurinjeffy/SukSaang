@@ -9,57 +9,33 @@ router = APIRouter()
 # ------------------ user ------------------
 @router.get("/users/")
 async def get_users():
-    try:
-        users = []
-        for username, user in root.customers.items():
-            users.append({"username": username, "password": user.password})
-        return {"users": users}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await _services.get_users()
 
 
 @router.post("/register/")
 async def create_user(username: str = Body(...), password: str = Body(...)):
-    try:
-        return await _services.create_user(username, password)
-    except HTTPException as e:
-        raise e
+    return await _services.create_user(username, password)
 
 
 @router.post("/login/")
 async def login_user(username: str = Body(...), password: str = Body(...)):
-    try:
-        return await _services.login_user(username, password)
-    except HTTPException as e:
-        raise e
+    return await _services.login_user(username, password)
 
 
 # ------------------ admin ------------------
 @router.get("/admin/")
 async def get_admins():
-    try:
-        admins = []
-        for username, user in root.admins.items():
-            admins.append({"username": username, "password": user.password})
-        return {"admins": admins}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await _services.get_admins()
 
 
 @router.post("/admin/register/")
 async def create_admin(username: str = Body(...), password: str = Body(...)):
-    try:
-        return await _services.create_admin(username, password)
-    except HTTPException as e:
-        raise e
+    return await _services.create_admin(username, password)
 
 
 @router.post("/admin/login/")
 async def login_admin(username: str = Body(...), password: str = Body(...)):
-    try:
-        return await _services.login_admin(username, password)
-    except HTTPException as e:
-        raise e
+    return await _services.login_admin(username, password)
 
 
 # ------------------ menu ------------------

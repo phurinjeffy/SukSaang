@@ -22,6 +22,18 @@ def create_access_token(username: str):
 
 
 # ------------------ user ------------------------
+async def get_users():
+    try:
+        users = []
+        for username, user in connection.root.users.items():
+            users.append({"username": username, "password": user.password})
+        return {"users": users}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
 async def create_user(username: str = Body(...), password: str = Body(...)):
     try:
         if username in connection.root.users:
@@ -57,6 +69,18 @@ async def login_user(username: str = Body(...), password: str = Body(...)):
 
 
 # ------------------ admin ------------------------
+async def get_admins():
+    try:
+        admins = []
+        for username, user in connection.root.admins.items():
+            admins.append({"username": username, "password": user.password})
+        return {"admins": admins}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
 async def create_admin(username: str = Body(...), password: str = Body(...)):
     try:
         if username in connection.root.admins:
