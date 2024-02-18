@@ -1,7 +1,5 @@
-import ZODB
-import ZODB.FileStorage
+import ZODB, ZODB.FileStorage
 import transaction
-from models import *
 import BTrees
 import atexit
 
@@ -15,8 +13,8 @@ def init_db():
     global root
     print("Initializing database.")
     try:
-        if not hasattr(root, 'customers'):
-            root.customers = BTrees.OOBTree.BTree()
+        if not hasattr(root, "users"):
+            root.users = BTrees.OOBTree.BTree()
         if not hasattr(root, "admins"):
             root.admins = BTrees.OOBTree.BTree()
         if not hasattr(root, "menus"):
@@ -25,7 +23,7 @@ def init_db():
     except Exception as e:
         print("Error loading database from file:", e)
         print("Initializing database with default data.")
-        root.customers = BTrees.OOBTree.BTree()
+        root.users = BTrees.OOBTree.BTree()
         root.admins = BTrees.OOBTree.BTree()
         root.menus = BTrees.OOBTree.BTree()
 
