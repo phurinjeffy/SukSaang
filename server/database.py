@@ -9,6 +9,9 @@ db = ZODB.DB(storage)
 connection = db.open()
 root = connection.root
 
+root.menus = BTrees.OOBTree.BTree()
+root.menus["vegtablePizza"] = MainDish("veg", 10, "jwfiokdc", 10, "maindish",[] )
+
 def init_db():
     global root
     print("Initializing database.")
