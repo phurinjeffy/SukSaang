@@ -40,51 +40,27 @@ async def login_admin(username: str = Body(...), password: str = Body(...)):
 
 # ------------------ menu ------------------
 @router.get("/admin/menus/")
-async def get_menus():
-    try:
-        menus = []
-        for name, menu in root.menus.items():
-            menus.append(
-                {
-                    "name": menu.name,
-                    "price": menu.price,
-                    "description": menu.description,
-                    "cost": menu.cost,
-                    "ingredients": menu.ingredients,
-                }
-            )
-        return {"menus": menus}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def get_menu():
+    return await _services.get_menus()
 
 
 @router.post("/menu/")
-async def add_menu(
-    name: str = Body(...),
-    price: int = Body(...),
-    description: str = Body(...),
-    cost: int = Body(...),
-    type: str = Body(...),
-    ingredients: list = Body(...),
-):
-    try:
-        if name in root.menus:
-            raise HTTPException(status_code=400, detail="Menu already exists")
-        dish = MainDish(name, price, description, cost, type, ingredients)
-        root.menus[name] = dish
-        connection.transaction_manager.commit()
-        return {"message": "Menus registered successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+async def add_menu(name: str = Body(...), price: int = Body(...), description: str = Body(...), cost: int = Body(...),type: str = Body(...),ingredients: list = Body(...)):
+    return await _services.add_menu(name, price, description, cost, type , ingredients)
 
 
-@router.post("/food/")
+@router.get("/getorder/")
+async def get_user_order(username):
+    return await _services.get_user_order(username)
+
+
+@router.post("/addorder/")
 async def add_food(
     name: str = Body(...),
-    price: int = Body(...),
-    description: str = Body(...),
-    cost: int = Body(...),
-    type: str = Body(...),
-    ingredients: list = Body(...),
-):
-    pass
+    food_name: str = Body(...)): 
+    return await _services.add_order(name, food_name)
+
+@router.delete("/deleteorder/")
+async def delete_order(name : str = Body(...), food_name : str = Body(...)):
+    return await _services.delete_order(name , food_name)    
+
