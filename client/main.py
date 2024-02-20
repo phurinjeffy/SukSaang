@@ -19,8 +19,12 @@ class AbstractWidget(ABC):
     @abstractmethod
     def drawWidget(self):
         pass
-    
+
     def check_token(self):
+        location_path = js.window.location.pathname
+        if location_path in ["/login", "/register"]:
+            return
+
         access_token = js.window.localStorage.getItem("access_token")
         if not access_token:
             js.window.location.href = "/login"
@@ -312,24 +316,50 @@ class Home(AbstractWidget):
     def drawWidget(self):
         self.container = document.createElement("div")
         self.container.className = (
-            "flex flex-col justify-center items-center gap-6 text-white"
+            "h-full flex flex-col justify-center items-center gap-10 text-white"
         )
         self.element.appendChild(self.container)
+
+        self.top = document.createElement("div")
+        self.top.className = "flex flex-row justify-around w-full"
+        self.container.appendChild(self.top)
+
+        self.points = document.createElement("div")
+        self.points.className = "bg-zinc-800 rounded-full w-10"
+        self.points.innerHTML = "POINTS"
+        self.top.appendChild(self.points)
+
+        self.menu = document.createElement("div")
+        self.menu.className = "bg-zinc-800 rounded-full w-10"
+        self.menu.innerHTML = "MENU"
+        self.top.appendChild(self.menu)
 
         self.logo = document.createElement("img")
         self.logo.src = "/restaurant.svg"
         self.logo.className = "w-48 h-48"
         self.container.appendChild(self.logo)
 
-        self.name = document.createElement("h2")
-        self.name.innerHTML = f"{self.restaurant_name}"
-        self.name.className = "text-2xl font-semibold"
-        self.container.appendChild(self.name)
+        self.welcome_box = document.createElement("div")
+        self.welcome_box.className = (
+            "rounded-full bg-zinc-700 text-lg font-base px-20 py-4"
+        )
+        self.welcome_box.innerHTML = f"Welcome, {self.username}"
+        self.container.appendChild(self.welcome_box)
 
-        self.welcome_message = document.createElement("h3")
-        self.welcome_message.innerHTML = f"Welcome, {self.username}"
-        self.welcome_message.className = "text-lg font-base"
-        self.container.appendChild(self.welcome_message)
+        self.box = document.createElement("div")
+        self.box.className = "flex flex-row gap-4"
+
+        self.order_box = document.createElement("div")
+        self.order_box.className = "rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center"
+        self.order_box.innerHTML = f"Order"
+        self.box.appendChild(self.order_box)
+
+        self.feedback_box = document.createElement("div")
+        self.feedback_box.className = "rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center text-center"
+        self.feedback_box.innerHTML = f"Leave Feedback"
+        self.box.appendChild(self.feedback_box)
+
+        self.container.appendChild(self.box)
 
 
 if __name__ == "__main__":
