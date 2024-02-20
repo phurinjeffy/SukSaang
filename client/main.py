@@ -60,6 +60,35 @@ class Welcome(AbstractWidget):
         self.element.appendChild(self.container)
 
 
+class Navbar(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+
+    def redirect_to_root(self, event):
+        js.window.location.href = "/"
+
+    def drawWidget(self):
+        self.navbar = document.createElement("div")
+        self.navbar.className = "backdrop-blur-lg w-screen h-24 text-white flex justify-center items-center fixed z-10"
+        self.title = document.createElement("a")
+        self.title.innerHTML = "SukSaang"
+        self.title.className = "font-signature font-extrabold text-5xl cursor-pointer"
+        self.title.onclick = self.redirect_to_root
+        self.navbar.appendChild(self.title)
+        self.element.appendChild(self.navbar)
+
+
+class NotFound(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+
+    def drawWidget(self):
+        self.text = document.createElement("h1")
+        self.text.className = "text-3xl text-white"
+        self.text.innerHTML = "404 NOT FOUND"
+        self.element.appendChild(self.text)
+
+
 class Login(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
@@ -155,35 +184,6 @@ class Login(AbstractWidget):
         self.box.appendChild(self.question_box)
         self.login.appendChild(self.box)
         self.element.appendChild(self.login)
-
-
-class Navbar(AbstractWidget):
-    def __init__(self, element_id):
-        AbstractWidget.__init__(self, element_id)
-
-    def redirect_to_root(self, event):
-        js.window.location.href = "/"
-
-    def drawWidget(self):
-        self.navbar = document.createElement("div")
-        self.navbar.className = "backdrop-blur-lg w-screen h-24 text-white flex justify-center items-center fixed z-10"
-        self.title = document.createElement("a")
-        self.title.innerHTML = "SukSaang"
-        self.title.className = "font-signature font-extrabold text-5xl cursor-pointer"
-        self.title.onclick = self.redirect_to_root
-        self.navbar.appendChild(self.title)
-        self.element.appendChild(self.navbar)
-
-
-class NotFound(AbstractWidget):
-    def __init__(self, element_id):
-        AbstractWidget.__init__(self, element_id)
-
-    def drawWidget(self):
-        self.text = document.createElement("h1")
-        self.text.className = "text-3xl text-white"
-        self.text.innerHTML = "404 NOT FOUND"
-        self.element.appendChild(self.text)
 
 
 class Home(AbstractWidget):
