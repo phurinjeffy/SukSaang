@@ -87,7 +87,7 @@ class Login(AbstractWidget):
             if "access_token" in data:
                 access_token = data["access_token"]
                 print("Login successful!")
-                js.window.localStorage.setItem("access_token", access_token)  # Store token in local storage
+                js.window.localStorage.setItem("access_token", access_token)
                 js.window.location.href = "/home"
             else:
                 message = data.get("detail", "Unknown error")
@@ -189,14 +189,14 @@ class NotFound(AbstractWidget):
 class Home(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.restaurant_name = "Restaurant Name"
-        self.username = "John Doe"
+        self.restaurant_name = None
+        self.username = None
+        self.fetch_user_info()
         
     def fetch_user_info(self):
-        # Fetch user information using the access token
         access_token = js.window.localStorage.getItem("access_token")
         if access_token:
-            url = f"http://localhost:8000/users/{access_token}"  # Replace with the actual endpoint to fetch user info
+            url = "http://localhost:8000/users/me"
             headers = {
                 "Authorization": f"Bearer {access_token}",
             }
@@ -204,9 +204,11 @@ class Home(AbstractWidget):
 
             if response.status_code == 200:
                 data = response.json()
-                self.username = data.get("username")  # Get username from response
+                self.username = data.get("username")
             else:
                 print("Error fetching user info:", response.text)
+        else:
+            print("Access token not found. User not logged in.")
 
     def drawWidget(self):
         self.container = document.createElement("div")

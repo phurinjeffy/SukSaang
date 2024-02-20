@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Depends
 from database import *
 from models import *
 import services as _services
@@ -7,6 +7,11 @@ router = APIRouter()
 
 
 # ------------------ user ------------------
+@router.get("/users/me", response_model=UserBase)
+async def read_users_me(current_user: User = Depends(_services.get_current_user)):
+    return current_user
+
+
 @router.get("/users/{username}")
 async def get_user(username: str):
     return await _services.get_user(username)
