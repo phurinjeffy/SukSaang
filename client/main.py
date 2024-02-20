@@ -84,15 +84,17 @@ class Login(AbstractWidget):
 
         if response.status_code == 200:
             data = response.json()
-            message = data.get("message", "Login successful")
-            if message == "Login successful":
+            if "access_token" in data:
+                access_token = data["access_token"]
                 print("Login successful!")
+                js.window.localStorage.setItem("access_token", access_token)  # Store token in local storage
                 js.window.location.href = "/home"
             else:
+                message = data.get("detail", "Unknown error")
                 print("Login failed:", message)
         else:
             print("Error:", response.text)
-
+            
     def drawWidget(self):
         self.login = document.createElement("div")
         self.login.className = (
