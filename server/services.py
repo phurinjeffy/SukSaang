@@ -29,17 +29,17 @@ async def get_user(username: str):
             return {"username": user.username, "password": user.password}
         else:
             raise ValueError(f"User '{username}' not found")
-        
+
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
-        
-        
+
+
 async def get_users():
     try:
         users = []
@@ -82,10 +82,10 @@ async def delete_user(username: str):
             return {"message": f"User '{username}' deleted successfully"}
         else:
             raise ValueError(f"User '{username}' not found")
-            
+
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -113,17 +113,17 @@ async def get_admin(username: str):
             return {"username": admin.username, "password": admin.password}
         else:
             raise ValueError(f"Admin '{username}' not found")
-        
+
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
-        
-        
+
+
 async def get_admins():
     try:
         admins = []
@@ -166,10 +166,10 @@ async def delete_admin(username: str):
             return {"message": f"Admin '{username}' deleted successfully"}
         else:
             raise ValueError(f"Admin '{username}' not found")
-            
+
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -189,13 +189,13 @@ async def login_admin(username: str, password: str):
     )
 
 
-#------------Customer Order------------------
-async def add_order(user : str, food_name : str):
+# ------------Customer Order------------------
+async def add_order(user: str, food_name: str):
     try:
         if food_name in connection.root.menus:
             food = connection.root.menus[food_name]
         else:
-            return {"message" : "In menu don't have this food"} 
+            return {"message": "In menu don't have this food"}
         if user in connection.root.users:
             connection.root.users[user].orders.append(food)
             return {"message": "Order added successfully"}
@@ -204,6 +204,7 @@ async def add_order(user : str, food_name : str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to add menu",
         )
+
 
 async def get_user_order(user: str):
     try:
@@ -219,6 +220,7 @@ async def get_user_order(user: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve user orders.",
         )
+
 
 async def delete_order(user: str, food_name: str):
     try:
