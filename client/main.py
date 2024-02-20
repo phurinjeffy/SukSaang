@@ -71,7 +71,7 @@ class Login(AbstractWidget):
         username = self.username_input.value
         password = self.password_input.value
         
-        url = "http://localhost:8000/login/"
+        url = "http://localhost:8000/users/login"
         data = {
             "username": username,
             "password": password
@@ -191,6 +191,22 @@ class Home(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
         self.restaurant_name = "Restaurant Name"
         self.username = "John Doe"
+        
+    def fetch_user_info(self):
+        # Fetch user information using the access token
+        access_token = js.window.localStorage.getItem("access_token")
+        if access_token:
+            url = f"http://localhost:8000/users/{access_token}"  # Replace with the actual endpoint to fetch user info
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+            }
+            response = requests.get(url, headers=headers)
+
+            if response.status_code == 200:
+                data = response.json()
+                self.username = data.get("username")  # Get username from response
+            else:
+                print("Error fetching user info:", response.text)
 
     def drawWidget(self):
         self.container = document.createElement("div")
