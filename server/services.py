@@ -87,7 +87,7 @@ async def create_user(username: str, password: str):
         connection.root.users[username] = user
         connection.transaction_manager.commit()
 
-        return {"message": "User created successfully"}
+        return {"username": username, "message": "User created successfully"}
 
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
@@ -170,7 +170,7 @@ async def create_admin(username: str, password: str):
         connection.root.admins[username] = admin
         connection.transaction_manager.commit()
 
-        return {"message": "Admin created successfully"}
+        return {"username": username, "message": "Admin created successfully"}
 
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
