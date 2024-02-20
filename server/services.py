@@ -113,3 +113,52 @@ async def login_admin(username: str, password: str):
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password"
     )
+
+
+# ------------------ menu ------------------------
+async def get_menus():
+    try:
+        menus = []
+        for name, menu in connection.root.menus.items():
+            menus.append(
+                {
+                    "name": menu.name,
+                    "price": menu.price,
+                    "description": menu.description,
+                    "cost": menu.cost,
+                    "ingredients": menu.ingredients,
+                }
+            )
+        return {"menus": menus}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+async def add_menu(
+    name: str,
+    price: int,
+    description: str,
+    cost: int,
+    type: str,
+    ingredients: list,
+):
+    try:
+        if name in connection.root.menus:
+            raise ValueError("Menu already exists")
+
+        dish = MainDish(name, price, description, cost, type, ingredients)
+        connection.root.menus[name] = dish
+        connection.transaction_manager.commit()
+
+        return {"message": "Menus registered successfully"}
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create menu",
+        )
