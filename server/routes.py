@@ -59,12 +59,12 @@ async def login_admin(username: str = Body(...), password: str = Body(...)):
 
 
 # ------------------ menu ------------------
-@router.get("/admins/menus")
+@router.get("/menus")
 async def get_menus():
     return await _services.get_menus()
 
 
-@router.post("/admins/menus")
+@router.post("/menus")
 async def add_menu(
     name: str = Body(...),
     price: int = Body(...),
@@ -77,16 +77,16 @@ async def add_menu(
 
 
 # ------------------ order ------------------
-@router.get("/users/orders")
-async def get_orders(username):
+@router.get("/users/{username}/orders")
+async def get_orders(username: str):
     return await _services.get_orders(username)
 
 
-@router.post("/users/orders")
-async def add_order(name: str = Body(...), food_name: str = Body(...)):
-    return await _services.add_order(name, food_name)
+@router.post("/users/{username}/orders")
+async def add_order(username: str, food_name: str):
+    return await _services.add_order(username, food_name)
 
 
-@router.delete("/users/orders/{name}/{food_name}")
-async def delete_order(name: str, food_name: str):
-    return await _services.delete_order(name, food_name)
+@router.delete("/users/{username}/orders/{food_name}")
+async def delete_order(username: str, food_name: str):
+    return await _services.delete_order(username, food_name)
