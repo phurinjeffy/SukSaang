@@ -65,25 +65,20 @@ async def get_menus():
 
 
 @router.post("/menu/")
-async def add_menu(
-    name: str = Body(...),
-    price: int = Body(...),
-    description: str = Body(...),
-    cost: int = Body(...),
-    type: str = Body(...),
-    ingredients: list = Body(...),
-):
-    return await _services.add_menu(name, price, description, cost, type, ingredients)
+async def add_menu(name: str = Body(...), price: int = Body(...), description: str = Body(...), cost: int = Body(...),type: str = Body(...),ingredients: list = Body(...)):
+    return await _services.add_menu(name, price, description, cost, type , ingredients)
 
 
-# ------------------ food ------------------
-@router.post("/food/")
-async def add_food(
-    name: str = Body(...),
-    price: int = Body(...),
-    description: str = Body(...),
-    cost: int = Body(...),
-    type: str = Body(...),
-    ingredients: list = Body(...),
-):
-    pass
+@router.get("/getorder/")
+async def get_user_order(username):
+    return await _services.get_user_order(username)
+
+
+@router.post("/addorder/")
+async def add_food(name: str = Body(...), food_name: str = Body(...)): 
+    return await _services.add_order(name, food_name)
+
+@router.delete("/deleteorder/")
+async def delete_order(name : str = Body(...), food_name : str = Body(...)):
+    return await _services.delete_order(name , food_name)    
+

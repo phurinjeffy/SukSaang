@@ -120,3 +120,4 @@ class Drink(Food, persistent.Persistent):
 class Dessert(Food, persistent.Persistent):
     def __init__(self, name, ingredients, price, description, cost):
         Food.__init__(self, name, price, description, cost, ingredients)
+
