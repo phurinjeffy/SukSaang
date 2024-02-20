@@ -87,6 +87,6 @@ async def add_order(name: str = Body(...), food_name: str = Body(...)):
     return await _services.add_order(name, food_name)
 
 
-@router.delete("/user/orders/{name}/{food_name}")
+@router.delete("/users/orders/{name}/{food_name}")
 async def delete_order(name: str = Body(...), food_name: str = Body(...)):
     return await _services.delete_order(name, food_name)
