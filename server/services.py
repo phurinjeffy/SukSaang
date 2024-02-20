@@ -189,58 +189,7 @@ async def login_admin(username: str, password: str):
     )
 
 
-# ------------Customer Order------------------
-async def add_order(user: str, food_name: str):
-    try:
-        if food_name in connection.root.menus:
-            food = connection.root.menus[food_name]
-        else:
-            return {"message": "In menu don't have this food"}
-        if user in connection.root.users:
-            connection.root.users[user].orders.append(food)
-            return {"message": "Order added successfully"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to add menu",
-        )
-
-
-async def get_user_order(user: str):
-    try:
-        if user in connection.root.users:
-            user_orders = connection.root.users[user].orders
-            order_names = [food.name for food in user_orders]
-            return {"orders": order_names}
-        else:
-            return {"message": "User not found."}
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve user orders.",
-        )
-
-
-async def delete_order(user: str, food_name: str):
-    try:
-        if user in connection.root.users:
-            user_obj = connection.root.users[user]
-            for food in user_obj.orders:
-                if food.name == food_name:
-                    user_obj.orders.remove(food)
-                    return {"message": "Order deleted successfully"}
-            return {"error": "Food item not found in user's order list"}
-        else:
-            return {"error": "User not found"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete order",
-        )
-
-
-# ------------------ menu ------------------------
+# ------------------ admin menu ------------------------
 async def get_menus():
     try:
         menus = []
@@ -286,4 +235,55 @@ async def add_menu(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create menu",
+        )
+
+
+# ------------------ user order ------------------------
+async def get_orders(user: str):
+    try:
+        if user in connection.root.users:
+            user_orders = connection.root.users[user].orders
+            order_names = [food.name for food in user_orders]
+            return {"orders": order_names}
+        else:
+            return {"message": "User not found."}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve user orders.",
+        )
+
+
+async def add_order(user: str, food_name: str):
+    try:
+        if food_name in connection.root.menus:
+            food = connection.root.menus[food_name]
+        else:
+            return {"message": "The menu doesn't have this food"}
+        if user in connection.root.users:
+            connection.root.users[user].orders.append(food)
+            return {"message": "Order added successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to add menu",
+        )
+
+
+async def delete_order(user: str, food_name: str):
+    try:
+        if user in connection.root.users:
+            user_obj = connection.root.users[user]
+            for food in user_obj.orders:
+                if food.name == food_name:
+                    user_obj.orders.remove(food)
+                    return {"message": "Order deleted successfully"}
+            return {"error": "Food item not found in user's order list"}
+        else:
+            return {"error": "User not found"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete order",
         )
