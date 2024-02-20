@@ -5,7 +5,8 @@ from services import *
 
 router = APIRouter()
 
-#------------------ token with user ------------------
+
+# ------------------ token with user ------------------
 @router.get("/users/")
 async def get_users():
     try:
@@ -16,55 +17,19 @@ async def get_users():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/register/")
 async def register_new_customer(username: str = Body(...), password: str = Body(...)):
-    try:
-        return await register_customer(username, password)  # Call register_customer function from services.py
-    except HTTPException as e:
-        raise e
+    return await register_customer(username, password)
+
 
 @router.post("/login/")
 async def user_login(username: str = Body(...), password: str = Body(...)):
-    try:
-        return await login_customer(username, password)  # Call login function from services.py
-    except HTTPException as e:
-        raise e
+    return await login_customer(username, password)
 
 
+# ------------------ token with admin ------------------
 
-# @router.get("/admins/")
-# async def get_admin():
-#     try:
-#         admins = []
-#         for username, user in root.admins.items():
-#             admins.append({"username": username, "password": user.password})
-#         return {"admins": admins}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
-# @router.post("/admin/register/")
-# async def register_admin(username: str, password: str):
-#     try:
-#         if username in root.admins:
-#             raise HTTPException(status_code=400, detail="Admin already exists")
-#         admin = Admin(username, password)
-#         root.admins[username] = admin
-#         connection.transaction_manager.commit()
-#         return {"message": "Admin registered successfully"}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
-# @router.post("/admin/login/")
-# async def login_admin(username: str = Body(...), password: str = Body(...)):
-#     if username in root.admins:
-#         admin = root.admins[username]
-#         if isinstance(admin, Admin) and admin.password == password:
-#             return {"message": "Admin login successful"}
-#     raise HTTPException(
-#         status_code=401, detail="Invalid username or password for admin"
-#     )
 
 @router.get("/admins/")
 async def get_admin():
@@ -76,20 +41,29 @@ async def get_admin():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/admin/register/")
 async def register_new_admin(username: str = Body(...), password: str = Body(...)):
     try:
-        return await register_admin(username, password)  # Call register_admin function from services.py
+        return await register_admin(
+            username, password
+        )  # Call register_admin function from services.py
     except HTTPException as e:
         raise e
+
 
 @router.post("/admin/login/")
 async def admin_login(username: str = Body(...), password: str = Body(...)):
     try:
-        return await login_admin(username, password)  # Call login_admin function from services.py
+        return await login_admin(
+            username, password
+        )  # Call login_admin function from services.py
     except HTTPException as e:
         raise e
-    
+
+
+# ------------------- admin menu ----------------------
+
 
 @router.get("/admin/menus/")
 async def get_menus():
@@ -110,7 +84,7 @@ async def get_menus():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/menu/")
+@router.post("/menu")
 async def add_menu(
     name: str = Body(...),
     price: int = Body(...),
@@ -119,18 +93,17 @@ async def add_menu(
     type: str = Body(...),
     ingredients: list = Body(...),
 ):
-    try:
-        if name in root.menus:
-            raise HTTPException(status_code=400, detail="Menu already exists")
-        dish = MainDish(name, price, description, cost, type, ingredients)
-        root.menus[name] = dish
-        connection.transaction_manager.commit()
-        return {"message": "Menus registered successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await add_memu_admin(
+        name=name,
+        price=price,
+        description=description,
+        cost=cost,
+        type=type,
+        ingredients=ingredients,
+    )
 
 
-@router.post("/food/")
+@router.post("/order/")
 async def add_food(
     name: str = Body(...),
     price: int = Body(...),

@@ -66,29 +66,23 @@ class Login(AbstractWidget):
 
     def redirect_to_register(self, event):
         js.window.location.href = "/register"
-        
+
     def login_click(self, event):
         username = self.username_input.value
         password = self.password_input.value
-        
+
         url = "http://localhost:8000/login/"
-        data = {
-            "username": username,
-            "password": password
-        }
+        data = {"username": username, "password": password}
         headers = {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
         }
-        
+
         response = requests.post(url, json=data, headers=headers)
 
         if response.status_code == 200:
             data = response.json()
-            if data["message"] == "Login successful":
-                print("Login successful!")
-                js.window.location.href = "/home"
-            else:
-                print("Login failed:", data["message"])
+            print("Login successful!")
+            js.window.location.href = "/home"
         else:
             print("Error:", response.text)
 
@@ -191,7 +185,9 @@ class Home(AbstractWidget):
 
     def drawWidget(self):
         self.container = document.createElement("div")
-        self.container.className = "flex flex-col justify-center items-center gap-6 text-white"
+        self.container.className = (
+            "flex flex-col justify-center items-center gap-6 text-white"
+        )
         self.element.appendChild(self.container)
 
         self.logo = document.createElement("img")
@@ -203,7 +199,7 @@ class Home(AbstractWidget):
         self.name.innerHTML = f"{self.restaurant_name}"
         self.name.className = "text-2xl font-semibold"
         self.container.appendChild(self.name)
-        
+
         self.welcome_message = document.createElement("h3")
         self.welcome_message.innerHTML = f"Welcome, {self.username}"
         self.welcome_message.className = "text-lg font-base"
