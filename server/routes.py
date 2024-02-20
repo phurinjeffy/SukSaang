@@ -1,70 +1,46 @@
 from fastapi import APIRouter, HTTPException, Body
 from database import *
 from models import *
-from services import *
+import services as _services
 
 router = APIRouter()
 
 
-# ------------------ token with user ------------------
+# ------------------ user ------------------
 @router.get("/users/")
 async def get_users():
-    try:
-        users = []
-        for username, user in root.customers.items():
-            users.append({"username": username, "password": user.password})
-        return {"users": users}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await _services.get_users()
 
 
 @router.post("/register/")
-async def register_new_customer(username: str = Body(...), password: str = Body(...)):
-    return await register_customer(username, password)
+async def create_user(username: str = Body(...), password: str = Body(...)):
+    return await _services.create_user(username, password)
 
 
 @router.post("/login/")
-async def user_login(username: str = Body(...), password: str = Body(...)):
-    return await login_customer(username, password)
+async def login_user(username: str = Body(...), password: str = Body(...)):
+    return await _services.login_user(username, password)
 
 
-# ------------------ token with admin ------------------
+# ------------------ admin ------------------
+@router.get("/admin/")
+async def get_admins():
+    return await _services.get_admins()
 
-
-@router.get("/admins/")
-async def get_admin():
-    try:
-        admins = []
-        for username, user in root.admins.items():
-            admins.append({"username": username, "password": user.password})
-        return {"admins": admins}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/admin/register/")
-async def register_new_admin(username: str = Body(...), password: str = Body(...)):
-    try:
-        return await register_admin(
-            username, password
-        )  # Call register_admin function from services.py
-    except HTTPException as e:
-        raise e
+async def create_admin(username: str = Body(...), password: str = Body(...)):
+    return await _services.create_admin(username, password)
+
 
 
 @router.post("/admin/login/")
-async def admin_login(username: str = Body(...), password: str = Body(...)):
-    try:
-        return await login_admin(
-            username, password
-        )  # Call login_admin function from services.py
-    except HTTPException as e:
-        raise e
+async def login_admin(username: str = Body(...), password: str = Body(...)):
+    return await _services.login_admin(username, password)
 
 
-# ------------------- admin menu ----------------------
-
-
+# ------------------ menu ------------------
 @router.get("/admin/menus/")
 async def get_menus():
     try:

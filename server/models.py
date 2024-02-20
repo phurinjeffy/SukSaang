@@ -2,30 +2,27 @@ import persistent
 from abc import ABC, abstractmethod
 
 
-class User(ABC):
+class Account(ABC):
     def __init__(self, username, password, hashed_password=""):
         self.username = username
         self.password = password
         self.hashed_password = hashed_password
 
 
-    def __str__(self):
-        return self.name
-
-    # def login(self):
-    #     pass
-
-    # def register(self):
-    #     pass
-
-
-class Customer(User, persistent.Persistent):
-    def __init__(self, username, password, table=0, orders=0, address="SukSaang"):
-        User.__init__(self, username, password)
-        self.orders = persistent.list.PersistentList()
-        self.orders = orders
-        self.table = table
+class User(Account, persistent.Persistent):
+    def __init__(
+        self,
+        username,
+        password,
+        hashed_password="",
+        address="",
+        table=0,
+        orders=[],
+    ):
+        Account.__init__(self, username, password, hashed_password)
         self.address = address
+        self.table = table
+        self.orders = persistent.list.PersistentList(orders)
 
     def add_order(self, order):
         self.orders.append(order)
@@ -47,23 +44,9 @@ class Customer(User, persistent.Persistent):
         self.orders.clear()
 
 
-class Menu(persistent.Persistent):
-    def __init__(self):
-        self.menus = persistent.list.PersistentList()
-
-    def add_menu(self, food):
-        self.menus.append(food)
-
-    def delete_menu(self, food):
-        self.menus.remove(food)
-
-    def edit_menu(self, detail, amount=0):
-        pass
-
-
-class Admin(User, persistent.Persistent):
-    def __init__(self, username, password, tables=0, statistic=0):
-        User.__init__(self, username, password)
+class Admin(Account, persistent.Persistent):
+    def __init__(self, username, password, hashed_password="", tables=0, statistic=0):
+        Account.__init__(self, username, password, hashed_password)
         self.tables = tables
         self.statistic = statistic
 
@@ -80,9 +63,23 @@ class Admin(User, persistent.Persistent):
         pass
 
 
+class Menu(persistent.Persistent):
+    def __init__(self, menus=[]):
+        self.menus = persistent.list.PersistentList(menus)
+
+    def add_menu(self, food):
+        self.menus.append(food)
+
+    def delete_menu(self, food):
+        self.menus.remove(food)
+
+    def edit_menu(self, detail, amount=0):
+        pass
+
+
 class Table(persistent.Persistent):
-    def __init__(self, customers):
-        self.customers = persistent.list.PersistentList()
+    def __init__(self, customers=[]):
+        self.customers = persistent.list.PersistentList(customers)
 
     def add_customers(self, customer):
         self.customers.append(customer)
@@ -102,27 +99,24 @@ class Statistic(persistent.Persistent):
 class Food(ABC):
     def __init__(self, name, price, description, cost, ingredients=[]):
         self.name = name
-        self.ingredients = ingredients
         self.price = price
         self.description = description
         self.cost = cost
-
-    def __str__(self):
-        return self.name
+        self.ingredients = persistent.list.PersistentList(ingredients)
 
 
 class MainDish(Food, persistent.Persistent):
     def __init__(self, name, price, description, cost, type, ingredients=[]):
-        Food.__init__(self, name, ingredients, price, description, cost)
+        Food.__init__(self, name, price, description, cost, ingredients)
         self.type = type
 
 
 class Drink(Food, persistent.Persistent):
     def __init__(self, name, ingredients, price, description, cost, sweetness):
-        Food.__init__(self, name, ingredients, price, description, cost, sweetness)
+        Food.__init__(self, name, price, description, cost, ingredients)
         self.sweetness = sweetness
 
 
 class Dessert(Food, persistent.Persistent):
     def __init__(self, name, ingredients, price, description, cost):
-        Food.__init__(self, name, ingredients, price, description, cost)
+        Food.__init__(self, name, price, description, cost, ingredients)
