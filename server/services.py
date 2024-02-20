@@ -22,6 +22,24 @@ def create_access_token(username: str):
 
 
 # ------------------ user ------------------------
+async def get_user(username: str):
+    try:
+        user = connection.root.users.get(username)
+        if user:
+            return {"username": user.username, "password": user.password}
+        else:
+            raise ValueError(f"User '{username}' not found")
+        
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+        
+        
 async def get_users():
     try:
         users = []
@@ -56,6 +74,25 @@ async def create_user(username: str, password: str):
         )
 
 
+async def delete_user(username: str):
+    try:
+        if username in connection.root.users:
+            del connection.root.users[username]
+            connection.transaction_manager.commit()
+            return {"message": f"User '{username}' deleted successfully"}
+        else:
+            raise ValueError(f"User '{username}' not found")
+            
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
 async def login_user(username: str, password: str):
     if username in connection.root.users:
         user = connection.root.users[username]
@@ -69,6 +106,24 @@ async def login_user(username: str, password: str):
 
 
 # ------------------ admin ------------------------
+async def get_admin(username: str):
+    try:
+        admin = connection.root.admins.get(username)
+        if admin:
+            return {"username": admin.username, "password": admin.password}
+        else:
+            raise ValueError(f"Admin '{username}' not found")
+        
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+        
+        
 async def get_admins():
     try:
         admins = []
@@ -100,6 +155,25 @@ async def create_admin(username: str, password: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create admin",
+        )
+
+
+async def delete_admin(username: str):
+    try:
+        if username in connection.root.admins:
+            del connection.root.admins[username]
+            connection.transaction_manager.commit()
+            return {"message": f"Admin '{username}' deleted successfully"}
+        else:
+            raise ValueError(f"Admin '{username}' not found")
+            
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
         )
 
 

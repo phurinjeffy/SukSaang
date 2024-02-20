@@ -7,6 +7,11 @@ router = APIRouter()
 
 
 # ------------------ user ------------------
+@router.get("/users/{username}")
+async def get_user(username: str):
+    return await _services.get_user(username)
+
+
 @router.get("/users/")
 async def get_users():
     return await _services.get_users()
@@ -17,12 +22,22 @@ async def create_user(username: str = Body(...), password: str = Body(...)):
     return await _services.create_user(username, password)
 
 
+@router.delete("/users/{username}")
+async def delete_user(username: str):
+    return await _services.delete_user(username)
+
+
 @router.post("/login/")
 async def login_user(username: str = Body(...), password: str = Body(...)):
     return await _services.login_user(username, password)
 
 
 # ------------------ admin ------------------
+@router.get("/admin/{username}")
+async def get_admin(username: str):
+    return await _services.get_admin(username)
+
+
 @router.get("/admin/")
 async def get_admins():
     return await _services.get_admins()
@@ -31,6 +46,11 @@ async def get_admins():
 @router.post("/admin/register/")
 async def create_admin(username: str = Body(...), password: str = Body(...)):
     return await _services.create_admin(username, password)
+
+
+@router.delete("/admin/{username}")
+async def delete_admin(username: str):
+    return await _services.delete_admin(username)
 
 
 @router.post("/admin/login/")
