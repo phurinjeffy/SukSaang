@@ -239,10 +239,10 @@ async def add_menu(
 
 
 # ------------------ user order ------------------------
-async def get_orders(user: str):
+async def get_orders(username: str):
     try:
-        if user in connection.root.users:
-            user_orders = connection.root.users[user].orders
+        if username in connection.root.users:
+            user_orders = connection.root.users[username].orders
             order_names = [food.name for food in user_orders]
             return {"orders": order_names}
         else:
@@ -255,14 +255,14 @@ async def get_orders(user: str):
         )
 
 
-async def add_order(user: str, food_name: str):
+async def add_order(username: str, food_name: str):
     try:
         if food_name in connection.root.menus:
             food = connection.root.menus[food_name]
         else:
             return {"message": "The menu doesn't have this food"}
-        if user in connection.root.users:
-            connection.root.users[user].orders.append(food)
+        if username in connection.root.users:
+            connection.root.users[username].orders.append(food)
             return {"message": "Order added successfully"}
     except Exception as e:
         raise HTTPException(
@@ -271,10 +271,10 @@ async def add_order(user: str, food_name: str):
         )
 
 
-async def delete_order(user: str, food_name: str):
+async def delete_order(username: str, food_name: str):
     try:
-        if user in connection.root.users:
-            user_obj = connection.root.users[user]
+        if username in connection.root.users:
+            user_obj = connection.root.users[username]
             for food in user_obj.orders:
                 if food.name == food_name:
                     user_obj.orders.remove(food)
