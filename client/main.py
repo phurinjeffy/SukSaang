@@ -89,26 +89,110 @@ class NotFound(AbstractWidget):
         self.element.appendChild(self.text)
 
 
+class Register(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+
+    def redirect_to_login(self, event):
+        js.window.location.href = "/login"
+
+    def register_click(self, event):
+        username = self.username_input.value
+        password = self.password_input.value
+
+        url = "http://localhost:8000/users"
+        data = {"username": username, "password": password}
+        headers = {
+            "Content-Type": "application/json",
+        }
+
+        response = requests.post(url, json=data, headers=headers)
+
+        if response.status_code == 200:
+            print("Register successful!")
+            js.window.location.href = "/login"
+        else:
+            print("Error:", response.text)
+
+    def drawWidget(self):
+        self.register = document.createElement("div")
+        self.register.className = (
+            "flex flex-col justify-center items-center w-screen gap-12 pt-10"
+        )
+
+        self.register_title = document.createElement("h3")
+        self.register_title.innerHTML = "Sign Up"
+        self.register_title.className = "text-4xl font-semibold font-medium text-white"
+        self.register.appendChild(self.register_title)
+
+        self.box = document.createElement("div")
+        self.box.className = "flex flex-col gap-6"
+
+        self.username_box = document.createElement("div")
+        self.username_header = document.createElement("p")
+        self.username_header.className = "text-base text-gray-300 font-light my-3"
+        self.username_header.innerHTML = "Username"
+        self.username_input = document.createElement("input")
+        self.username_input.type = "text"
+        self.username_input.className = (
+            "w-96 h-10 rounded-lg border border-gray-300 px-3"
+        )
+
+        self.password_box = document.createElement("div")
+        self.password_header = document.createElement("p")
+        self.password_header.className = "text-base text-gray-300 font-light my-3"
+        self.password_header.innerHTML = "Password"
+        self.password_input = document.createElement("input")
+        self.password_input.type = "password"
+        self.password_input.className = (
+            "w-96 h-10 rounded-lg border border-gray-300 px-3"
+        )
+
+        self.button_box = document.createElement("div")
+        self.button_register = document.createElement("button")
+        self.button_register.className = "w-96 h-16 bg-orange-500 shadow-md rounded-full text-white text-lg font-medium my-4"
+        self.button_register.innerHTML = "Register"
+        self.button_register.onclick = self.register_click
+
+        self.question_box = document.createElement("div")
+        self.question_box.className = "flex flex-row justify-center"
+        self.question_text = document.createElement("a")
+        self.question_text.className = "text-gray-400 cursor-pointer hover:underline"
+        self.question_text.innerHTML = "Already have an account?"
+        self.question_text.onclick = self.redirect_to_login
+
+        self.username_box.appendChild(self.username_header)
+        self.username_box.appendChild(self.username_input)
+        self.password_box.appendChild(self.password_header)
+        self.password_box.appendChild(self.password_input)
+        self.button_box.appendChild(self.button_register)
+        self.question_box.appendChild(self.question_text)
+
+        self.box.appendChild(self.username_box)
+        self.box.appendChild(self.password_box)
+        self.box.appendChild(self.button_box)
+        self.box.appendChild(self.question_box)
+        self.register.appendChild(self.box)
+        self.element.appendChild(self.register)
+
+
 class Login(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
 
     def redirect_to_register(self, event):
         js.window.location.href = "/register"
-        
+
     def login_click(self, event):
         username = self.username_input.value
         password = self.password_input.value
-        
+
         url = "http://localhost:8000/users/login"
-        data = {
-            "username": username,
-            "password": password
-        }
+        data = {"username": username, "password": password}
         headers = {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
         }
-        
+
         response = requests.post(url, json=data, headers=headers)
 
         if response.status_code == 200:
@@ -123,11 +207,11 @@ class Login(AbstractWidget):
                 print("Login failed:", message)
         else:
             print("Error:", response.text)
-            
+
     def drawWidget(self):
         self.login = document.createElement("div")
         self.login.className = (
-            "flex flex-col justify-center items-center w-screen gap-4 pt-10"
+            "flex flex-col justify-center items-center w-screen gap-12 pt-10"
         )
 
         self.login_title = document.createElement("h3")
@@ -167,7 +251,7 @@ class Login(AbstractWidget):
         self.question_box = document.createElement("div")
         self.question_box.className = "flex flex-row justify-center"
         self.question_text = document.createElement("a")
-        self.question_text.className = "text-gray-400 cursor-pointer"
+        self.question_text.className = "text-gray-400 cursor-pointer hover:underline"
         self.question_text.innerHTML = "Don't have an account?"
         self.question_text.onclick = self.redirect_to_register
 
@@ -192,7 +276,7 @@ class Home(AbstractWidget):
         self.restaurant_name = None
         self.username = None
         self.fetch_user_info()
-        
+
     def fetch_user_info(self):
         access_token = js.window.localStorage.getItem("access_token")
         if access_token:
@@ -212,7 +296,9 @@ class Home(AbstractWidget):
 
     def drawWidget(self):
         self.container = document.createElement("div")
-        self.container.className = "flex flex-col justify-center items-center gap-6 text-white"
+        self.container.className = (
+            "flex flex-col justify-center items-center gap-6 text-white"
+        )
         self.element.appendChild(self.container)
 
         self.logo = document.createElement("img")
@@ -224,7 +310,7 @@ class Home(AbstractWidget):
         self.name.innerHTML = f"{self.restaurant_name}"
         self.name.className = "text-2xl font-semibold"
         self.container.appendChild(self.name)
-        
+
         self.welcome_message = document.createElement("h3")
         self.welcome_message.innerHTML = f"Welcome, {self.username}"
         self.welcome_message.className = "text-lg font-base"
@@ -242,7 +328,7 @@ if __name__ == "__main__":
     elif location_path == "/login":
         content.drawWidget([Login("content")])
     elif location_path == "/register":
-        content.drawWidget([Login("content")])
+        content.drawWidget([Register("content")])
     elif location_path == "/home":
         content.drawWidget([Home("content")])
     else:
