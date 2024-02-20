@@ -8,6 +8,7 @@ class AbstractWidget(ABC):
     def __init__(self, element_id):
         self.element_id = element_id
         self._element = None
+        self.check_token()
 
     @property
     def element(self):
@@ -18,6 +19,20 @@ class AbstractWidget(ABC):
     @abstractmethod
     def drawWidget(self):
         pass
+    
+    def check_token(self):
+        access_token = js.window.localStorage.getItem("access_token")
+        if not access_token:
+            js.window.location.href = "/login"
+        else:
+            url = "http://localhost:8000/users/me"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+            }
+            response = requests.get(url, headers=headers)
+
+            if response.status_code != 200:
+                js.window.location.href = "/login"
 
 
 class Layout(AbstractWidget):
