@@ -22,7 +22,7 @@ class AbstractWidget(ABC):
 
     def check_token(self):
         location_path = js.window.location.pathname
-        if location_path in ["/login", "/register"]:
+        if location_path in ["/login", "/register", "/admin/login", "/admin/register"]:
             return
 
         access_token = js.window.localStorage.getItem("access_token")
@@ -57,8 +57,11 @@ class Welcome(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
 
-    def redirect_to_login(self, event):
+    def redirect_to_user_login(self, event):
         js.window.location.href = "/login"
+        
+    def redirect_to_admin_login(self, event):
+        js.window.location.href = "/admin/login"
 
     def drawWidget(self):
         self.container = document.createElement("div")
@@ -67,13 +70,13 @@ class Welcome(AbstractWidget):
         self.customer = document.createElement("div")
         self.customer.className = "flex justify-center uppercase p-10 bg-gray-700 w-[400px] text-white cursor-pointer"
         self.customer.innerHTML = "customer"
-        self.customer.onclick = self.redirect_to_login
+        self.customer.onclick = self.redirect_to_user_login
         self.container.appendChild(self.customer)
 
         self.admin = document.createElement("div")
         self.admin.className = "flex justify-center uppercase p-10 bg-gray-700 w-[400px] text-white cursor-pointer"
         self.admin.innerHTML = "admin"
-        self.admin.onclick = self.redirect_to_login
+        self.admin.onclick = self.redirect_to_admin_login
         self.container.appendChild(self.admin)
 
         self.element.appendChild(self.container)
@@ -119,7 +122,10 @@ class Register(AbstractWidget):
         username = self.username_input.value
         password = self.password_input.value
 
-        url = "http://localhost:8000/users"
+        if js.window.location.pathname == "/register":
+            url = "http://localhost:8000/users"
+        elif js.window.location.pathname == "/admin/register":
+            url = "http://localhost:8000/admins"
         data = {"username": username, "password": password}
         headers = {
             "Content-Type": "application/json",
@@ -206,7 +212,10 @@ class Login(AbstractWidget):
         username = self.username_input.value
         password = self.password_input.value
 
-        url = "http://localhost:8000/users/login"
+        if js.window.location.pathname == "/login":
+            url = "http://localhost:8000/users/login"
+        elif js.window.location.pathname == "/admin/login":
+            url = "http://localhost:8000/admins/login"
         data = {"username": username, "password": password}
         headers = {
             "Content-Type": "application/json",
@@ -370,9 +379,9 @@ if __name__ == "__main__":
     content = Layout("app")
     if location_path == "/":
         content.drawWidget([Welcome("content")])
-    elif location_path == "/login":
+    elif location_path in ["/login", "/admin/login"]:
         content.drawWidget([Login("content")])
-    elif location_path == "/register":
+    elif location_path in ["/register", "/admin/register"]:
         content.drawWidget([Register("content")])
     elif location_path == "/home":
         content.drawWidget([Home("content")])
