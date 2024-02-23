@@ -3,6 +3,7 @@ from pyscript import document
 import requests
 from abc import ABC, abstractmethod
 
+
 def check_token():
     location_path = js.window.location.pathname
     if location_path in ["/", "/login", "/register", "/admin_login", "/admin_register"]:
@@ -61,7 +62,7 @@ class Welcome(AbstractWidget):
 
     def redirect_to_user_login(self, event):
         js.window.location.href = "/login"
-        
+
     def redirect_to_admin_login(self, event):
         js.window.location.href = "/admin_login"
 
@@ -143,6 +144,7 @@ class Register(AbstractWidget):
             js.window.location.href = "/login"
         else:
             print("Error:", response.text)
+            self.error_message.innerHTML = response.text
 
     def drawWidget(self):
         self.register = document.createElement("div")
@@ -197,12 +199,16 @@ class Register(AbstractWidget):
         self.password_box.appendChild(self.password_input)
         self.button_box.appendChild(self.button_register)
         self.question_box.appendChild(self.question_text)
+        
+        self.error_message = document.createElement("p")
+        self.error_message.className = "text-red-500"
 
         self.box.appendChild(self.username_box)
         self.box.appendChild(self.password_box)
         self.box.appendChild(self.button_box)
         self.box.appendChild(self.question_box)
         self.register.appendChild(self.box)
+        self.register.appendChild(self.error_message)
         self.element.appendChild(self.register)
 
 
@@ -243,6 +249,7 @@ class Login(AbstractWidget):
                 print("Login failed:", message)
         else:
             print("Error:", response.text)
+            self.error_message.innerHTML = response.text
 
     def drawWidget(self):
         self.login = document.createElement("div")
@@ -298,11 +305,15 @@ class Login(AbstractWidget):
         self.button_box.appendChild(self.button_login)
         self.question_box.appendChild(self.question_text)
 
+        self.error_message = document.createElement("p")
+        self.error_message.className = "text-red-500"
+
         self.box.appendChild(self.username_box)
         self.box.appendChild(self.password_box)
         self.box.appendChild(self.button_box)
         self.box.appendChild(self.question_box)
         self.login.appendChild(self.box)
+        self.login.appendChild(self.error_message)
         self.element.appendChild(self.login)
 
 
