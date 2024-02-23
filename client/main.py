@@ -49,7 +49,15 @@ class Layout(AbstractWidget):
     def drawWidget(self, widgets):
         self.content = document.createElement("div")
         self.content.id = "content"
-        self.content.className = "pt-28 pb-12 min-h-screen h-full min-w-screen w-full bg-gradient-to-br from from-zinc-950 via-gray-800 to-gray-700"
+        self.content.className = "pt-28 pb-12 min-h-screen h-full min-w-screen w-full "
+        if js.window.location.pathname.startswith("/admin"):
+            self.content.className += (
+                "bg-gradient-to-br from-zinc-950 via-gray-800 to-gray-700"
+            )
+        else:
+            self.content.className += (
+                "bg-gradient-to-br from-zinc-950 via-gray-600 to-gray-500"
+            )
         self.element.appendChild(self.content)
 
         for widget in widgets:
