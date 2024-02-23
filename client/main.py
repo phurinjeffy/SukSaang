@@ -12,13 +12,15 @@ def check_token():
     if not access_token:
         js.window.location.href = "/login"
     else:
-        url = "http://localhost:8000/users/me"
+        user_url = "http://localhost:8000/users/me"
+        admin_url = "http://localhost:8000/admins/me"
         headers = {
             "Authorization": f"Bearer {access_token}",
         }
-        response = requests.get(url, headers=headers)
+        user_response = requests.get(user_url, headers=headers)
+        admin_response = requests.get(admin_url, headers=headers)
 
-        if response.status_code != 200:
+        if user_response.status_code != 200 and admin_response.status_code != 200:
             js.window.location.href = "/login"
 
 

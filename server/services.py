@@ -131,6 +131,30 @@ async def login_user(username: str, password: str):
 
 
 # ------------------ admin ------------------------
+async def get_current_admin(token: str = Depends(oauth2_scheme)) -> Admin:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            )
+        if username not in connection.root.admins:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Admin not found"
+            )
+        admin_data = connection.root.admins[username]
+        return admin_data
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
+        )
+    except jwt.DecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not decode token"
+        )
+
+
 async def get_admin(username: str):
     try:
         admin = connection.root.admins.get(username)

@@ -9,7 +9,7 @@ router = APIRouter()
 
 # ------------------ user ------------------
 @router.get("/users/me", response_model=UserBase)
-async def read_users_me(current_user: User = Depends(_services.get_current_user)):
+async def get_current_user(current_user: User = Depends(_services.get_current_user)):
     return current_user
 
 
@@ -39,6 +39,11 @@ async def login_user(username: str = Body(...), password: str = Body(...)):
 
 
 # ------------------ admin ------------------
+@router.get("/admins/me", response_model=AdminBase)
+async def get_current_admin(current_admin: Admin = Depends(_services.get_current_admin)):
+    return current_admin
+
+
 @router.get("/admins/{username}")
 async def get_admin(username: str):
     return await _services.get_admin(username)
