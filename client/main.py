@@ -22,7 +22,7 @@ class AbstractWidget(ABC):
 
     def check_token(self):
         location_path = js.window.location.pathname
-        if location_path in ["/login", "/register", "/admin/login", "/admin/register"]:
+        if location_path in ["/", "/login", "/register", "/admin_login", "/admin_register"]:
             return
 
         access_token = js.window.localStorage.getItem("access_token")
@@ -61,7 +61,7 @@ class Welcome(AbstractWidget):
         js.window.location.href = "/login"
         
     def redirect_to_admin_login(self, event):
-        js.window.location.href = "/admin/login"
+        js.window.location.href = "/admin_login"
 
     def drawWidget(self):
         self.container = document.createElement("div")
@@ -124,7 +124,7 @@ class Register(AbstractWidget):
 
         if js.window.location.pathname == "/register":
             url = "http://localhost:8000/users"
-        elif js.window.location.pathname == "/admin/register":
+        elif js.window.location.pathname == "/admin_register":
             url = "http://localhost:8000/admins"
         data = {"username": username, "password": password}
         headers = {
@@ -214,7 +214,7 @@ class Login(AbstractWidget):
 
         if js.window.location.pathname == "/login":
             url = "http://localhost:8000/users/login"
-        elif js.window.location.pathname == "/admin/login":
+        elif js.window.location.pathname == "/admin_login":
             url = "http://localhost:8000/admins/login"
         data = {"username": username, "password": password}
         headers = {
@@ -379,9 +379,9 @@ if __name__ == "__main__":
     content = Layout("app")
     if location_path == "/":
         content.drawWidget([Welcome("content")])
-    elif location_path in ["/login", "/admin/login"]:
+    elif location_path in ["/login", "/admin_login"]:
         content.drawWidget([Login("content")])
-    elif location_path in ["/register", "/admin/register"]:
+    elif location_path in ["/register", "/admin_register"]:
         content.drawWidget([Register("content")])
     elif location_path == "/home":
         content.drawWidget([Home("content")])
