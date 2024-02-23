@@ -386,18 +386,25 @@ async def add_table(table_num: str):
 
 async def add_table_customer(table_num: str, user: str):
     try:
-        if user in connection.root.users and table_num in connection.root.tables:
-            connection.root.tables[table_num].customers.append(
-                connection.root.users[user]
-            )
-            connection.transaction_manager.commit()
-            return {
-                "message": f"User '{user}' added to table '{table_num}' successfully"
-            }
-        else:
+        if user not in connection.root.users:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User or table not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
+        if table_num not in connection.root.tables:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Table not found"
+            )
+
+        table = connection.root.tables[table_num]
+        if any(user == customer.username for customer in table.customers):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"User '{user}' is already at table '{table_num}'",
+            )
+        table.customers.append(connection.root.users[user])
+        connection.transaction_manager.commit()
+
+        return {"message": f"User '{user}' added to table '{table_num}' successfully"}
     except HTTPException:
         raise
     except Exception as e:
