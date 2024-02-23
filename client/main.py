@@ -1,3 +1,4 @@
+import os
 import js
 from pyscript import document
 import requests
@@ -49,7 +50,7 @@ class Layout(AbstractWidget):
     def drawWidget(self, widgets):
         self.content = document.createElement("div")
         self.content.id = "content"
-        self.content.className = "pt-28 pb-12 min-h-screen h-full min-w-screen w-full "
+        self.content.className = "pt-28 pb-4 min-h-screen h-full min-w-fit w-full "
         if js.window.location.pathname.startswith("/admin"):
             self.content.className += (
                 "bg-gradient-to-br from-zinc-950 via-gray-800 to-gray-700"
@@ -412,6 +413,7 @@ class Menu(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
         self.menu = None
         self.fetch_menu_info()
+        self.categories = ["rice", "noodle", "pasta", "steak", "soup", "sides"]
 
     def fetch_menu_info(self):
         url = "http://localhost:8000/menus"
@@ -425,17 +427,53 @@ class Menu(AbstractWidget):
         self.menu_container = ""
         for item in self.menu:
             self.menu_container += f"""
-                <div class="py-6">
-                    <h3>{item['name']}</h3>
-                    <p>Price: ${item['price']}</p>
-                    <p>Description: {item['description']}</p>
+                <div class="flex flex-col justify-center items-center hover:scale-105 duration-300">
+                    <img class="w-36 h-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                    <h3 class="capitalize text-lg">{item['name']}</h3>
+                    <p class="text-base">฿ {item['price']}</p>
+                </div>
+            """
+
+        svg_images = ""
+        for category in self.categories:
+            svg_images += f"""
+                <div class="flex flex-col justify-center items-center hover:scale-105 duration-300">
+                    <img src="/category/{category}.svg" class="w-24 h-24 mb-1" />
+                    <p class="capitalize text-base">{category}</p>
                 </div>
             """
 
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="text-white">
-                <div class="">{self.menu_container}</div>
+            <div class="flex flex-col justify-center items-center text-white">
+                <div class="w-full">
+                    <div class="text-2xl font-extralight bg-zinc-500 p-6">
+                        Categories
+                    </div>
+                    <div class="flex flex-row gap-8 bg-zinc-300 p-8">
+                        {svg_images}
+                    </div>
+                </div>
+                <div class="w-full">
+                    <div class="text-2xl font-extralight bg-zinc-500 p-6">
+                        Recommended
+                    </div>
+                    <div class="flex flex-row gap-8 bg-zinc-300 p-10">
+                        {self.menu_container}
+                    </div>
+                </div>
+                <div class="w-full">
+                    <div class="text-2xl font-extralight bg-zinc-500 p-6">
+                        Most Popular
+                    </div>
+                    <div class="flex flex-row gap-8 bg-zinc-300 p-10">
+                        {self.menu_container}
+                    </div>
+                </div>
+                <div class="fixed bottom-0 right-0 rounded-lg bg-stone-700 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
+                    <img class="w-10 h-10" src="/cart.svg"/>
+                    <p class="">Total Amount: ฿ {0}</p>
+                </div>
             </div>
         """
         self.element.appendChild(content)
