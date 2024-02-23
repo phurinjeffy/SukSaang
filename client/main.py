@@ -3,12 +3,30 @@ from pyscript import document
 import requests
 from abc import ABC, abstractmethod
 
+def check_token():
+    location_path = js.window.location.pathname
+    if location_path in ["/", "/login", "/register", "/admin_login", "/admin_register"]:
+        return
+
+    access_token = js.window.localStorage.getItem("access_token")
+    if not access_token:
+        js.window.location.href = "/login"
+    else:
+        url = "http://localhost:8000/users/me"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+        response = requests.get(url, headers=headers)
+
+        if response.status_code != 200:
+            js.window.location.href = "/login"
+
 
 class AbstractWidget(ABC):
     def __init__(self, element_id):
         self.element_id = element_id
         self._element = None
-        self.check_token()
+        check_token()
 
     @property
     def element(self):
@@ -19,24 +37,6 @@ class AbstractWidget(ABC):
     @abstractmethod
     def drawWidget(self):
         pass
-
-    def check_token(self):
-        location_path = js.window.location.pathname
-        if location_path in ["/", "/login", "/register", "/admin_login", "/admin_register"]:
-            return
-
-        access_token = js.window.localStorage.getItem("access_token")
-        if not access_token:
-            js.window.location.href = "/login"
-        else:
-            url = "http://localhost:8000/users/me"
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-            }
-            response = requests.get(url, headers=headers)
-
-            if response.status_code != 200:
-                js.window.location.href = "/login"
 
 
 class Layout(AbstractWidget):
@@ -116,7 +116,10 @@ class Register(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
 
     def redirect_to_login(self, event):
-        js.window.location.href = "/login"
+        if js.window.location.pathname == "/register":
+            js.window.location.href = "/login"
+        elif js.window.location.pathname == "/admin_register":
+            js.window.location.href = "/admin_login"
 
     def register_click(self, event):
         username = self.username_input.value
@@ -206,7 +209,10 @@ class Login(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
 
     def redirect_to_register(self, event):
-        js.window.location.href = "/register"
+        if js.window.location.pathname == "/login":
+            js.window.location.href = "/register"
+        elif js.window.location.pathname == "/admin_login":
+            js.window.location.href = "/admin_register"
 
     def login_click(self, event):
         username = self.username_input.value
