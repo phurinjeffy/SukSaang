@@ -337,6 +337,9 @@ class Home(AbstractWidget):
         self.username = None
         self.fetch_user_info()
 
+    def redirect_to_menu(self, event):
+        js.window.location.href = "/menu"
+
     def fetch_user_info(self):
         access_token = js.window.localStorage.getItem("access_token")
         if access_token:
@@ -366,12 +369,12 @@ class Home(AbstractWidget):
         self.container.appendChild(self.top)
 
         self.points = document.createElement("div")
-        self.points.className = "bg-zinc-800 rounded-full w-10"
+        self.points.className = "cursor-pointer w-14"
         self.points.innerHTML = "POINTS"
         self.top.appendChild(self.points)
 
         self.menu = document.createElement("div")
-        self.menu.className = "bg-zinc-800 rounded-full w-10"
+        self.menu.className = "cursor-pointer w-14"
         self.menu.innerHTML = "MENU"
         self.top.appendChild(self.menu)
 
@@ -391,12 +394,13 @@ class Home(AbstractWidget):
         self.box.className = "flex flex-row gap-4"
 
         self.order_box = document.createElement("div")
-        self.order_box.className = "rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center"
+        self.order_box.className = "rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center cursor-pointer"
         self.order_box.innerHTML = f"Order"
+        self.order_box.onclick = self.redirect_to_menu
         self.box.appendChild(self.order_box)
 
         self.feedback_box = document.createElement("div")
-        self.feedback_box.className = "rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center text-center"
+        self.feedback_box.className = "rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center text-center cursor-pointer"
         self.feedback_box.innerHTML = f"Leave Feedback"
         self.box.appendChild(self.feedback_box)
 
@@ -418,19 +422,23 @@ class Menu(AbstractWidget):
             print("Error fetching menu:", response.text)
 
     def drawWidget(self):
-        if self.menu:
-            self.menu_container = document.createElement("div")
-            self.menu_container.className = "text-white"
-            for item in self.menu:
-                menu_item = document.createElement("div")
-                menu_item.className = "menu-item"
-                menu_item.innerHTML = f"<h3>{item['name']}</h3><p>Price: ${item['price']}</p><p>Description: {item['description']}</p>"
-                self.menu_container.appendChild(menu_item)
-            self.element.appendChild(self.menu_container)
-        else:
-            error_message = document.createElement("p")
-            error_message.innerHTML = "No menu available"
-            self.element.appendChild(error_message)
+        self.menu_container = ""
+        for item in self.menu:
+            self.menu_container += f"""
+                <div class="py-6">
+                    <h3>{item['name']}</h3>
+                    <p>Price: ${item['price']}</p>
+                    <p>Description: {item['description']}</p>
+                </div>
+            """
+
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="text-white">
+                <div class="">{self.menu_container}</div>
+            </div>
+        """
+        self.element.appendChild(content)
 
 
 if __name__ == "__main__":
