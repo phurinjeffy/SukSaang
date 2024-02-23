@@ -390,6 +390,36 @@ class Home(AbstractWidget):
         self.container.appendChild(self.box)
 
 
+class Menu(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+        self.menu = None
+        self.fetch_menu_info()
+
+    def fetch_menu_info(self):
+        url = "http://localhost:8000/menus"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.menu = response.json()["menus"]
+        else:
+            print("Error fetching menu:", response.text)
+
+    def drawWidget(self):
+        if self.menu:
+            self.menu_container = document.createElement("div")
+            self.menu_container.className = "text-white"
+            for item in self.menu:
+                menu_item = document.createElement("div")
+                menu_item.className = "menu-item"
+                menu_item.innerHTML = f"<h3>{item['name']}</h3><p>Price: ${item['price']}</p><p>Description: {item['description']}</p>"
+                self.menu_container.appendChild(menu_item)
+            self.element.appendChild(self.menu_container)
+        else:
+            error_message = document.createElement("p")
+            error_message.innerHTML = "No menu available"
+            self.element.appendChild(error_message)
+        
+
 if __name__ == "__main__":
     location_path = js.window.location.pathname
 
@@ -404,5 +434,7 @@ if __name__ == "__main__":
         content.drawWidget([Register("content")])
     elif location_path == "/home":
         content.drawWidget([Home("content")])
+    elif location_path == "/menu":
+        content.drawWidget([Menu("content")])
     else:
         content.drawWidget([NotFound("content")])
