@@ -1,63 +1,76 @@
-from fastapi import APIRouter, HTTPException, Body, Header, status
+from fastapi import APIRouter, HTTPException, Body, Depends
 from database import *
 from models import *
+from schemas import *
 import services as _services
 
 router = APIRouter()
 
 
 # ------------------ user ------------------
-@router.get("/users/")
+@router.get("/users/me", response_model=UserBase)
+async def read_users_me(current_user: User = Depends(_services.get_current_user)):
+    return current_user
+
+
+@router.get("/users/{username}")
+async def get_user(username: str):
+    return await _services.get_user(username)
+
+
+@router.get("/users")
 async def get_users():
     return await _services.get_users()
 
-@router.get("/user/")
-async def get_user(authorization: str = Header(None)):
-    access_token = authorization.split(" ")[1] if authorization else None
-    if access_token:
-        user_info = await _services.get_user(access_token)
-        if user_info:
-            return user_info
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
-@router.post("/register/")
+@router.post("/users")
 async def create_user(username: str = Body(...), password: str = Body(...)):
     return await _services.create_user(username, password)
 
 
-@router.post("/login/")
+@router.delete("/users/{username}")
+async def delete_user(username: str):
+    return await _services.delete_user(username)
+
+
+@router.post("/users/login")
 async def login_user(username: str = Body(...), password: str = Body(...)):
     return await _services.login_user(username, password)
 
 
 # ------------------ admin ------------------
-@router.get("/admin/")
+@router.get("/admins/{username}")
+async def get_admin(username: str):
+    return await _services.get_admin(username)
+
+
+@router.get("/admins")
 async def get_admins():
     return await _services.get_admins()
 
 
-
-@router.post("/admin/register/")
+@router.post("/admins")
 async def create_admin(username: str = Body(...), password: str = Body(...)):
     return await _services.create_admin(username, password)
 
 
+@router.delete("/admins/{username}")
+async def delete_admin(username: str):
+    return await _services.delete_admin(username)
 
-@router.post("/admin/login/")
+
+@router.post("/admins/login")
 async def login_admin(username: str = Body(...), password: str = Body(...)):
     return await _services.login_admin(username, password)
 
 
 # ------------------ menu ------------------
-@router.get("/admin/menus/")
+@router.get("/menus")
 async def get_menus():
     return await _services.get_menus()
 
 
-@router.post("/menu")
+@router.post("/menus")
 async def add_menu(
     name: str = Body(...),
     price: int = Body(...),
@@ -68,13 +81,18 @@ async def add_menu(
 ):
     return await _services.add_menu(name, price, description, cost, type, ingredients)
 
-@router.post("/order/")
-async def add_food(
-    name: str = Body(...),
-    price: int = Body(...),
-    description: str = Body(...),
-    cost: int = Body(...),
-    type: str = Body(...),
-    ingredients: list = Body(...),
-):
-    pass
+
+# ------------------ order ------------------
+@router.get("/users/{username}/orders")
+async def get_orders(username: str):
+    return await _services.get_orders(username)
+
+
+@router.post("/users/{username}/orders")
+async def add_order(username: str, food_name: str):
+    return await _services.add_order(username, food_name)
+
+
+@router.delete("/users/{username}/orders/{food_name}")
+async def delete_order(username: str, food_name: str):
+    return await _services.delete_order(username, food_name)
