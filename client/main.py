@@ -424,22 +424,22 @@ class Menu(AbstractWidget):
             print("Error fetching menu:", response.text)
 
     def drawWidget(self):
-        self.menu_container = ""
-        for item in self.menu:
-            self.menu_container += f"""
-                <div class="flex flex-col justify-center items-center hover:scale-105 duration-300">
-                    <img class="w-36 h-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
-                    <h3 class="capitalize text-lg">{item['name']}</h3>
-                    <p class="text-base">฿ {item['price']}</p>
-                </div>
-            """
-
         svg_images = ""
         for category in self.categories:
             svg_images += f"""
                 <div class="flex flex-col justify-center items-center hover:scale-105 duration-300">
-                    <img src="/category/{category}.svg" class="w-24 h-24 mb-1" />
+                    <img class="w-24 h-24 m-1" src="/category/{category}.svg" />
                     <p class="capitalize text-base">{category}</p>
+                </div>
+            """
+
+        self.menu_container = ""
+        for item in self.menu:
+            self.menu_container += f"""
+                <div class="flex flex-col justify-center items-center hover:scale-105 duration-300">
+                    <img class="w-36 w-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                    <h3 class="capitalize text-base sm:text-lg">{item['name']}</h3>
+                    <p class="text-sm">฿ {item['price']}</p>
                 </div>
             """
 
@@ -472,7 +472,7 @@ class Menu(AbstractWidget):
                 </div>
                 <div class="fixed bottom-0 right-0 rounded-lg bg-stone-700 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
                     <img class="w-10 h-10" src="/cart.svg"/>
-                    <p class="">Total Amount: ฿ {0}</p>
+                    <p class="hidden sm:block">Total Amount: ฿ {0}</p>
                 </div>
             </div>
         """
