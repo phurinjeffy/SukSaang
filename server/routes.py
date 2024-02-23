@@ -77,14 +77,16 @@ async def get_menus():
 
 @router.post("/menus")
 async def add_menu(
+    category: str = Body(...),
     name: str = Body(...),
     price: int = Body(...),
     description: str = Body(...),
-    cost: int = Body(...),
     type: str = Body(...),
+    cost: int = Body(...),
     ingredients: list = Body(...),
+    sweetness: int = Body(...)
 ):
-    return await _services.add_menu(name, price, description, cost, type, ingredients)
+    return await _services.add_menu(category, name, price, description, type, cost, ingredients, sweetness)
 
 
 @router.delete("/menus/{food_name}")

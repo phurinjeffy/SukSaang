@@ -98,26 +98,26 @@ class Statistic(persistent.Persistent):
 
 
 class Food(ABC):
-    def __init__(self, name, price, description, cost, ingredients=[]):
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
         self.name = name
         self.price = price
         self.description = description
+        self.type = type
         self.cost = cost
         self.ingredients = persistent.list.PersistentList(ingredients)
 
 
 class MainDish(Food, persistent.Persistent):
-    def __init__(self, name, price, description, cost, type, ingredients=[]):
-        Food.__init__(self, name, price, description, cost, ingredients)
-        self.type = type
-
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
+        Food.__init__(self, name, price, description, type, cost, ingredients)
+        
 
 class Drink(Food, persistent.Persistent):
-    def __init__(self, name, ingredients, price, description, cost, sweetness):
-        Food.__init__(self, name, price, description, cost, ingredients)
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], sweetness=1):
+        Food.__init__(self, name, price, description, type, cost, ingredients)
         self.sweetness = sweetness
 
 
 class Dessert(Food, persistent.Persistent):
-    def __init__(self, name, ingredients, price, description, cost):
-        Food.__init__(self, name, price, description, cost, ingredients)
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
+        Food.__init__(self, name, price, description, type, cost, ingredients)

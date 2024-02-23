@@ -245,6 +245,7 @@ async def get_menus():
                     "name": menu.name,
                     "price": menu.price,
                     "description": menu.description,
+                    "type": menu.type,
                     "cost": menu.cost,
                     "ingredients": menu.ingredients,
                 }
@@ -257,20 +258,27 @@ async def get_menus():
 
 
 async def add_menu(
+    category: str,
     name: str,
     price: int,
     description: str,
-    cost: int,
     type: str,
+    cost: int,
     ingredients: list,
+    sweetness: int
 ):
     try:
         if name in connection.root.menus:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Menu already exists"
             )
-        dish = MainDish(name, price, description, cost, type, ingredients)
-        connection.root.menus[name] = dish
+        if category.upper() == "DRINK":
+            menu = Drink(name, price, description, type, cost, ingredients, sweetness)
+        elif category.upper() == "DESSERT":
+            menu = Dessert(name, price, description, type, cost, ingredients)
+        else:
+            menu = MainDish(name, price, description, type, cost, ingredients)
+        connection.root.menus[name] = menu
         connection.transaction_manager.commit()
         return {"message": "Menus registered successfully"}
     except HTTPException:
