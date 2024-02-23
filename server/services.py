@@ -33,6 +33,27 @@ async def get_users():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
+async def retrieve_user_info(access_token: str):
+    try:
+        user = connection.root.users.get(access_token=access_token)
+        if user:
+            return {
+                "username": user.username,
+                "email": user.email,
+                # Include other user information you want to retrieve
+            }
+        else:
+            return None  # Return None if user is not found
+    except Exception as e:
+        raise e  # You can handle the exception as per your application's requirements
+    
+async def get_user(access_token: str):
+    try:
+        # Assuming you have a function to retrieve user info based on access token
+        user_info = await retrieve_user_info(access_token)
+        return user_info
+    except Exception as e:
+        raise e 
 
 async def create_user(username: str, password: str):
     try:
@@ -114,36 +135,66 @@ async def login_admin(username: str, password: str):
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password"
     )
 
-# ------------------------ menu Admin -----------------------
 
-async def add_memu_admin(
-    name: str = Body(...),
-    price: int = Body(...),
-    description: str = Body(...),
-    cost: int = Body(...),
-    type: str = Body(...),
-    ingredients: list = Body(...),
+# ------------------------ menu Admin -----------------------
+async def get_menus():
+    try:
+        menus = []
+        for name, menu in connection.root.menus.items():
+            menus.append(
+                {
+                    "name": menu.name,
+                    "price": menu.price,
+                    "description": menu.description,
+                    "cost": menu.cost,
+                    "ingredients": menu.ingredients,
+                }
+            )
+        return {"menus": menus}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+async def add_menu(
+    name: str,
+    price: int,
+    description: str,
+    cost: int,
+    type: str,
+    ingredients: list,
 ):
     try:
         if name in connection.root.menus:
-            raise HTTPException(status_code=400, detail="Menu already exists")
+            raise ValueError("Menu already exists")
+
         dish = MainDish(name, price, description, cost, type, ingredients)
         connection.root.menus[name] = dish
         connection.transaction_manager.commit()
+
         return {"message": "Menus registered successfully"}
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create menu",
+        )
+
 
 # ------------------------ order User -----------------------
 
 async def add_order_user( 
-    name: str = Body(...),
-    price: int = Body(...),
-    description: str = Body(...),
-    cost: int = Body(...),
-    type: str = Body(...),
-    ingredients: list = Body(...),
-    sweetness: str = Body(...)
+    name: str,
+    price: int,
+    description: str,
+    cost: int,
+    type: str,
+    ingredients: list,
+    sweetness: str
 ):
     try:
         if name in connection.root.orders:

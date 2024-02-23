@@ -63,6 +63,7 @@ class Welcome(AbstractWidget):
 class Login(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        self.access_token = None
 
     def redirect_to_register(self, event):
         js.window.location.href = "/register"
@@ -82,9 +83,9 @@ class Login(AbstractWidget):
         if response.status_code == 200:
             data = response.json()
             if "access_token" in data:
-                access_token = data["access_token"]
+                self.access_token = data["access_token"]
                 print("Login successful!")
-                js.window.localStorage.setItem("access_token", access_token)  # Store token in local storage
+                js.window.localStorage.setItem("access_token", self.access_token)  # Store token in local storage
                 js.window.location.href = "/home"
             else:
                 message = data.get("detail", "Unknown error")
@@ -187,9 +188,34 @@ class Home(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.restaurant_name = "Restaurant Name"
-        self.username = "John Doe"
+        self.username = "None"
+    
+    def fetch_user_info(self):
+        # Fetch user information using the access token
+        access_token = js.window.localStorage.getItem("access_token")
+        if access_token:
+            url = "http://localhost:8000/user/"  # Replace with the actual endpoint to fetch user info
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+            }
+            response = requests.get(url, headers=headers)
+
+            if response.status_code == 200:
+                data = response.json()
+                self.username = data.get("username", "Guest")  # Get username from response
+            else:
+                print("Error fetching user info:", response.text)
 
     def drawWidget(self):
+        self.fetch_user_info()
+
+        self.container = document.createElement("div")
+        self.container.className = (
+            "flex flex-col justify-center items-center gap-6 text-white"
+        )
+        self.element.appendChild(self.container)
+
+
         self.container = document.createElement("div")
         self.container.className = (
             "flex flex-col justify-center items-center gap-6 text-white"
@@ -205,11 +231,11 @@ class Home(AbstractWidget):
         self.name.innerHTML = f"{self.restaurant_name}"
         self.name.className = "text-2xl font-semibold"
         self.container.appendChild(self.name)
-
-        self.welcome_message = document.createElement("h3")
-        self.welcome_message.innerHTML = f"Welcome, {self.username}"
-        self.welcome_message.className = "text-lg font-base"
-        self.container.appendChild(self.welcome_message)
+        if self.username:
+            self.welcome_message = document.createElement("h3")
+            self.welcome_message.innerHTML = f"Welcome, {self.username}"
+            self.welcome_message.className = "text-lg font-base"
+            self.container.appendChild(self.welcome_message)
 
 
 if __name__ == "__main__":

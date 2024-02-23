@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Header, status
 from database import *
 from models import *
 import services as _services
@@ -11,6 +11,17 @@ router = APIRouter()
 async def get_users():
     return await _services.get_users()
 
+@router.get("/user/")
+async def get_user(authorization: str = Header(None)):
+    access_token = authorization.split(" ")[1] if authorization else None
+    if access_token:
+        user_info = await _services.get_user(access_token)
+        if user_info:
+            return user_info
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 @router.post("/register/")
 async def create_user(username: str = Body(...), password: str = Body(...)):
@@ -43,21 +54,7 @@ async def login_admin(username: str = Body(...), password: str = Body(...)):
 # ------------------ menu ------------------
 @router.get("/admin/menus/")
 async def get_menus():
-    try:
-        menus = []
-        for name, menu in root.menus.items():
-            menus.append(
-                {
-                    "name": menu.name,
-                    "price": menu.price,
-                    "description": menu.description,
-                    "cost": menu.cost,
-                    "ingredients": menu.ingredients,
-                }
-            )
-        return {"menus": menus}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return await _services.get_menus()
 
 
 @router.post("/menu")
@@ -69,15 +66,7 @@ async def add_menu(
     type: str = Body(...),
     ingredients: list = Body(...),
 ):
-    return await add_memu_admin(
-        name=name,
-        price=price,
-        description=description,
-        cost=cost,
-        type=type,
-        ingredients=ingredients,
-    )
-
+    return await _services.add_menu(name, price, description, cost, type, ingredients)
 
 @router.post("/order/")
 async def add_food(
