@@ -78,7 +78,8 @@ class Menu(persistent.Persistent):
 
 
 class Table(persistent.Persistent):
-    def __init__(self, customers=[]):
+    def __init__(self, tnumber, customers=[]):
+        self.tnumber = tnumber
         self.customers = persistent.list.PersistentList(customers)
 
     def add_customers(self, customer):

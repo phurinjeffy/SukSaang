@@ -101,3 +101,32 @@ async def add_order(username: str, food_name: str):
 @router.delete("/users/{username}/orders/{food_name}")
 async def delete_order(username: str, food_name: str):
     return await _services.delete_order(username, food_name)
+
+
+#------------------Table Things----------------------
+
+@router.get("/tables/")
+async def get_tables():
+    return await _services.get_tables()
+
+@router.post("/tables/")
+async def add_table(number : int):
+    return await _services.add_table(number)
+
+@router.post("/tables/customer")
+async def table_add_customer(user: str = Body(...), tablenumber: int = Body(...)):
+    return await _services.table_add_customer(user, tablenumber)
+
+@router.get("/table/customer/all/")
+async def show_table_customer(tablenumber: int):
+    return await _services.show_table_customer(tablenumber)
+
+@router.get("/table/menu/")
+async def show_table_menu(tablenumber: int):
+    return await _services.show_table_menu(tablenumber)
+
+@router.get("/table/payemnt/")
+async def show_table_payment(tablenumber: int):
+    return await _services.show_table_payment(tablenumber)
+
+

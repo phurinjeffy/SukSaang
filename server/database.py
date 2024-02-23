@@ -19,6 +19,8 @@ def init_db():
             root.admins = BTrees.OOBTree.BTree()
         if not hasattr(root, "menus"):
             root.menus = BTrees.OOBTree.BTree()
+        if not hasattr(root, "tables"):
+            root.tables = BTrees.OOBTree.BTree()
         print("Database loaded from file.")
     except Exception as e:
         print("Error loading database from file:", e)
@@ -26,6 +28,7 @@ def init_db():
         root.users = BTrees.OOBTree.BTree()
         root.admins = BTrees.OOBTree.BTree()
         root.menus = BTrees.OOBTree.BTree()
+        root.tables = BTrees.OOBTree.BTree()
 
 
 def close_db_connection():

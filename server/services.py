@@ -285,9 +285,20 @@ async def add_menu(
             detail="Failed to create menu",
         )
 
+# 'RootConvenience' object does not support item deletion
+# async def delete_menu(food_name: str):
+#     try:
+#         if food_name in connection.root.menus:
+#             del connection.root[food_name]
+#             await connection.commit()
+#             print(f"Menu item '{food_name}' deleted successfully.")
+#         else:
+#             print(f"Menu item '{food_name}' not found.")
+#     except Exception as e:
+#         print(f"Error deleting menu item '{food_name}': {e}")
 
-# ------------------ user order ------------------------
-async def get_orders(username: str):
+#------------Customer Order------------------
+async def add_order(user : str, food_name : str):
     try:
         if username in connection.root.users:
             user_orders = connection.root.users[username].orders
@@ -335,3 +346,85 @@ async def delete_order(username: str, food_name: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete order",
         )
+
+#--------------------Table-------------------------
+    
+async def get_tables():
+    try:
+        all_table = []
+        for table in connection.root.tables:
+            all_table.append({"table_number": table})
+        return {"tables": all_table}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+async def add_table(tnum: str):
+    try:
+        if tnum in connection.root.tables:
+            raise ValueError("Table already exists")
+
+        table = Table(tnum)
+        connection.root.tables[tnum] = table
+        connection.transaction_manager.commit()
+        return {"message": "Table is added successfully"}
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to add table",
+        )
+
+async def table_add_customer(user: str, table: str):
+    try:
+        if user in connection.root.users and table in connection.root.tables:
+            connection.root.tables[table].customers.append(connection.root.users[user])
+            connection.transaction_manager.commit()
+            return {"message": f"User '{user}' added to table '{table}' successfully"}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User or table not found")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+async def show_table_customer(table_num: int):
+    try:
+        if table_num in connection.root.tables:
+            return [customer.username for customer in connection.root.tables[table_num].customers]
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="table not found")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+async def show_table_menu(table_num: int):
+    try:
+        if table_num in connection.root.tables:
+            all_menus = []
+            
+            for customer in connection.root.tables[table_num].customers:
+                customer_menus = [order for order in customer.orders]
+                all_menus.extend(customer_menus)
+            
+            return all_menus
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Table not found")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+async def show_table_payment(table_num: int):
+    try:
+        if table_num in connection.root.tables:
+            total_payment = 0
+            
+            for customer in connection.root.tables[table_num].customers:
+                for order in customer.orders:
+                    total_payment += order.price
+            
+            return {"total_payment": total_payment}
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Table not found")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
