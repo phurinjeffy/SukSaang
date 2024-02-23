@@ -49,7 +49,7 @@ class Layout(AbstractWidget):
     def drawWidget(self, widgets):
         self.content = document.createElement("div")
         self.content.id = "content"
-        self.content.className = "pt-28 h-screen w-screen bg-gradient-to-br from from-zinc-950 via-gray-800 to-gray-700"
+        self.content.className = "pt-28 pb-12 min-h-screen h-full min-w-screen w-full bg-gradient-to-br from from-zinc-950 via-gray-800 to-gray-700"
         self.element.appendChild(self.content)
 
         for widget in widgets:
@@ -69,6 +69,11 @@ class Welcome(AbstractWidget):
     def drawWidget(self):
         self.container = document.createElement("div")
         self.container.className = "flex flex-col justify-center items-center gap-10"
+
+        self.welcome_text = document.createElement("h1")
+        self.welcome_text.className = "text-white text-4xl pt-20 pb-8"
+        self.welcome_text.innerHTML = "Select Account"
+        self.container.appendChild(self.welcome_text)
 
         self.customer = document.createElement("div")
         self.customer.className = "flex justify-center uppercase p-10 bg-gray-700 w-[400px] text-white cursor-pointer"
@@ -199,7 +204,7 @@ class Register(AbstractWidget):
         self.password_box.appendChild(self.password_input)
         self.button_box.appendChild(self.button_register)
         self.question_box.appendChild(self.question_text)
-        
+
         self.error_message = document.createElement("p")
         self.error_message.className = "text-red-500"
 
@@ -418,7 +423,7 @@ class Menu(AbstractWidget):
             error_message = document.createElement("p")
             error_message.innerHTML = "No menu available"
             self.element.appendChild(error_message)
-        
+
 
 if __name__ == "__main__":
     location_path = js.window.location.pathname
