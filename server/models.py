@@ -1,15 +1,7 @@
-from pydantic import BaseModel
 import persistent
 from abc import ABC, abstractmethod
 
 
-# ----------- BaseModel ----------------
-class UserBase(BaseModel):
-    username: str
-    password: str
-
-
-# ----------- Models -------------------
 class Account(ABC):
     def __init__(self, username, password, hashed_password=""):
         self.username = username

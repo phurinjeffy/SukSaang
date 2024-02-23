@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body, Depends
 from database import *
 from models import *
+from schemas import *
 import services as _services
 
 router = APIRouter()
