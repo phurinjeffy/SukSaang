@@ -467,7 +467,7 @@ class Menu(AbstractWidget):
                         Most Popular
                     </div>
                     <div class="flex flex-row gap-8 bg-zinc-300 p-10">
-                        {self.menu_container}
+                        {menu_container}
                     </div>
                 </div>
                 <div class="fixed bottom-0 right-0 rounded-lg bg-stone-700 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
