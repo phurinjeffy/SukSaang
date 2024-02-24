@@ -412,8 +412,8 @@ class Menu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.menu = None
-        self.fetch_menu_info()
         self.categories = ["rice", "noodle", "pasta", "steak", "soup", "sides"]
+        self.fetch_menu_info()
 
     def fetch_menu_info(self):
         url = "http://localhost:8000/menus"
@@ -433,9 +433,9 @@ class Menu(AbstractWidget):
                 </div>
             """
 
-        self.menu_container = ""
+        menu_container = ""
         for item in self.menu:
-            self.menu_container += f"""
+            menu_container += f"""
                 <div class="flex flex-col justify-center items-center hover:scale-105 duration-300">
                     <img class="w-36 w-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
                     <h3 class="capitalize text-base sm:text-lg">{item['name']}</h3>
@@ -459,7 +459,7 @@ class Menu(AbstractWidget):
                         Recommended
                     </div>
                     <div class="flex flex-row gap-8 bg-zinc-300 p-10">
-                        {self.menu_container}
+                        {menu_container}
                     </div>
                 </div>
                 <div class="w-full">
@@ -474,6 +474,19 @@ class Menu(AbstractWidget):
                     <img class="w-10 h-10" src="/cart.svg"/>
                     <p class="hidden sm:block">Total Amount: ฿ {0}</p>
                 </div>
+            </div>
+        """
+        self.element.appendChild(content)
+        
+        
+class Cart(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+        
+    def drawWidget(self):
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="flex flex-col justify-center items-center text-white">
             </div>
         """
         self.element.appendChild(content)
@@ -495,5 +508,7 @@ if __name__ == "__main__":
         content.drawWidget([Home("content")])
     elif location_path == "/menu":
         content.drawWidget([Menu("content")])
+    elif location_path == "/cart":
+        content.drawWidget([Cart("content")])
     else:
         content.drawWidget([NotFound("content")])
