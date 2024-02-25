@@ -240,7 +240,13 @@ async def get_menu(menu_item: str):
     try:
         item = connection.root.menus.get(menu_item)
         if item:
-            return {"name": item.name, "price": item.price}
+            return {
+                "name": item.name,
+                "price": item.price,
+                "description": item.description,
+                "type": item.type,
+                "ingredients": item.ingredients,
+            }
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -284,7 +290,7 @@ async def add_menu(
     type: str,
     cost: int,
     ingredients: list,
-    sweetness: int
+    sweetness: int,
 ):
     try:
         if name in connection.root.menus:

@@ -426,7 +426,7 @@ class Menu(AbstractWidget):
 
     def handle_menu_item_click(self, event):
         menu_item_name = event.currentTarget.querySelector("h3").textContent
-        js.document.body.style.overflow = "hidden"
+        document.body.style.overflow = "hidden"
         Detail("content", menu_item_name).drawWidget()
 
     def drawWidget(self):
@@ -509,15 +509,30 @@ class Detail(AbstractWidget):
         modal_content.className = "w-1/2 bg-stone-800 rounded-lg p-8 border border-gray-300 shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         modal_content.innerHTML = f"""
             <span class="close text-white">&times;</span>
-            <div class="flex flex-col justify-center items-center text-white gap-8">
-                {self.item}
+            <div class="flex flex-col justify-center items-center text-white gap-6">
+                <img class="w-44 w-44" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                <p class="font-semibold text-lg">{self.item['name']}</p>
+                <ul class="list-disc font-extralight text-sm">
+                    <li>
+                        <span class="font-semibold mr-1">Price: </span> ฿{self.item['price']}
+                    </li>
+                    <li>
+                        <span class="font-semibold mr-1">Description: </span> {self.item['description']}
+                    </li>
+                    <li>
+                        <span class="font-semibold mr-1">Type: </span> {self.item['type']}
+                    </li>
+                    <li>
+                        <span class="font-semibold mr-1">Ingredients: </span> {self.item['ingredients']['data']}
+                    </li>
+                </ul>
             </div>
         """
         self.element.appendChild(modal_content)
 
         def close_modal(event):
             self.element.removeChild(modal_content)
-            js.document.body.style.overflow = "auto"
+            document.body.style.overflow = "auto"
 
         close_button = modal_content.querySelector(".close")
         close_button.onclick = close_modal
