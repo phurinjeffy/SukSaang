@@ -69,7 +69,7 @@ class Layout(AbstractWidget):
     def drawWidget(self, widgets):
         self.content = document.createElement("div")
         self.content.id = "content"
-        self.content.className = "pt-28 pb-4 min-h-screen h-full min-w-fit w-full "
+        self.content.className = "pt-24 min-h-screen h-full min-w-fit w-full "
         if js.window.location.pathname.startswith("/admin"):
             self.content.className += (
                 "bg-gradient-to-br from-zinc-950 via-gray-800 to-gray-700"
@@ -96,7 +96,9 @@ class Welcome(AbstractWidget):
 
     def drawWidget(self):
         self.container = document.createElement("div")
-        self.container.className = "flex flex-col justify-center items-center gap-10"
+        self.container.className = (
+            "flex flex-col justify-center items-center gap-10 pb-8"
+        )
 
         self.welcome_text = document.createElement("h1")
         self.welcome_text.className = "text-white text-4xl pt-20 pb-8"
@@ -362,7 +364,7 @@ class Home(AbstractWidget):
     def drawWidget(self):
         self.container = document.createElement("div")
         self.container.className = (
-            "h-full flex flex-col justify-center items-center gap-10 text-white"
+            "h-full flex flex-col justify-center items-center gap-10 text-white pb-4"
         )
         self.element.appendChild(self.container)
 
@@ -444,7 +446,7 @@ class Menu(AbstractWidget):
             menu_container += f"""
                 <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300">
                     <img class="w-36 w-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
-                    <h3 class="capitalize text-base sm:text-lg">{item['name']}</h3>
+                    <h3 class="capitalize text-sm sm:text-lg">{item['name']}</h3>
                     <p class="text-sm">฿ {item['price']}</p>
                 </div>
             """
@@ -453,26 +455,26 @@ class Menu(AbstractWidget):
         content.innerHTML = f"""
             <div class="flex flex-col justify-center items-center text-white">
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-zinc-500 p-6">
+                    <div class="text-2xl font-extralight bg-orange-300 p-6">
                         Categories
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-300 p-8">
+                    <div class="flex flex-row gap-8 bg-zinc-200 p-8">
                         {svg_images}
                     </div>
                 </div>
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-zinc-500 p-6">
+                    <div class="text-2xl font-extralight bg-orange-300 p-6">
                         Recommended
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-300 p-10">
+                    <div class="flex flex-row gap-8 bg-zinc-200 p-10">
                         {menu_container}
                     </div>
                 </div>
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-zinc-500 p-6">
+                    <div class="text-2xl font-extralight bg-orange-300 p-6">
                         Most Popular
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-300 p-10">
+                    <div class="flex flex-row gap-8 bg-zinc-200 p-10">
                         {menu_container}
                     </div>
                 </div>
@@ -568,8 +570,8 @@ class Cart(AbstractWidget):
 
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="flex flex-col justify-center items-center text-white gap-8">
-                <div class="text-3xl">
+            <div class="flex flex-col justify-center items-center text-white gap-8 py-4">
+                <div class="text-4xl">
                     Cart
                 </div>
                 <div class="w-full flex flex-col gap-4">
