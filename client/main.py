@@ -1,4 +1,4 @@
-import os
+import time
 import js
 from pyscript import document
 import requests
@@ -435,52 +435,52 @@ class Menu(AbstractWidget):
         svg_images = ""
         for category in self.categories:
             svg_images += f"""
-                <div class="flex flex-col justify-center items-center hover:scale-105 duration-300">
+                <div class="flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer">
                     <img class="w-24 h-24 m-1" src="/category/{category}.svg" />
-                    <p class="capitalize text-base">{category}</p>
+                    <p class="capitalize font-light text-base">{category}</p>
                 </div>
             """
 
         menu_container = ""
         for item in self.menu:
             menu_container += f"""
-                <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300">
+                <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer">
                     <img class="w-36 w-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
-                    <h3 class="capitalize text-sm sm:text-lg">{item['name']}</h3>
-                    <p class="text-sm">฿ {item['price']}</p>
+                    <h3 class="capitalize font-light text-sm sm:text-lg">{item['name']}</h3>
+                    <p class="text-sm font-light">฿ {item['price']}</p>
                 </div>
             """
 
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="flex flex-col justify-center items-center text-white">
+            <div class="flex flex-col justify-center items-center text-gray-700">
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-orange-300 p-6">
+                    <div class="text-2xl font-extralight bg-zinc-300 p-6">
                         Categories
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-200 p-8">
+                    <div class="flex flex-row gap-8 bg-zinc-200 border-b border-slate-400 border-opacity-75 p-8">
                         {svg_images}
                     </div>
                 </div>
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-orange-300 p-6">
+                    <div class="text-2xl font-extralight bg-orange-200 p-6">
                         Recommended
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-200 p-10">
+                    <div class="flex flex-row gap-8 bg-zinc-200 border-b border-slate-400 border-opacity-75 p-10">
                         {menu_container}
                     </div>
                 </div>
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-orange-300 p-6">
+                    <div class="text-2xl font-extralight bg-orange-200 p-6">
                         Most Popular
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-200 p-10">
+                    <div class="flex flex-row gap-8 bg-zinc-200 border-b border-slate-400 border-opacity-75 p-10">
                         {menu_container}
                     </div>
                 </div>
-                <div class="fixed bottom-0 right-0 rounded-lg bg-stone-700 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
+                <div class="fixed bottom-0 right-0 rounded-lg bg-zinc-400 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
                     <img class="w-10 h-10" src="/cart.svg"/>
-                    <p class="hidden sm:block">Total Amount: ฿ {0}</p>
+                    <p class="hidden sm:block text-white">Total Amount: ฿ {0}</p>
                 </div>
             </div>
         """
@@ -506,28 +506,50 @@ class Detail(AbstractWidget):
         else:
             print("Error fetching menu item:", response.text)
 
+    def add_to_cart(self, event):
+        username = fetch_user_info()
+        food_name = self.item["name"]
+
+        url = f"http://localhost:8000/users/{username}/orders?food_name={food_name}"
+        headers = {
+            "Content-Type": "application/json",
+        }
+
+        response = requests.post(url, headers=headers)
+
+        if response.status_code == 200:
+            print("Succesfully Added to Cart")
+            self.add_button.textContent = "Added to Cart"
+            self.add_button.className = "text-green-500"
+        else:
+            print("Error:", response.text)
+            self.add_button.textContent = "Failed to Add to Cart"
+            self.add_button.className = "text-red-500"
+
     def drawWidget(self):
         modal_content = document.createElement("div")
-        modal_content.className = "w-1/2 bg-stone-800 rounded-lg p-8 border border-gray-300 shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         modal_content.innerHTML = f"""
-            <span class="close text-white">&times;</span>
-            <div class="flex flex-col justify-center items-center text-white gap-6">
-                <img class="w-44 w-44" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
-                <p class="font-semibold text-lg">{self.item['name']}</p>
-                <ul class="list-disc font-extralight text-sm">
-                    <li>
-                        <span class="font-semibold mr-1">Price: </span> ฿{self.item['price']}
-                    </li>
-                    <li>
-                        <span class="font-semibold mr-1">Description: </span> {self.item['description']}
-                    </li>
-                    <li>
-                        <span class="font-semibold mr-1">Type: </span> {self.item['type']}
-                    </li>
-                    <li>
-                        <span class="font-semibold mr-1">Ingredients: </span> {self.item['ingredients']['data']}
-                    </li>
-                </ul>
+            <div class="w-1/2 bg-zinc-500 rounded-lg p-8 border border-gray-300 shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <span class="close text-white cursor-pointer">&times;</span>
+                <div class="flex flex-col justify-center items-center text-white gap-6">
+                    <img class="w-44 w-44" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                    <p class="font-semibold text-lg">{self.item['name']}</p>
+                    <ul class="list-disc font-extralight text-sm">
+                        <li>
+                            <span class="font-semibold mr-1">Price: </span> ฿{self.item['price']}
+                        </li>
+                        <li>
+                            <span class="font-semibold mr-1">Description: </span> {self.item['description']}
+                        </li>
+                        <li>
+                            <span class="font-semibold mr-1">Type: </span> {self.item['type']}
+                        </li>
+                        <li>
+                            <span class="font-semibold mr-1">Ingredients: </span> {self.item['ingredients']['data']}
+                        </li>
+                    </ul>
+                    <button class="add-btn hover:text-blue-400">Add to Cart</button>
+                </div>
             </div>
         """
         self.element.appendChild(modal_content)
@@ -538,6 +560,9 @@ class Detail(AbstractWidget):
 
         close_button = modal_content.querySelector(".close")
         close_button.onclick = close_modal
+
+        self.add_button = modal_content.querySelector(".add-btn")
+        self.add_button.onclick = self.add_to_cart
 
 
 class Cart(AbstractWidget):
