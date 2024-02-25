@@ -417,6 +417,7 @@ class Menu(AbstractWidget):
         self.menu = None
         self.categories = ["rice", "noodle", "pasta", "steak", "soup", "sides"]
         self.fetch_menu_info()
+        self.opened_modal = None
 
     def fetch_menu_info(self):
         url = "http://localhost:8000/menus"
@@ -427,9 +428,12 @@ class Menu(AbstractWidget):
             print("Error fetching menu:", response.text)
 
     def handle_menu_item_click(self, event):
+        if self.opened_modal:
+            self.opened_modal.close_modal()
         menu_item_name = event.currentTarget.querySelector("h3").textContent
         document.body.style.overflow = "hidden"
-        Detail("content", menu_item_name).drawWidget()
+        self.opened_modal = Detail("content", menu_item_name)
+        self.opened_modal.drawWidget()
 
     def drawWidget(self):
         svg_images = ""
@@ -498,6 +502,7 @@ class Detail(AbstractWidget):
         self.item = None
         self.quantity = 1
         self.fetch_menu_item_info()
+        self.modal_content = None
 
     def fetch_menu_item_info(self):
         url = f"http://localhost:8000/menus/{self.menu_item}"
@@ -506,6 +511,12 @@ class Detail(AbstractWidget):
             self.item = response.json()
         else:
             print("Error fetching menu item:", response.text)
+            
+    def close_modal(self, event=None):
+        if self.modal_content:
+            self.element.removeChild(self.modal_content)
+            document.body.style.overflow = "auto"
+            self.modal_content = None
 
     def add_to_cart(self, event, amount):
         username = fetch_user_info()
@@ -528,8 +539,8 @@ class Detail(AbstractWidget):
             self.add_button.className = "text-red-500"
 
     def drawWidget(self):
-        modal_content = document.createElement("div")
-        modal_content.innerHTML = f"""
+        self.modal_content = document.createElement("div")
+        self.modal_content.innerHTML = f"""
             <div class="w-1/2 bg-zinc-500 rounded-lg p-8 border border-gray-300 shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <span class="close text-white cursor-pointer">&times;</span>
                 <div class="flex flex-col justify-center items-center text-white gap-6">
@@ -558,16 +569,12 @@ class Detail(AbstractWidget):
                 </div>
             </div>
         """
-        self.element.appendChild(modal_content)
+        self.element.appendChild(self.modal_content)
 
-        def close_modal(event):
-            self.element.removeChild(modal_content)
-            document.body.style.overflow = "auto"
-
-        close_button = modal_content.querySelector(".close")
-        close_button.onclick = close_modal
+        close_button = self.modal_content.querySelector(".close")
+        close_button.onclick = self.close_modal
         
-        self.quantity_element = modal_content.querySelector(".amount")
+        self.quantity_element = self.modal_content.querySelector(".amount")
         def decrement(event):
             if self.quantity > 1:
                 self.quantity -= 1
@@ -577,12 +584,12 @@ class Detail(AbstractWidget):
             self.quantity += 1
             self.quantity_element.textContent = self.quantity
             
-        decrement_button = modal_content.querySelector(".decrement")
+        decrement_button = self.modal_content.querySelector(".decrement")
         decrement_button.onclick = decrement
-        increment_button = modal_content.querySelector(".increment")
+        increment_button = self.modal_content.querySelector(".increment")
         increment_button.onclick = increment
 
-        self.add_button = modal_content.querySelector(".add-btn")
+        self.add_button = self.modal_content.querySelector(".add-btn")
         self.add_button.onclick = lambda event: self.add_to_cart(event, self.quantity)
 
 
