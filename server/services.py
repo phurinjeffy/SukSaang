@@ -358,14 +358,15 @@ async def get_orders(username: str):
         )
 
 
-async def add_order(username: str, food_name: str):
+async def add_order(username: str, food_name: str, amount: int):
     try:
         if food_name in connection.root.menus:
             food = connection.root.menus[food_name]
         else:
             return {"message": "The menu doesn't have this food"}
         if username in connection.root.users:
-            connection.root.users[username].orders.append(food)
+            for _ in range(amount):
+                connection.root.users[username].orders.append(food)
             return {"message": "Order added successfully"}
     except Exception as e:
         raise HTTPException(

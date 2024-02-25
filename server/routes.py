@@ -106,8 +106,8 @@ async def get_orders(username: str):
 
 
 @router.post("/users/{username}/orders")
-async def add_order(username: str, food_name: str):
-    return await _services.add_order(username, food_name)
+async def add_order(username: str, food_name: str, amount: int):
+    return await _services.add_order(username, food_name, amount)
 
 
 @router.delete("/users/{username}/orders/{food_name}")

@@ -496,6 +496,7 @@ class Detail(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
         self.menu_item = menu_item
         self.item = None
+        self.quantity = 1
         self.fetch_menu_item_info()
 
     def fetch_menu_item_info(self):
@@ -506,11 +507,11 @@ class Detail(AbstractWidget):
         else:
             print("Error fetching menu item:", response.text)
 
-    def add_to_cart(self, event):
+    def add_to_cart(self, event, amount):
         username = fetch_user_info()
         food_name = self.item["name"]
 
-        url = f"http://localhost:8000/users/{username}/orders?food_name={food_name}"
+        url = f"http://localhost:8000/users/{username}/orders?food_name={food_name}&amount={amount}"
         headers = {
             "Content-Type": "application/json",
         }
@@ -548,6 +549,11 @@ class Detail(AbstractWidget):
                             <span class="font-semibold mr-1">Ingredients: </span> {self.item['ingredients']['data']}
                         </li>
                     </ul>
+                    <div class="flex flex-row gap-4">
+                        <button class="decrement"> - </button>
+                        <p class="amount">{self.quantity}</p>
+                        <button class="increment"> + </button>
+                    </div>
                     <button class="add-btn hover:text-blue-400">Add to Cart</button>
                 </div>
             </div>
@@ -560,9 +566,24 @@ class Detail(AbstractWidget):
 
         close_button = modal_content.querySelector(".close")
         close_button.onclick = close_modal
+        
+        self.quantity_element = modal_content.querySelector(".amount")
+        def decrement(event):
+            if self.quantity > 1:
+                self.quantity -= 1
+                self.quantity_element.textContent = self.quantity
+
+        def increment(event):
+            self.quantity += 1
+            self.quantity_element.textContent = self.quantity
+            
+        decrement_button = modal_content.querySelector(".decrement")
+        decrement_button.onclick = decrement
+        increment_button = modal_content.querySelector(".increment")
+        increment_button.onclick = increment
 
         self.add_button = modal_content.querySelector(".add-btn")
-        self.add_button.onclick = self.add_to_cart
+        self.add_button.onclick = lambda event: self.add_to_cart(event, self.quantity)
 
 
 class Cart(AbstractWidget):
