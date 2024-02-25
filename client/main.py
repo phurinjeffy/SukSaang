@@ -26,6 +26,25 @@ def check_token():
             js.window.location.href = "/login"
 
 
+def fetch_user_info():
+    access_token = js.window.localStorage.getItem("access_token")
+    if access_token:
+        url = "http://localhost:8000/users/me"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            data = response.json()
+            username = data.get("username")
+            return username
+        else:
+            print("Error fetching user info:", response.text)
+    else:
+        print("Access token not found. User not logged in.")
+
+
 class AbstractWidget(ABC):
     def __init__(self, element_id):
         self.element_id = element_id
@@ -335,28 +354,10 @@ class Home(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.restaurant_name = None
-        self.username = None
-        self.fetch_user_info()
+        self.username = fetch_user_info()
 
     def redirect_to_menu(self, event):
         js.window.location.href = "/menu"
-
-    def fetch_user_info(self):
-        access_token = js.window.localStorage.getItem("access_token")
-        if access_token:
-            url = "http://localhost:8000/users/me"
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-            }
-            response = requests.get(url, headers=headers)
-
-            if response.status_code == 200:
-                data = response.json()
-                self.username = data.get("username")
-            else:
-                print("Error fetching user info:", response.text)
-        else:
-            print("Access token not found. User not logged in.")
 
     def drawWidget(self):
         self.container = document.createElement("div")
@@ -423,6 +424,11 @@ class Menu(AbstractWidget):
         else:
             print("Error fetching menu:", response.text)
 
+    def handle_menu_item_click(self, event):
+        menu_item_name = event.currentTarget.querySelector("h3").textContent
+        js.document.body.style.overflow = "hidden"
+        Detail("content", menu_item_name).drawWidget()
+
     def drawWidget(self):
         svg_images = ""
         for category in self.categories:
@@ -436,7 +442,7 @@ class Menu(AbstractWidget):
         menu_container = ""
         for item in self.menu:
             menu_container += f"""
-                <div class="flex flex-col justify-center items-center hover:scale-105 duration-300">
+                <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300">
                     <img class="w-36 w-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
                     <h3 class="capitalize text-base sm:text-lg">{item['name']}</h3>
                     <p class="text-sm">฿ {item['price']}</p>
@@ -477,16 +483,86 @@ class Menu(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
-        
-        
+
+        menu_items = self.element.querySelectorAll(".menu-item")
+        for menu_item in menu_items:
+            menu_item.onclick = self.handle_menu_item_click
+
+
+class Detail(AbstractWidget):
+    def __init__(self, element_id, menu_item):
+        AbstractWidget.__init__(self, element_id)
+        self.menu_item = menu_item
+        self.item = None
+        self.fetch_menu_item_info()
+
+    def fetch_menu_item_info(self):
+        url = f"http://localhost:8000/menus/{self.menu_item}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.item = response.json()
+        else:
+            print("Error fetching menu item:", response.text)
+
+    def drawWidget(self):
+        modal_content = document.createElement("div")
+        modal_content.className = "w-1/2 bg-stone-800 rounded-lg p-8 border border-gray-300 shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        modal_content.innerHTML = f"""
+            <span class="close text-white">&times;</span>
+            <div class="flex flex-col justify-center items-center text-white gap-8">
+                {self.item}
+            </div>
+        """
+        self.element.appendChild(modal_content)
+
+        def close_modal(event):
+            self.element.removeChild(modal_content)
+            js.document.body.style.overflow = "auto"
+
+        close_button = modal_content.querySelector(".close")
+        close_button.onclick = close_modal
+
+
 class Cart(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        
+        self.orders = None
+        self.username = fetch_user_info()
+        self.fetch_orders_info()
+
+    def fetch_orders_info(self):
+        url = f"http://localhost:8000/users/{self.username}/orders"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.orders = response.json()["orders"]
+        else:
+            print("Error fetching menu:", response.text)
+
     def drawWidget(self):
+        items_container = ""
+        for item in self.orders:
+            items_container += f"""
+                <div class="flex flex-row justify-center items-center gap-10">
+                    <img class="w-36 w-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                    <div class="flex flex-col w-1/2">
+                        <h3 class="capitalize text-base sm:text-lg">{item['name']}</h3>
+                        <p class="text-sm">฿ {item['price']}</p>
+                    </div>
+                </div>
+            """
+
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="flex flex-col justify-center items-center text-white">
+            <div class="flex flex-col justify-center items-center text-white gap-8">
+                <div class="text-3xl">
+                    Cart
+                </div>
+                <div class="w-full flex flex-col gap-4">
+                    {items_container}
+                </div>
+                <div class="bg-zinc-700 rounded-full p-8 cursor-pointer">
+                    Place Order
+                </div>
             </div>
         """
         self.element.appendChild(content)

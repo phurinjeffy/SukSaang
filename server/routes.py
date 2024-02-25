@@ -70,6 +70,11 @@ async def login_admin(username: str = Body(...), password: str = Body(...)):
 
 
 # ------------------ menu ------------------
+@router.get("/menus/{menu_item}")
+async def get_menu(menu_item: str):
+    return await _services.get_menu(menu_item)
+
+
 @router.get("/menus")
 async def get_menus():
     return await _services.get_menus()

@@ -236,6 +236,25 @@ async def login_admin(username: str, password: str):
 
 
 # ------------------ admin menu ------------------------
+async def get_menu(menu_item: str):
+    try:
+        item = connection.root.menus.get(menu_item)
+        if item:
+            return {"name": item.name, "price": item.price}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Menu '{menu_item}' not found",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
 async def get_menus():
     try:
         menus = []
@@ -314,9 +333,16 @@ async def delete_menu(food_name: str):
 async def get_orders(username: str):
     try:
         if username in connection.root.users:
+            orders = []
             user_orders = connection.root.users[username].orders
-            order_names = [food.name for food in user_orders]
-            return {"orders": order_names}
+            for item in user_orders:
+                orders.append(
+                    {
+                        "name": item.name,
+                        "price": item.price,
+                    }
+                )
+            return {"orders": orders}
         else:
             return {"message": "User not found."}
     except Exception as e:
