@@ -12,18 +12,20 @@ def check_token():
 
     access_token = js.window.localStorage.getItem("access_token")
     if not access_token:
-        js.window.location.href = "/login"
+        js.window.location.href = "/"
     else:
-        user_url = "http://localhost:8000/users/me"
-        admin_url = "http://localhost:8000/admins/me"
+        if location_path.startswith("/admin"):
+            url = "http://localhost:8000/admins/me"
+        else:
+            url = "http://localhost:8000/users/me"
+            
         headers = {
             "Authorization": f"Bearer {access_token}",
         }
-        user_response = requests.get(user_url, headers=headers)
-        admin_response = requests.get(admin_url, headers=headers)
+        response = requests.get(url, headers=headers)
 
-        if user_response.status_code != 200 and admin_response.status_code != 200:
-            js.window.location.href = "/login"
+        if response.status_code != 200:
+            js.window.location.href = "/"
 
 
 def fetch_user_info():
