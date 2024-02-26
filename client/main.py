@@ -95,29 +95,26 @@ class Welcome(AbstractWidget):
         js.window.location.href = "/admin_login"
 
     def drawWidget(self):
-        self.container = document.createElement("div")
-        self.container.className = (
-            "flex flex-col justify-center items-center gap-10 pb-8"
-        )
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="flex flex-row justify-center items-center gap-20 mt-36 pb-8">
+                <div class="user flex flex-col justify-center items-center gap-6 cursor-pointer hover:scale-105 duration-500">
+                    <img class="w-44 h-44" src="/user.svg"/>
+                    <p class="text-white text-3xl font-bold">User</p>
+                </div>
+                <div class="admin flex flex-col justify-center items-center gap-6 cursor-pointer hover:scale-105 duration-500">
+                    <img class="w-44 h-44" src="/admin.svg"/>
+                    <p class="text-white text-3xl font-bold">Admin</p>
+                </div>
+            </div>
+        """
+        self.element.appendChild(content)
 
-        self.welcome_text = document.createElement("h1")
-        self.welcome_text.className = "text-white text-4xl pt-20 pb-8"
-        self.welcome_text.innerHTML = "Select Account"
-        self.container.appendChild(self.welcome_text)
+        user_element = content.querySelector(".user")
+        user_element.onclick = self.redirect_to_user_login
 
-        self.customer = document.createElement("div")
-        self.customer.className = "flex justify-center uppercase p-10 bg-gray-700 w-[400px] text-white cursor-pointer"
-        self.customer.innerHTML = "customer"
-        self.customer.onclick = self.redirect_to_user_login
-        self.container.appendChild(self.customer)
-
-        self.admin = document.createElement("div")
-        self.admin.className = "flex justify-center uppercase p-10 bg-gray-700 w-[400px] text-white cursor-pointer"
-        self.admin.innerHTML = "admin"
-        self.admin.onclick = self.redirect_to_admin_login
-        self.container.appendChild(self.admin)
-
-        self.element.appendChild(self.container)
+        admin_element = content.querySelector(".admin")
+        admin_element.onclick = self.redirect_to_admin_login
 
 
 class Navbar(AbstractWidget):
@@ -511,7 +508,7 @@ class Detail(AbstractWidget):
             self.item = response.json()
         else:
             print("Error fetching menu item:", response.text)
-            
+
     def close_modal(self, event=None):
         if self.modal_content:
             self.element.removeChild(self.modal_content)
@@ -573,8 +570,9 @@ class Detail(AbstractWidget):
 
         close_button = self.modal_content.querySelector(".close")
         close_button.onclick = self.close_modal
-        
+
         self.quantity_element = self.modal_content.querySelector(".amount")
+
         def decrement(event):
             if self.quantity > 1:
                 self.quantity -= 1
@@ -583,7 +581,7 @@ class Detail(AbstractWidget):
         def increment(event):
             self.quantity += 1
             self.quantity_element.textContent = self.quantity
-            
+
         decrement_button = self.modal_content.querySelector(".decrement")
         decrement_button.onclick = decrement
         increment_button = self.modal_content.querySelector(".increment")
