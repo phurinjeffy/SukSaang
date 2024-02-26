@@ -359,53 +359,31 @@ class Home(AbstractWidget):
         js.window.location.href = "/menu"
 
     def drawWidget(self):
-        self.container = document.createElement("div")
-        self.container.className = (
-            "h-full flex flex-col justify-center items-center gap-10 text-white pb-4"
-        )
-        self.element.appendChild(self.container)
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="h-full flex flex-col justify-center items-center gap-10 text-white pb-4">
+                <div class="flex flex-row justify-around w-full">
+                    <div class="cursor-pointer w-14">POINTS</div>
+                    <div class="cursor-pointer w-14">MENU</div>
+                </div>
+                <img src="/restaurant.svg" class="w-48 h-48" />
+                <div class="rounded-full bg-zinc-700 text-lg font-base px-20 py-4">
+                    Welcome, {self.username}
+                </div>
+                <div class="flex flex-row gap-4">
+                    <div class="order rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center cursor-pointer">
+                        Order
+                    </div>
+                    <div class="rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center text-center cursor-pointer">
+                        Leave Feedback
+                    </div>
+                </div>
+            </div>
+        """
+        self.element.appendChild(content)
 
-        self.top = document.createElement("div")
-        self.top.className = "flex flex-row justify-around w-full"
-        self.container.appendChild(self.top)
-
-        self.points = document.createElement("div")
-        self.points.className = "cursor-pointer w-14"
-        self.points.innerHTML = "POINTS"
-        self.top.appendChild(self.points)
-
-        self.menu = document.createElement("div")
-        self.menu.className = "cursor-pointer w-14"
-        self.menu.innerHTML = "MENU"
-        self.top.appendChild(self.menu)
-
-        self.logo = document.createElement("img")
-        self.logo.src = "/restaurant.svg"
-        self.logo.className = "w-48 h-48"
-        self.container.appendChild(self.logo)
-
-        self.welcome_box = document.createElement("div")
-        self.welcome_box.className = (
-            "rounded-full bg-zinc-700 text-lg font-base px-20 py-4"
-        )
-        self.welcome_box.innerHTML = f"Welcome, {self.username}"
-        self.container.appendChild(self.welcome_box)
-
-        self.box = document.createElement("div")
-        self.box.className = "flex flex-row gap-4"
-
-        self.order_box = document.createElement("div")
-        self.order_box.className = "rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center cursor-pointer"
-        self.order_box.innerHTML = f"Order"
-        self.order_box.onclick = self.redirect_to_menu
-        self.box.appendChild(self.order_box)
-
-        self.feedback_box = document.createElement("div")
-        self.feedback_box.className = "rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center text-center cursor-pointer"
-        self.feedback_box.innerHTML = f"Leave Feedback"
-        self.box.appendChild(self.feedback_box)
-
-        self.container.appendChild(self.box)
+        order_box = content.querySelector(".order")
+        order_box.onclick = self.redirect_to_menu
 
 
 class Menu(AbstractWidget):
