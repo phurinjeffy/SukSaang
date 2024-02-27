@@ -536,3 +536,40 @@ async def show_table_payment(table_num: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
+
+    
+async def book_table(username: str, table: str):
+    try:
+        if username in connection.root.users and table in connection.root.bookings:
+            tables_obj = connection.root.bookings[table]
+            if tables_obj:
+                connection.root.bookings[table] = False
+                connection.root.users[username].table = table
+                return {"message": f"Table {table} booked successfully"}
+            else:
+                return {"message": "Table is unavailable"}
+        else:
+            return {"message": "Invalid table or username"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Cannot book table: " + str(e)
+        )
+    
+async def check_out(username: str):
+    try:
+        if username in connection.root.users:
+            table = connection.root.users[username].table
+            tables_obj = connection.root.bookings[table]
+            connection.root.bookings[table] = True
+            connection.root.users[username].table = ""
+            return {"message": f"Check out table {table} successfully"}
+        else:
+            return {"message": "Invalid username"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Cannot check out",
+        )
