@@ -41,6 +41,12 @@ def init_db():
             root.tables[1] = Table(1)
             root.tables[2] = Table(2)
             root.tables[3] = Table(3)
+
+        if not hasattr(root, "bookings"):
+            root.bookings = BTrees.OOBTree.BTree()
+
+            for i in range(1,11):
+                root.bookings[str(i)] = True
             
         print("Database loaded from file.")
     except Exception as e:
@@ -50,6 +56,7 @@ def init_db():
         root.admins = BTrees.OOBTree.BTree()
         root.menus = BTrees.OOBTree.BTree()
         root.tables = BTrees.OOBTree.BTree()
+        root.bookings = BTrees.OOBTree.BTree()
 
 
 def close_db_connection():
