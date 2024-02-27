@@ -495,11 +495,11 @@ class Detail(AbstractWidget):
             document.body.style.overflow = "auto"
             self.modal_content = None
 
-    def add_to_cart(self, event, amount):
+    def add_to_cart(self, event, quantity):
         username = fetch_user_info()
         food_name = self.item["name"]
 
-        url = f"http://localhost:8000/users/{username}/orders?food_name={food_name}&amount={amount}"
+        url = f"http://localhost:8000/users/{username}/orders?food_name={food_name}&quantity={quantity}"
         headers = {
             "Content-Type": "application/json",
         }
@@ -539,7 +539,7 @@ class Detail(AbstractWidget):
                     </ul>
                     <div class="flex flex-row gap-4">
                         <button class="decrement"> - </button>
-                        <p class="amount">{self.quantity}</p>
+                        <p class="quantity">{self.quantity}</p>
                         <button class="increment"> + </button>
                     </div>
                     <button class="add-btn hover:text-blue-400">Add to Cart</button>
@@ -551,7 +551,7 @@ class Detail(AbstractWidget):
         close_button = self.modal_content.querySelector(".close")
         close_button.onclick = self.close_modal
 
-        self.quantity_element = self.modal_content.querySelector(".amount")
+        self.quantity_element = self.modal_content.querySelector(".quantity")
 
         def decrement(event):
             if self.quantity > 1:
@@ -595,6 +595,7 @@ class Cart(AbstractWidget):
                     <div class="flex flex-col w-1/2">
                         <h3 class="capitalize text-base sm:text-lg">{item['name']}</h3>
                         <p class="text-sm">฿ {item['price']}</p>
+                        <p class="text-sm">x{item['quantity']}</p>
                     </div>
                 </div>
             """

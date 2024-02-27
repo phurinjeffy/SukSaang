@@ -17,12 +17,12 @@ class User(Account, persistent.Persistent):
         hashed_password="",
         address="",
         table=0,
-        orders=[],
+        orders=None,
     ):
         Account.__init__(self, username, password, hashed_password)
         self.address = address
         self.table = table
-        self.orders = persistent.list.PersistentList(orders)
+        self.orders = orders if orders is not None else {}
 
     def add_order(self, order):
         self.orders.append(order)
