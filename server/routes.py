@@ -40,7 +40,9 @@ async def login_user(username: str = Body(...), password: str = Body(...)):
 
 # ------------------ admin ------------------
 @router.get("/admins/me", response_model=AdminBase)
-async def get_current_admin(current_admin: Admin = Depends(_services.get_current_admin)):
+async def get_current_admin(
+    current_admin: Admin = Depends(_services.get_current_admin),
+):
     return current_admin
 
 
@@ -89,9 +91,11 @@ async def add_menu(
     type: str = Body(...),
     cost: int = Body(...),
     ingredients: list = Body(...),
-    sweetness: int = Body(...)
+    sweetness: int = Body(...),
 ):
-    return await _services.add_menu(category, name, price, description, type, cost, ingredients, sweetness)
+    return await _services.add_menu(
+        category, name, price, description, type, cost, ingredients, sweetness
+    )
 
 
 @router.delete("/menus/{food_name}")
@@ -115,14 +119,14 @@ async def delete_order(username: str, food_name: str):
     return await _services.delete_order(username, food_name)
 
 
-#------------------ Table ----------------------
+# ------------------ Table ----------------------
 @router.get("/tables/")
 async def get_tables():
     return await _services.get_tables()
 
 
 @router.post("/tables/")
-async def add_table(table_num : int):
+async def add_table(table_num: int):
     return await _services.add_table(table_num)
 
 
@@ -144,3 +148,14 @@ async def show_table_orders(table_num: int):
 @router.get("/table/{table_num}/payment")
 async def show_table_payment(table_num: int):
     return await _services.show_table_payment(table_num)
+
+# ------------------ Booking Table ------------------
+
+@router.post("/users/{username}/tables")
+async def book_table(username: str, table: str):
+    return await _services.book_table(username, table)
+
+# ------------------ Check Out ------------------
+@router.post("/users/{username}/checkout")
+async def check_out(username: str):
+    return await _services.check_out(username)
