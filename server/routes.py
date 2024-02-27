@@ -9,7 +9,7 @@ router = APIRouter()
 
 # ------------------ user ------------------
 @router.get("/users/me", response_model=UserBase)
-async def read_users_me(current_user: User = Depends(_services.get_current_user)):
+async def get_current_user(current_user: User = Depends(_services.get_current_user)):
     return current_user
 
 
@@ -39,6 +39,11 @@ async def login_user(username: str = Body(...), password: str = Body(...)):
 
 
 # ------------------ admin ------------------
+@router.get("/admins/me", response_model=AdminBase)
+async def get_current_admin(current_admin: Admin = Depends(_services.get_current_admin)):
+    return current_admin
+
+
 @router.get("/admins/{username}")
 async def get_admin(username: str):
     return await _services.get_admin(username)
@@ -65,6 +70,11 @@ async def login_admin(username: str = Body(...), password: str = Body(...)):
 
 
 # ------------------ menu ------------------
+@router.get("/menus/{menu_item}")
+async def get_menu(menu_item: str):
+    return await _services.get_menu(menu_item)
+
+
 @router.get("/menus")
 async def get_menus():
     return await _services.get_menus()
@@ -72,14 +82,21 @@ async def get_menus():
 
 @router.post("/menus")
 async def add_menu(
+    category: str = Body(...),
     name: str = Body(...),
     price: int = Body(...),
     description: str = Body(...),
-    cost: int = Body(...),
     type: str = Body(...),
+    cost: int = Body(...),
     ingredients: list = Body(...),
+    sweetness: int = Body(...)
 ):
-    return await _services.add_menu(name, price, description, cost, type, ingredients)
+    return await _services.add_menu(category, name, price, description, type, cost, ingredients, sweetness)
+
+
+@router.delete("/menus/{food_name}")
+async def delete_menu(food_name: str):
+    return await _services.delete_menu(food_name)
 
 
 # ------------------ order ------------------
@@ -89,10 +106,41 @@ async def get_orders(username: str):
 
 
 @router.post("/users/{username}/orders")
-async def add_order(username: str, food_name: str):
-    return await _services.add_order(username, food_name)
+async def add_order(username: str, food_name: str, amount: int):
+    return await _services.add_order(username, food_name, amount)
 
 
 @router.delete("/users/{username}/orders/{food_name}")
 async def delete_order(username: str, food_name: str):
     return await _services.delete_order(username, food_name)
+
+
+#------------------ Table ----------------------
+@router.get("/tables/")
+async def get_tables():
+    return await _services.get_tables()
+
+
+@router.post("/tables/")
+async def add_table(table_num : int):
+    return await _services.add_table(table_num)
+
+
+@router.post("/tables/{table_num}/customers")
+async def add_table_customer(table_num: int, user: str = Body(...)):
+    return await _services.add_table_customer(table_num, user)
+
+
+@router.get("/tables/{table_num}/customers")
+async def show_table_customer(table_num: int):
+    return await _services.show_table_customer(table_num)
+
+
+@router.get("/tables/{table_num}/orders")
+async def show_table_orders(table_num: int):
+    return await _services.show_table_orders(table_num)
+
+
+@router.get("/table/{table_num}/payment")
+async def show_table_payment(table_num: int):
+    return await _services.show_table_payment(table_num)

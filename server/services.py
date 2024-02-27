@@ -54,11 +54,12 @@ async def get_user(username: str):
         if user:
             return {"username": user.username, "password": user.password}
         else:
-            raise ValueError(f"User '{username}' not found")
-
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User '{username}' not found",
+            )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -102,17 +103,15 @@ async def get_user(access_token: str):
 async def create_user(username: str, password: str):
     try:
         if username in connection.root.users:
-            raise ValueError("User already exists")
-
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="User already exists"
+            )
         user = User(username, password)
         connection.root.users[username] = user
         connection.transaction_manager.commit()
-
         return {"username": username, "message": "User created successfully"}
-
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -127,11 +126,12 @@ async def delete_user(username: str):
             connection.transaction_manager.commit()
             return {"message": f"User '{username}' deleted successfully"}
         else:
-            raise ValueError(f"User '{username}' not found")
-
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User '{username}' not found",
+            )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -145,24 +145,48 @@ async def login_user(username: str, password: str):
         if user.password == password:
             access_token = create_access_token(username)  # Generate JWT token
             return {"access_token": access_token, "token_type": "bearer"}
-
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password"
     )
 
 
 # ------------------ admin ------------------------
+async def get_current_admin(token: str = Depends(oauth2_scheme)) -> Admin:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            )
+        if username not in connection.root.admins:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Admin not found"
+            )
+        admin_data = connection.root.admins[username]
+        return admin_data
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
+        )
+    except jwt.DecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not decode token"
+        )
+
+
 async def get_admin(username: str):
     try:
         admin = connection.root.admins.get(username)
         if admin:
             return {"username": admin.username, "password": admin.password}
         else:
-            raise ValueError(f"Admin '{username}' not found")
-
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Admin '{username}' not found",
+            )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -185,17 +209,15 @@ async def get_admins():
 async def create_admin(username: str, password: str):
     try:
         if username in connection.root.admins:
-            raise ValueError("Admin already exists")
-
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Admin already exists"
+            )
         admin = Admin(username, password)
         connection.root.admins[username] = admin
         connection.transaction_manager.commit()
-
         return {"username": username, "message": "Admin created successfully"}
-
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -210,11 +232,12 @@ async def delete_admin(username: str):
             connection.transaction_manager.commit()
             return {"message": f"Admin '{username}' deleted successfully"}
         else:
-            raise ValueError(f"Admin '{username}' not found")
-
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Admin '{username}' not found",
+            )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -228,13 +251,37 @@ async def login_admin(username: str, password: str):
         if user.password == password:
             access_token = create_access_token(username)  # Generate JWT token
             return {"access_token": access_token, "token_type": "bearer"}
-
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password"
     )
 
 
 # ------------------ admin menu ------------------------
+async def get_menu(menu_item: str):
+    try:
+        item = connection.root.menus.get(menu_item)
+        if item:
+            return {
+                "name": item.name,
+                "price": item.price,
+                "description": item.description,
+                "type": item.type,
+                "ingredients": item.ingredients,
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Menu '{menu_item}' not found",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
 async def get_menus():
     try:
         menus = []
@@ -244,6 +291,7 @@ async def get_menus():
                     "name": menu.name,
                     "price": menu.price,
                     "description": menu.description,
+                    "type": menu.type,
                     "cost": menu.cost,
                     "ingredients": menu.ingredients,
                 }
@@ -256,26 +304,31 @@ async def get_menus():
 
 
 async def add_menu(
+    category: str,
     name: str,
     price: int,
     description: str,
-    cost: int,
     type: str,
+    cost: int,
     ingredients: list,
+    sweetness: int,
 ):
     try:
         if name in connection.root.menus:
-            raise ValueError("Menu already exists")
-
-        dish = MainDish(name, price, description, cost, type, ingredients)
-        connection.root.menus[name] = dish
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Menu already exists"
+            )
+        if category.upper() == "DRINK":
+            menu = Drink(name, price, description, type, cost, ingredients, sweetness)
+        elif category.upper() == "DESSERT":
+            menu = Dessert(name, price, description, type, cost, ingredients)
+        else:
+            menu = MainDish(name, price, description, type, cost, ingredients)
+        connection.root.menus[name] = menu
         connection.transaction_manager.commit()
-
         return {"message": "Menus registered successfully"}
-
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
-
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -283,16 +336,42 @@ async def add_menu(
         )
 
 
-# ------------------ user order ------------------------
+async def delete_menu(food_name: str):
+    try:
+        if food_name in connection.root.menus:
+            del connection.root[food_name]
+            connection.transaction_manager.commit()
+            return {"message": f"Menu Item '{food_name}' deleted successfully"}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Menu Item '{food_name}' not found",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
+# ------------ Customer Order ------------------
 async def get_orders(username: str):
     try:
         if username in connection.root.users:
+            orders = []
             user_orders = connection.root.users[username].orders
-            order_names = [food.name for food in user_orders]
-            return {"orders": order_names}
+            for item in user_orders:
+                orders.append(
+                    {
+                        "name": item.name,
+                        "price": item.price,
+                    }
+                )
+            return {"orders": orders}
         else:
             return {"message": "User not found."}
-
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -300,14 +379,15 @@ async def get_orders(username: str):
         )
 
 
-async def add_order(username: str, food_name: str):
+async def add_order(username: str, food_name: str, amount: int):
     try:
         if food_name in connection.root.menus:
             food = connection.root.menus[food_name]
         else:
             return {"message": "The menu doesn't have this food"}
         if username in connection.root.users:
-            connection.root.users[username].orders.append(food)
+            for _ in range(amount):
+                connection.root.users[username].orders.append(food)
             return {"message": "Order added successfully"}
     except Exception as e:
         raise HTTPException(
@@ -331,4 +411,128 @@ async def delete_order(username: str, food_name: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete order",
+        )
+
+
+# --------------------Table-------------------------
+async def get_tables():
+    try:
+        all_table = []
+        for table in connection.root.tables:
+            all_table.append({"table_num": table})
+        return {"tables": all_table}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+async def add_table(table_num: str):
+    try:
+        if table_num in connection.root.tables:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Table already exists"
+            )
+        table = Table(table_num)
+        connection.root.tables[table_num] = table
+        connection.transaction_manager.commit()
+        return {"message": "Table is added successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to add table",
+        )
+
+
+async def add_table_customer(table_num: str, user: str):
+    try:
+        if user not in connection.root.users:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
+        if table_num not in connection.root.tables:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Table not found"
+            )
+
+        table = connection.root.tables[table_num]
+        if any(user == customer.username for customer in table.customers):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"User '{user}' is already at table '{table_num}'",
+            )
+        table.customers.append(connection.root.users[user])
+        connection.transaction_manager.commit()
+
+        return {"message": f"User '{user}' added to table '{table_num}' successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+async def show_table_customer(table_num: int):
+    try:
+        if table_num in connection.root.tables:
+            return [
+                customer.username
+                for customer in connection.root.tables[table_num].customers
+            ]
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Table not found"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+async def show_table_orders(table_num: int):
+    try:
+        if table_num in connection.root.tables:
+            all_orders = []
+
+            for customer in connection.root.tables[table_num].customers:
+                customer_orders = [order for order in customer.orders]
+                all_orders.extend(customer_orders)
+
+            return all_orders
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Table not found"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+async def show_table_payment(table_num: int):
+    try:
+        if table_num in connection.root.tables:
+            total_payment = 0
+
+            for customer in connection.root.tables[table_num].customers:
+                for order in customer.orders:
+                    total_payment += order.price
+
+            return {"total_payment": total_payment}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Table not found"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
