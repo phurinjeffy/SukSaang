@@ -18,7 +18,7 @@ def check_token():
             url = "http://localhost:8000/admins/me"
         else:
             url = "http://localhost:8000/users/me"
-            
+
         headers = {
             "Authorization": f"Bearer {access_token}",
         }
@@ -514,6 +514,7 @@ class Detail(AbstractWidget):
             print("Error:", response.text)
             self.add_button.textContent = "Failed to Add to Cart"
             self.add_button.className = "text-red-500"
+        self.close_modal()
 
     def drawWidget(self):
         self.modal_content = document.createElement("div")
@@ -574,8 +575,9 @@ class Detail(AbstractWidget):
 class Cart(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.orders = None
         self.username = fetch_user_info()
+        self.orders = None
+        self.subtotal = 0
         self.fetch_orders_info()
 
     def fetch_orders_info(self):
@@ -586,28 +588,69 @@ class Cart(AbstractWidget):
         else:
             print("Error fetching menu:", response.text)
 
+    def delete_order(self, food_name, quantity):
+        url = f"http://localhost:8000/users/{self.username}/orders/{food_name}?quantity={quantity}"
+        headers = {
+            "Content-Type": "application/json",
+        }
+        response = requests.delete(url, headers=headers)
+        if response.status_code == 200:
+            pass
+        else:
+            print("Error:", response.text)
+
     def drawWidget(self):
         items_container = ""
-        for item in self.orders:
+        for i, item in enumerate(self.orders):
+            total = int(item["price"] * item["quantity"])
             items_container += f"""
-                <div class="flex flex-row justify-center items-center gap-10">
-                    <img class="w-36 w-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
-                    <div class="flex flex-col w-1/2">
-                        <h3 class="capitalize text-base sm:text-lg">{item['name']}</h3>
-                        <p class="text-sm">฿ {item['price']}</p>
-                        <p class="text-sm">x{item['quantity']}</p>
-                    </div>
-                </div>
+                <tr class="border-b">
+                    <td>
+                        <div class="flex flex-row justify-start items-center gap-4 p-4 pr-0">
+                            <img class="w-14 w-14 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                            <p class="capitalize text-base sm:text-lg">{item['name']}</p>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        ฿ {item['price']}
+                    </td>
+                    <td class="text-right">
+                        <div class="flex flex-row gap-4 justify-end">
+                            <button class="decrement" data-index="{i}"> - </button>
+                            <p class="quantity text-sm">{item['quantity']}</p>
+                            <button class="increment" data-index="{i}"> + </button>
+                        </div>
+                    </td>
+                    <td class="text-right p-4 pl-0">
+                        ฿ {total}
+                    </td>
+                </tr>
             """
+            self.subtotal += total
 
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="flex flex-col justify-center items-center text-white gap-8 py-4">
+            <div class="w-full flex flex-col justify-center items-center text-white gap-8 py-4">
                 <div class="text-4xl">
                     Cart
                 </div>
-                <div class="w-full flex flex-col gap-4">
-                    {items_container}
+                <div class="w-screen px-10">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left p-4 pr-0">Item</th>
+                                <th class="text-right">Price</th>
+                                <th class="text-right">Quantity</th>
+                                <th class="text-right p-4 pl-0">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items_container}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="subtotal">
+                    Subtotal: ฿ {self.subtotal}
                 </div>
                 <div class="bg-zinc-700 rounded-full p-8 cursor-pointer">
                     Place Order
@@ -615,6 +658,52 @@ class Cart(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
+        
+        def decrement(event):
+            item_index = int(event.target.dataset.index)
+            food_name = self.orders[item_index]['name']
+    
+            if self.orders[item_index]['quantity'] > 1:
+                self.delete_order(food_name, 1)
+                self.orders[item_index]['quantity'] -= 1
+    
+                quantity_element = event.target.parentElement.querySelector(".quantity")
+                quantity_element.textContent = str(self.orders[item_index]['quantity'])
+    
+                total_price = self.orders[item_index]['price'] * self.orders[item_index]['quantity']
+                total_element = event.target.parentElement.parentElement.nextElementSibling
+                total_element.textContent = f"฿ {total_price}"
+    
+                self.calculate_subtotal()
+
+        def increment(event):
+            item_index = int(event.target.dataset.index)
+            food_name = self.orders[item_index]['name']
+            
+            self.delete_order(food_name, -1)
+            self.orders[item_index]['quantity'] += 1
+
+            quantity_element = event.target.parentElement.querySelector(".quantity")
+            quantity_element.textContent = str(self.orders[item_index]['quantity'])
+
+            total_price = self.orders[item_index]['price'] * self.orders[item_index]['quantity']
+            total_element = event.target.parentElement.parentElement.nextElementSibling
+            total_element.textContent = f"฿ {total_price}"
+
+            self.calculate_subtotal()
+
+        decrement_buttons = self.element.querySelectorAll(".decrement")
+        for button in decrement_buttons:
+            button.onclick = decrement
+
+        increment_buttons = self.element.querySelectorAll(".increment")
+        for button in increment_buttons:
+            button.onclick = increment
+
+    def calculate_subtotal(self):
+        self.subtotal = sum(item['price'] * item['quantity'] for item in self.orders)
+        subtotal_element = self.element.querySelector(".subtotal")
+        subtotal_element.textContent = f"Subtotal: ฿ {self.subtotal}"
 
 
 if __name__ == "__main__":
