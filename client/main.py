@@ -663,7 +663,7 @@ class Cart(AbstractWidget):
             item_index = int(event.target.dataset.index)
             food_name = self.orders[item_index]['name']
     
-            if self.orders[item_index]['quantity'] > 1:
+            if self.orders[item_index]['quantity'] >= 1:
                 self.delete_order(food_name, 1)
                 self.orders[item_index]['quantity'] -= 1
     
@@ -675,6 +675,10 @@ class Cart(AbstractWidget):
                 total_element.textContent = f"฿ {total_price}"
     
                 self.calculate_subtotal()
+                
+                if self.orders[item_index]['quantity'] == 0:
+                    row = event.target.closest("tr")
+                    row.parentNode.removeChild(row)
 
         def increment(event):
             item_index = int(event.target.dataset.index)
