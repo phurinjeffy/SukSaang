@@ -277,7 +277,7 @@ class Login(AbstractWidget):
             if "access_token" in data:
                 self.access_token = data["access_token"]
                 print("Login successful!")
-                js.window.localStorage.setItem("access_token", access_token)
+                js.window.localStorage.setItem("access_token", self.access_token)
                 js.window.location.href = "/home"
             else:
                 message = data.get("detail", "Unknown error")
