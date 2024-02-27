@@ -659,13 +659,17 @@ class Cart(AbstractWidget):
         """
         self.element.appendChild(content)
         
-        def decrement(event):
+        def update_quantity(event, amount):
             item_index = int(event.target.dataset.index)
             food_name = self.orders[item_index]['name']
-    
+            
             if self.orders[item_index]['quantity'] >= 1:
-                self.delete_order(food_name, 1)
-                self.orders[item_index]['quantity'] -= 1
+                if amount == -1:
+                    self.delete_order(food_name, 1)
+                else:
+                    self.delete_order(food_name, -1)
+                    
+                self.orders[item_index]['quantity'] -= (-amount)
     
                 quantity_element = event.target.parentElement.querySelector(".quantity")
                 quantity_element.textContent = str(self.orders[item_index]['quantity'])
@@ -674,40 +678,21 @@ class Cart(AbstractWidget):
                 total_element = event.target.parentElement.parentElement.nextElementSibling
                 total_element.textContent = f"฿ {total_price}"
     
-                self.calculate_subtotal()
+                self.subtotal = sum(item['price'] * item['quantity'] for item in self.orders)
+                subtotal_element = self.element.querySelector(".subtotal")
+                subtotal_element.textContent = f"Subtotal: ฿ {self.subtotal}"
                 
                 if self.orders[item_index]['quantity'] == 0:
                     row = event.target.closest("tr")
                     row.parentNode.removeChild(row)
 
-        def increment(event):
-            item_index = int(event.target.dataset.index)
-            food_name = self.orders[item_index]['name']
-            
-            self.delete_order(food_name, -1)
-            self.orders[item_index]['quantity'] += 1
-
-            quantity_element = event.target.parentElement.querySelector(".quantity")
-            quantity_element.textContent = str(self.orders[item_index]['quantity'])
-
-            total_price = self.orders[item_index]['price'] * self.orders[item_index]['quantity']
-            total_element = event.target.parentElement.parentElement.nextElementSibling
-            total_element.textContent = f"฿ {total_price}"
-
-            self.calculate_subtotal()
-
         decrement_buttons = self.element.querySelectorAll(".decrement")
         for button in decrement_buttons:
-            button.onclick = decrement
+            button.onclick = lambda event: update_quantity(event, -1)
 
         increment_buttons = self.element.querySelectorAll(".increment")
         for button in increment_buttons:
-            button.onclick = increment
-
-    def calculate_subtotal(self):
-        self.subtotal = sum(item['price'] * item['quantity'] for item in self.orders)
-        subtotal_element = self.element.querySelector(".subtotal")
-        subtotal_element.textContent = f"Subtotal: ฿ {self.subtotal}"
+            button.onclick = lambda event: update_quantity(event, 1)
 
 
 if __name__ == "__main__":
