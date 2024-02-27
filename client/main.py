@@ -622,7 +622,7 @@ class Cart(AbstractWidget):
                         </div>
                     </td>
                     <td class="text-right p-4 pl-0">
-                        ฿ {total}
+                        ฿ <span class="total">{total}</span>
                     </td>
                 </tr>
             """
@@ -649,8 +649,8 @@ class Cart(AbstractWidget):
                         </tbody>
                     </table>
                 </div>
-                <div class="subtotal">
-                    Subtotal: ฿ {self.subtotal}
+                <div>
+                    Subtotal: ฿ <span class="subtotal">{self.subtotal}</span>
                 </div>
                 <div class="bg-zinc-700 rounded-full p-8 cursor-pointer">
                     Place Order
@@ -664,23 +664,19 @@ class Cart(AbstractWidget):
             food_name = self.orders[item_index]['name']
             
             if self.orders[item_index]['quantity'] >= 1:
-                if amount == -1:
-                    self.delete_order(food_name, 1)
-                else:
-                    self.delete_order(food_name, -1)
+                self.delete_order(food_name, -amount)
                     
-                self.orders[item_index]['quantity'] -= (-amount)
+                self.orders[item_index]['quantity'] += amount
+                price_change = self.orders[item_index]['price'] * amount
     
                 quantity_element = event.target.parentElement.querySelector(".quantity")
-                quantity_element.textContent = str(self.orders[item_index]['quantity'])
+                quantity_element.textContent = self.orders[item_index]['quantity']
+
+                total_element = event.target.parentElement.parentElement.nextElementSibling.querySelector(".total")
+                total_element.textContent = int(total_element.textContent) + price_change
     
-                total_price = self.orders[item_index]['price'] * self.orders[item_index]['quantity']
-                total_element = event.target.parentElement.parentElement.nextElementSibling
-                total_element.textContent = f"฿ {total_price}"
-    
-                self.subtotal = sum(item['price'] * item['quantity'] for item in self.orders)
                 subtotal_element = self.element.querySelector(".subtotal")
-                subtotal_element.textContent = f"Subtotal: ฿ {self.subtotal}"
+                subtotal_element.textContent = int(subtotal_element.textContent) + price_change
                 
                 if self.orders[item_index]['quantity'] == 0:
                     row = event.target.closest("tr")
