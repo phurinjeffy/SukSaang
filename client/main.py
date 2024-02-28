@@ -77,9 +77,7 @@ class Layout(AbstractWidget):
                 "bg-gradient-to-br from-zinc-950 via-gray-800 to-gray-700"
             )
         else:
-            self.content.className += (
-                "bg-gradient-to-br from-zinc-950 via-gray-600 to-gray-500"
-            )
+            self.content.className += "bg-gradient-to-tl from-slate-300 to-slate-500"
         self.element.appendChild(self.content)
 
         for widget in widgets:
@@ -301,7 +299,7 @@ class Login(AbstractWidget):
 
         self.username_box = document.createElement("div")
         self.username_header = document.createElement("p")
-        self.username_header.className = "text-base text-gray-300 font-light my-3"
+        self.username_header.className = "text-base text-gray-200 font-light my-3"
         self.username_header.innerHTML = "Username"
         self.username_input = document.createElement("input")
         self.username_input.type = "text"
@@ -311,7 +309,7 @@ class Login(AbstractWidget):
 
         self.password_box = document.createElement("div")
         self.password_header = document.createElement("p")
-        self.password_header.className = "text-base text-gray-300 font-light my-3"
+        self.password_header.className = "text-base text-gray-200 font-light my-3"
         self.password_header.innerHTML = "Password"
         self.password_input = document.createElement("input")
         self.password_input.type = "password"
@@ -328,7 +326,7 @@ class Login(AbstractWidget):
         self.question_box = document.createElement("div")
         self.question_box.className = "flex flex-row justify-center"
         self.question_text = document.createElement("a")
-        self.question_text.className = "text-gray-400 cursor-pointer hover:underline"
+        self.question_text.className = "text-gray-200 cursor-pointer hover:underline"
         self.question_text.innerHTML = "Don't have an account?"
         self.question_text.onclick = self.redirect_to_register
 
@@ -444,22 +442,22 @@ class Menu(AbstractWidget):
                     </div>
                 </div>
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-orange-200 p-6">
+                    <div class="text-2xl font-extralight bg-slate-300 p-6">
                         Recommended
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-200 border-b border-slate-400 border-opacity-75 p-10">
+                    <div class="flex flex-row gap-8 bg-zinc-100 border-b border-slate-400 border-opacity-75 p-10">
                         {menu_container}
                     </div>
                 </div>
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-orange-200 p-6">
+                    <div class="text-2xl font-extralight bg-slate-300 p-6">
                         Most Popular
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-200 border-b border-slate-400 border-opacity-75 p-10">
+                    <div class="flex flex-row gap-8 bg-zinc-100 border-b border-slate-400 border-opacity-75 p-10">
                         {menu_container}
                     </div>
                 </div>
-                <div class="fixed bottom-0 right-0 rounded-lg bg-zinc-400 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
+                <div class="fixed bottom-0 right-0 rounded-lg bg-slate-400 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
                     <img class="w-10 h-10" src="/cart.svg"/>
                     <p class="hidden sm:block text-white">Total Amount: ฿ {0}</p>
                 </div>
@@ -508,18 +506,14 @@ class Detail(AbstractWidget):
 
         if response.status_code == 200:
             print("Succesfully Added to Cart")
-            self.add_button.textContent = "Added to Cart"
-            self.add_button.className = "text-green-500"
         else:
             print("Error:", response.text)
-            self.add_button.textContent = "Failed to Add to Cart"
-            self.add_button.className = "text-red-500"
         self.close_modal()
 
     def drawWidget(self):
         self.modal_content = document.createElement("div")
         self.modal_content.innerHTML = f"""
-            <div class="w-1/2 bg-zinc-500 rounded-lg p-8 border border-gray-300 shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div class="w-2/5 bg-slate-400 rounded-lg p-8 border border-gray-300 shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <span class="close text-white cursor-pointer">&times;</span>
                 <div class="flex flex-col justify-center items-center text-white gap-6">
                     <img class="w-44 w-44" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
@@ -543,7 +537,7 @@ class Detail(AbstractWidget):
                         <p class="quantity">{self.quantity}</p>
                         <button class="increment"> + </button>
                     </div>
-                    <button class="add-btn hover:text-blue-400">Add to Cart</button>
+                    <button class="add-btn hover:text-amber-500">Add to Cart</button>
                 </div>
             </div>
         """
@@ -658,27 +652,33 @@ class Cart(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
-        
+
         def update_quantity(event, amount):
             item_index = int(event.target.dataset.index)
-            food_name = self.orders[item_index]['name']
-            
-            if self.orders[item_index]['quantity'] >= 1:
-                self.delete_order(food_name, -amount)
-                    
-                self.orders[item_index]['quantity'] += amount
-                price_change = self.orders[item_index]['price'] * amount
-    
-                quantity_element = event.target.parentElement.querySelector(".quantity")
-                quantity_element.textContent = self.orders[item_index]['quantity']
+            food_name = self.orders[item_index]["name"]
 
-                total_element = event.target.parentElement.parentElement.nextElementSibling.querySelector(".total")
-                total_element.textContent = int(total_element.textContent) + price_change
-    
+            if self.orders[item_index]["quantity"] >= 1:
+                self.delete_order(food_name, -amount)
+
+                self.orders[item_index]["quantity"] += amount
+                price_change = self.orders[item_index]["price"] * amount
+
+                quantity_element = event.target.parentElement.querySelector(".quantity")
+                quantity_element.textContent = self.orders[item_index]["quantity"]
+
+                total_element = event.target.parentElement.parentElement.nextElementSibling.querySelector(
+                    ".total"
+                )
+                total_element.textContent = (
+                    int(total_element.textContent) + price_change
+                )
+
                 subtotal_element = self.element.querySelector(".subtotal")
-                subtotal_element.textContent = int(subtotal_element.textContent) + price_change
-                
-                if self.orders[item_index]['quantity'] == 0:
+                subtotal_element.textContent = (
+                    int(subtotal_element.textContent) + price_change
+                )
+
+                if self.orders[item_index]["quantity"] == 0:
                     row = event.target.closest("tr")
                     row.parentNode.removeChild(row)
 
