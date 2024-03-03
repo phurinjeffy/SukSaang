@@ -78,7 +78,7 @@ class Layout(AbstractWidget):
         elif js.window.location.pathname in ["/", "/login", "/register"]:
             self.content.className += "from-slate-500 to-slate-300"
         else:
-            self.content.className += "from-slate-200 via-white to-slate-100"
+            self.content.className += "from-blue-50 via-white to-blue-50"
         self.element.appendChild(self.content)
 
         for widget in widgets:
@@ -152,7 +152,7 @@ class Navbar(AbstractWidget):
             menu_container.innerHTML = ""
 
     def generate_menu_html(self):
-        menu_elements = f'<ul class="flex flex-col justify-center items-center absolute top-0 left-0 w-full h-screen bg-gradient-to-b from-mountain to-gray-700 text-gray-200 md:hidden">'
+        menu_elements = f'<ul class="flex flex-col justify-center items-center absolute top-0 left-0 w-full h-screen bg-gradient-to-b from-blue-300 to-blue-400 text-white md:hidden">'
         for url, text in self.link_mapping.items():
             menu_elements += f"""
                 <li class="px-4 cursor-pointer capitalize py-6 text-4xl">
@@ -175,20 +175,20 @@ class Navbar(AbstractWidget):
         li_elements = ""
         for url, text in self.link_mapping.items():
             li_elements += f"""
-                <li class="px-4 cursor-pointer capitalize font-medium text-gray-100 hover:scale-105 duration-200">
+                <li class="px-4 cursor-pointer capitalize font-medium text-white hover:scale-105 duration-200">
                     <a href="{url}">{text}</a>
                 </li>
             """
 
         content.innerHTML = f"""
-            <div class="w-screen h-24 px-8 text-white flex {'bg-gradient-to-tr from-slate-400 to-slate-500 justify-between' if user else 'backdrop-blur-lg justify-center'} items-center fixed z-10">
+            <div class="w-screen h-24 px-8 text-white flex {'bg-gradient-to-br from-blue-500 to-blue-400 justify-between' if user else 'backdrop-blur-lg justify-center'} items-center fixed z-10">
                 <a class="title font-signature font-extrabold text-5xl cursor-pointer">SukSaang</a>
                 <div class="menu-container"></div>
                 <ul class="hidden md:flex flex-row">
                     {li_elements if user else ""}
                 </ul>
                 <div class="menu cursor-pointer pr-4 z-10 text-gray-100 md:hidden">
-                    {f'<img src="/close.svg" class="menu-btn w-10" />' if self.nav else f'<img src="/menu.svg" class="menu-btn w-10" />'}
+                    {f'<img src="/close.svg" class="menu-btn w-10" />' if self.nav else f'<img src="/menu.svg" class="menu-btn w-10" />' if user else ""}
                 </div>
             </div>
         """
@@ -449,7 +449,7 @@ class Home(AbstractWidget):
                         <p class="font-medium text-2xl">
                             Order with a click, savor every bite.
                         </p>
-                        <button class="menu-btn flex justify-center items-center gap-1 bg-blue-600 text-white w-fit mt-6 p-4 rounded-full hover:scale-105 duration-300">
+                        <button class="menu-btn flex justify-center items-center gap-1 bg-blue-400 text-white w-fit mt-6 px-6 py-4 rounded-full hover:scale-105 duration-300">
                             View Menu
                             <img class="w-6" src="/arrow.svg" />
                         </button>
@@ -460,17 +460,20 @@ class Home(AbstractWidget):
                     </div>
                 </div>
             </div>
-            <div class="flex lg:flex-row flex-col justify-center items-center gap-6 mt-20 bg-blue-600 py-10 px-14 rounded-xl text-white">
+            <div class="mt-14 mb-10 text-3xl font-semibold text-blue-950">
+                Your food adventure starts here.
+            </div>
+            <div class="flex lg:flex-row flex-col justify-center items-center gap-6 bg-blue-400 py-10 px-14 rounded-xl text-white">
                 <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
-                    <img class="" src="/close.svg" />
+                    <img class="" src="/table.svg" />
                     <p class="">Book Table</p>
                 </div>
                 <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
-                    <img class="" src="/close.svg" />
+                    <img class="" src="/delivery.svg" />
                     <p class="">Delivery</p>
                 </div>
                 <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
-                    <img class="" src="/close.svg" />
+                    <img class="" src="/walkin.svg" />
                     <p class="">Walk In</p>
                 </div>
             </div>
@@ -529,30 +532,30 @@ class Menu(AbstractWidget):
         content.innerHTML = f"""
             <div class="flex flex-col justify-center items-center text-gray-700">
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-zinc-300 p-6">
+                    <div class="text-2xl font-extralight bg-blue-200 p-6">
                         Categories
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-200 border-b border-slate-400 border-opacity-75 p-8">
+                    <div class="flex flex-row gap-8 bg-blue-50 border-b border-slate-400 border-opacity-75 p-8">
                         {svg_images}
                     </div>
                 </div>
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-slate-300 p-6">
+                    <div class="text-2xl font-extralight bg-blue-100 p-6">
                         Recommended
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-100 border-b border-slate-400 border-opacity-75 p-10">
+                    <div class="flex flex-row gap-8 bg-white border-b border-slate-400 border-opacity-75 p-10">
                         {menu_container}
                     </div>
                 </div>
                 <div class="w-full">
-                    <div class="text-2xl font-extralight bg-slate-300 p-6">
+                    <div class="text-2xl font-extralight bg-blue-100 p-6">
                         Most Popular
                     </div>
-                    <div class="flex flex-row gap-8 bg-zinc-100 border-b border-slate-400 border-opacity-75 p-10">
+                    <div class="flex flex-row gap-8 bg-white border-b border-slate-400 border-opacity-75 p-10">
                         {menu_container}
                     </div>
                 </div>
-                <div class="fixed bottom-0 right-0 rounded-lg bg-slate-400 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
+                <div class="fixed bottom-0 right-0 rounded-lg bg-blue-400 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
                     <img class="w-10 h-10" src="/cart.svg"/>
                     <p class="hidden sm:block text-white">Total Amount: ฿ {0}</p>
                 </div>
@@ -719,7 +722,7 @@ class Cart(AbstractWidget):
 
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="w-full flex flex-col items-center text-gray-700 gap-8 py-10">
+            <div class="w-full flex flex-col items-center text-black gap-8 py-10">
                 <div class="text-4xl">
                     Cart
                 </div>
@@ -741,7 +744,7 @@ class Cart(AbstractWidget):
                 <div>
                     Subtotal: ฿ <span class="subtotal">{self.subtotal}</span>
                 </div>
-                <div class="text-white bg-zinc-700 rounded-full p-8 cursor-pointer">
+                <div class="mt-10 text-white bg-blue-600 rounded-full p-8 cursor-pointer">
                     Place Order
                 </div>
             </div>
