@@ -123,14 +123,22 @@ class Navbar(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
         self.nav = False
         self.link_mapping = {
-            "/home": "Home",
             "/menu": "Menu",
             "/cart": "Cart",
             "/profile": "Profile",
         }
 
-    def redirect_to_root(self, event):
-        js.window.location.href = "/"
+    def redirect(self, event):
+        if js.window.location.pathname in [
+            "/",
+            "/login",
+            "/register",
+            "/admin_login",
+            "/admin_register",
+        ]:
+            js.window.location.href = "/"
+        else:
+            js.window.location.href = "/home"
 
     def toggle_menu(self, event):
         self.nav = not self.nav
@@ -186,7 +194,7 @@ class Navbar(AbstractWidget):
         """
 
         title = content.querySelector(".title")
-        title.onclick = self.redirect_to_root
+        title.onclick = self.redirect
 
         menu = content.querySelector(".menu")
         menu.onclick = self.toggle_menu
@@ -411,7 +419,6 @@ class Login(AbstractWidget):
 class Home(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.restaurant_name = None
         self.username = fetch_user_info()
 
     def redirect_to_menu(self, event):
@@ -433,37 +440,45 @@ class Home(AbstractWidget):
 
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="h-full flex flex-col justify-center items-center gap-10 text-black pb-4">
-                <div class="flex flex-row justify-around w-full">
-                    <div class="cursor-pointer w-14">POINTS</div>
-                    <div class="cursor-pointer w-14">MENU</div>
-                </div>
-                
-                <div class="xl:flex-[1.5] flex justify-end items-end w-full xl:h-screen">
-                    <div class="relative xl:w-full w-[90%] xl:h-full h-[590px] z-0">
-                        <img src="{image_src}" class="object-contain" />
+            <div class="flex flex-col justify-center items-center p-10">
+                <div class="flex lg:flex-row flex-col justify-center items-center gap-8">
+                    <div class="flex flex-col gap-4 text-blue-950">
+                        <h1 class="font-bold text-6xl">
+                            Welcome, {self.username}
+                        </h1>
+                        <p class="font-medium text-2xl">
+                            Order with a click, savor every bite.
+                        </p>
+                        <button class="menu-btn flex justify-center items-center gap-1 bg-blue-600 text-white w-fit mt-6 p-4 rounded-full hover:scale-105 duration-300">
+                            View Menu
+                            <img class="w-6" src="/arrow.svg" />
+                        </button>
                     </div>
-                    <img src="/hero-bg.png" class="absolute bg-repeat-round -z-10 w-full xl:h-screen h-[590px] overflow-hidden" />
-                </div>
-                
-                <div class="text-lg font-base px-20 py-4">
-                    Welcome, {self.username}
-                </div>
-                
-                <div class="flex flex-row gap-4">
-                    <div class="order text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center cursor-pointer">
-                        Order
+                    <div>
+                        <div class="bg-cover bg-center bg-no-repeat" style="background-image: url('/hero-bg.png');"/>
+                        <img class="w-full" src="{image_src}" />
                     </div>
-                    <div class="text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center text-center cursor-pointer">
-                        Leave Feedback
-                    </div>
+                </div>
+            </div>
+            <div class="flex lg:flex-row flex-col justify-center items-center gap-6 mt-20 bg-blue-600 py-10 px-14 rounded-xl text-white">
+                <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
+                    <img class="" src="/close.svg" />
+                    <p class="">Book Table</p>
+                </div>
+                <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
+                    <img class="" src="/close.svg" />
+                    <p class="">Delivery</p>
+                </div>
+                <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
+                    <img class="" src="/close.svg" />
+                    <p class="">Walk In</p>
                 </div>
             </div>
         """
         self.element.appendChild(content)
 
-        order_box = content.querySelector(".order")
-        order_box.onclick = self.redirect_to_menu
+        menu_btn = content.querySelector(".menu-btn")
+        menu_btn.onclick = self.redirect_to_menu
 
 
 class Menu(AbstractWidget):
