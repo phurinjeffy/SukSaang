@@ -1,4 +1,3 @@
-import time
 import js
 from pyscript import document
 import requests
@@ -71,13 +70,15 @@ class Layout(AbstractWidget):
     def drawWidget(self, widgets):
         self.content = document.createElement("div")
         self.content.id = "content"
-        self.content.className = "pt-24 min-h-screen h-full min-w-fit w-full "
+        self.content.className = (
+            "pt-24 min-h-screen h-full min-w-fit w-full bg-gradient-to-br "
+        )
         if js.window.location.pathname.startswith("/admin"):
-            self.content.className += (
-                "bg-gradient-to-br from-zinc-950 via-gray-800 to-gray-700"
-            )
+            self.content.className += "from-zinc-950 via-gray-800 to-gray-700"
+        elif js.window.location.pathname in ["/", "/login", "/register"]:
+            self.content.className += "from-slate-500 to-slate-300"
         else:
-            self.content.className += "bg-gradient-to-tl from-slate-300 to-slate-500"
+            self.content.className += "from-slate-200 via-white to-slate-100"
         self.element.appendChild(self.content)
 
         for widget in widgets:
@@ -120,19 +121,77 @@ class Welcome(AbstractWidget):
 class Navbar(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        self.nav = False
+        self.link_mapping = {
+            "/home": "Home",
+            "/menu": "Menu",
+            "/cart": "Cart",
+            "/profile": "Profile",
+        }
 
     def redirect_to_root(self, event):
         js.window.location.href = "/"
 
+    def toggle_menu(self, event):
+        self.nav = not self.nav
+        menu_container = self.element.querySelector(".menu-container")
+        menu_btn = self.element.querySelector(".menu-btn")
+        if self.nav:
+            menu_btn.src = "/close.svg"
+            menu_container.innerHTML = self.generate_menu_html()
+        else:
+            menu_btn.src = "/menu.svg"
+            menu_container.innerHTML = ""
+
+    def generate_menu_html(self):
+        menu_elements = f'<ul class="flex flex-col justify-center items-center absolute top-0 left-0 w-full h-screen bg-gradient-to-b from-mountain to-gray-700 text-gray-200 md:hidden">'
+        for url, text in self.link_mapping.items():
+            menu_elements += f"""
+                <li class="px-4 cursor-pointer capitalize py-6 text-4xl">
+                    <a href="{url}">{text}</a>
+                </li>
+            """
+        menu_elements += "</ul>"
+        return menu_elements
+
     def drawWidget(self):
-        self.navbar = document.createElement("div")
-        self.navbar.className = "backdrop-blur-lg w-screen h-24 text-white flex justify-center items-center fixed z-10"
-        self.title = document.createElement("a")
-        self.title.innerHTML = "SukSaang"
-        self.title.className = "font-signature font-extrabold text-5xl cursor-pointer"
-        self.title.onclick = self.redirect_to_root
-        self.navbar.appendChild(self.title)
-        self.element.appendChild(self.navbar)
+        content = document.createElement("div")
+        location_path = js.window.location.pathname
+        user = (
+            True
+            if location_path
+            not in ["/", "/login", "/register", "/admin_login", "/admin_register"]
+            else False
+        )
+
+        li_elements = ""
+        for url, text in self.link_mapping.items():
+            li_elements += f"""
+                <li class="px-4 cursor-pointer capitalize font-medium text-gray-100 hover:scale-105 duration-200">
+                    <a href="{url}">{text}</a>
+                </li>
+            """
+
+        content.innerHTML = f"""
+            <div class="w-screen h-24 px-8 text-white flex {'bg-gradient-to-tr from-slate-400 to-slate-500 justify-between' if user else 'backdrop-blur-lg justify-center'} items-center fixed z-10">
+                <a class="title font-signature font-extrabold text-5xl cursor-pointer">SukSaang</a>
+                <div class="menu-container"></div>
+                <ul class="hidden md:flex flex-row">
+                    {li_elements if user else ""}
+                </ul>
+                <div class="menu cursor-pointer pr-4 z-10 text-gray-100 md:hidden">
+                    {f'<img src="/close.svg" class="menu-btn w-10" />' if self.nav else f'<img src="/menu.svg" class="menu-btn w-10" />'}
+                </div>
+            </div>
+        """
+
+        title = content.querySelector(".title")
+        title.onclick = self.redirect_to_root
+
+        menu = content.querySelector(".menu")
+        menu.onclick = self.toggle_menu
+
+        self.element.appendChild(content)
 
 
 class NotFound(AbstractWidget):
@@ -221,7 +280,7 @@ class Register(AbstractWidget):
         self.question_box = document.createElement("div")
         self.question_box.className = "flex flex-row justify-center"
         self.question_text = document.createElement("a")
-        self.question_text.className = "text-gray-400 cursor-pointer hover:underline"
+        self.question_text.className = "text-gray-200 cursor-pointer hover:underline"
         self.question_text.innerHTML = "Already have an account?"
         self.question_text.onclick = self.redirect_to_login
 
@@ -359,22 +418,43 @@ class Home(AbstractWidget):
         js.window.location.href = "/menu"
 
     def drawWidget(self):
+        current_hour = js.Date.new().getHours()
+
+        breakfast_image = "/breakfast-hero.png"
+        lunch_image = "/lunch-hero.png"
+        dinner_image = "/dinner-hero.png"
+
+        if 6 <= current_hour < 12:
+            image_src = breakfast_image
+        elif 12 <= current_hour < 18:
+            image_src = lunch_image
+        else:
+            image_src = dinner_image
+
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="h-full flex flex-col justify-center items-center gap-10 text-white pb-4">
+            <div class="h-full flex flex-col justify-center items-center gap-10 text-black pb-4">
                 <div class="flex flex-row justify-around w-full">
                     <div class="cursor-pointer w-14">POINTS</div>
                     <div class="cursor-pointer w-14">MENU</div>
                 </div>
-                <img src="/restaurant.svg" class="w-48 h-48" />
-                <div class="rounded-full bg-zinc-700 text-lg font-base px-20 py-4">
+                
+                <div class="xl:flex-[1.5] flex justify-end items-end w-full xl:h-screen">
+                    <div class="relative xl:w-full w-[90%] xl:h-full h-[590px] z-0">
+                        <img src="{image_src}" class="object-contain" />
+                    </div>
+                    <img src="/hero-bg.png" class="absolute bg-repeat-round -z-10 w-full xl:h-screen h-[590px] overflow-hidden" />
+                </div>
+                
+                <div class="text-lg font-base px-20 py-4">
                     Welcome, {self.username}
                 </div>
+                
                 <div class="flex flex-row gap-4">
-                    <div class="order rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center cursor-pointer">
+                    <div class="order text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center cursor-pointer">
                         Order
                     </div>
-                    <div class="rounded-full bg-zinc-700 text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center text-center cursor-pointer">
+                    <div class="text-lg font-base px-20 py-14 w-[250px] flex justify-center items-center text-center cursor-pointer">
                         Leave Feedback
                     </div>
                 </div>
@@ -598,7 +678,7 @@ class Cart(AbstractWidget):
         for i, item in enumerate(self.orders):
             total = int(item["price"] * item["quantity"])
             items_container += f"""
-                <tr class="border-b">
+                <tr class="border-b border-gray-500">
                     <td>
                         <div class="flex flex-row justify-start items-center gap-4 p-4 pr-0">
                             <img class="w-14 w-14 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
@@ -624,14 +704,14 @@ class Cart(AbstractWidget):
 
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="w-full flex flex-col justify-center items-center text-white gap-8 py-4">
+            <div class="w-full flex flex-col items-center text-gray-700 gap-8 py-10">
                 <div class="text-4xl">
                     Cart
                 </div>
                 <div class="w-screen px-10">
                     <table class="w-full">
                         <thead>
-                            <tr class="border-b">
+                            <tr class="border-b border-gray-500">
                                 <th class="text-left p-4 pr-0">Item</th>
                                 <th class="text-right">Price</th>
                                 <th class="text-right">Quantity</th>
@@ -646,7 +726,7 @@ class Cart(AbstractWidget):
                 <div>
                     Subtotal: ฿ <span class="subtotal">{self.subtotal}</span>
                 </div>
-                <div class="bg-zinc-700 rounded-full p-8 cursor-pointer">
+                <div class="text-white bg-zinc-700 rounded-full p-8 cursor-pointer">
                     Place Order
                 </div>
             </div>
