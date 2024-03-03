@@ -535,7 +535,7 @@ class Menu(AbstractWidget):
                     <div class="text-2xl font-extralight bg-blue-200 p-6">
                         Categories
                     </div>
-                    <div class="flex flex-row gap-8 bg-blue-50 border-b border-slate-400 border-opacity-75 p-8">
+                    <div class="flex flex-row gap-8 bg-white border-b border-slate-400 border-opacity-75 p-8">
                         {svg_images}
                     </div>
                 </div>
@@ -611,23 +611,23 @@ class Detail(AbstractWidget):
     def drawWidget(self):
         self.modal_content = document.createElement("div")
         self.modal_content.innerHTML = f"""
-            <div class="w-2/5 bg-slate-400 rounded-lg p-8 border border-gray-300 shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div class="w-2/5 bg-blue-300 rounded-lg p-8 border border-white shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <span class="close text-white cursor-pointer">&times;</span>
                 <div class="flex flex-col justify-center items-center text-white gap-6">
                     <img class="w-44 w-44" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
                     <p class="font-semibold text-lg">{self.item['name']}</p>
                     <ul class="list-disc font-extralight text-sm">
                         <li>
-                            <span class="font-semibold mr-1">Price: </span> ฿{self.item['price']}
+                            <span class="font-medium mr-1">Price: </span> ฿{self.item['price']}
                         </li>
                         <li>
-                            <span class="font-semibold mr-1">Description: </span> {self.item['description']}
+                            <span class="font-medium mr-1">Description: </span> {self.item['description']}
                         </li>
                         <li>
-                            <span class="font-semibold mr-1">Type: </span> {self.item['type']}
+                            <span class="font-medium mr-1">Type: </span> {self.item['type']}
                         </li>
                         <li>
-                            <span class="font-semibold mr-1">Ingredients: </span> {self.item['ingredients']['data']}
+                            <span class="font-medium mr-1">Ingredients: </span> {self.item['ingredients']['data']}
                         </li>
                     </ul>
                     <div class="flex flex-row gap-4">
@@ -635,7 +635,7 @@ class Detail(AbstractWidget):
                         <p class="quantity">{self.quantity}</p>
                         <button class="increment"> + </button>
                     </div>
-                    <button class="add-btn hover:text-amber-500">Add to Cart</button>
+                    <button class="add-btn hover:scale-105 duration-500">Add to Cart</button>
                 </div>
             </div>
         """
@@ -696,7 +696,7 @@ class Cart(AbstractWidget):
         for i, item in enumerate(self.orders):
             total = int(item["price"] * item["quantity"])
             items_container += f"""
-                <tr class="border-b border-gray-500">
+                <tr class="border-b border-gray-500 font-light">
                     <td>
                         <div class="flex flex-row justify-start items-center gap-4 p-4 pr-0">
                             <img class="w-14 w-14 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
@@ -723,17 +723,17 @@ class Cart(AbstractWidget):
         content = document.createElement("div")
         content.innerHTML = f"""
             <div class="w-full flex flex-col items-center text-black gap-8 py-10">
-                <div class="text-4xl">
+                <div class="text-4xl font-light">
                     Cart
                 </div>
                 <div class="w-screen px-10">
                     <table class="w-full">
                         <thead>
                             <tr class="border-b border-gray-500">
-                                <th class="text-left p-4 pr-0">Item</th>
-                                <th class="text-right">Price</th>
-                                <th class="text-right">Quantity</th>
-                                <th class="text-right p-4 pl-0">Total</th>
+                                <th class="font-light text-left p-4 pr-0">Item</th>
+                                <th class="font-light text-right">Price</th>
+                                <th class="font-light text-right">Quantity</th>
+                                <th class="font-light text-right p-4 pl-0">Total</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -741,10 +741,10 @@ class Cart(AbstractWidget):
                         </tbody>
                     </table>
                 </div>
-                <div>
+                <div class="font-base">
                     Subtotal: ฿ <span class="subtotal">{self.subtotal}</span>
                 </div>
-                <div class="mt-10 text-white bg-blue-600 rounded-full p-8 cursor-pointer">
+                <div class="mt-10 text-white bg-blue-500 rounded-full p-8 cursor-pointer">
                     Place Order
                 </div>
             </div>
