@@ -125,7 +125,7 @@ class Navbar(AbstractWidget):
         self.link_mapping = {
             "/menu": "Menu",
             "/cart": "Cart",
-            "/profile": "Profile",
+            "": "Logout",
         }
 
     def redirect(self, event):
@@ -161,22 +161,20 @@ class Navbar(AbstractWidget):
             """
         menu_elements += "</ul>"
         return menu_elements
+    
+    def logout_click(self, event):
+        js.window.localStorage.removeItem("access_token")
 
     def drawWidget(self):
         content = document.createElement("div")
         location_path = js.window.location.pathname
-        user = (
-            True
-            if location_path
-            not in ["/", "/login", "/register", "/admin_login", "/admin_register"]
-            else False
-        )
+        user = True if location_path not in ["/", "/login", "/register", "/admin_login", "/admin_register"] else False
 
         li_elements = ""
         for url, text in self.link_mapping.items():
             li_elements += f"""
                 <li class="px-4 cursor-pointer capitalize font-medium text-white hover:scale-105 duration-200">
-                    <a href="{url}">{text}</a>
+                    <a href="{url}" class="{text.lower()}">{text}</a>
                 </li>
             """
 
@@ -198,6 +196,10 @@ class Navbar(AbstractWidget):
 
         menu = content.querySelector(".menu")
         menu.onclick = self.toggle_menu
+        
+        if user:
+            logout = content.querySelector(".logout")
+            logout.onclick = self.logout_click
 
         self.element.appendChild(content)
 
@@ -208,7 +210,7 @@ class NotFound(AbstractWidget):
 
     def drawWidget(self):
         self.text = document.createElement("h1")
-        self.text.className = "text-3xl text-white"
+        self.text.className = "text-3xl text-black"
         self.text.innerHTML = "404 NOT FOUND"
         self.element.appendChild(self.text)
 
@@ -325,9 +327,14 @@ class Login(AbstractWidget):
         username = self.username_input.value
         password = self.password_input.value
 
+        isUser = False
+        isAdmin = False
+
         if js.window.location.pathname == "/login":
+            isUser = True
             url = "http://localhost:8000/users/login"
         elif js.window.location.pathname == "/admin_login":
+            isAdmin = True
             url = "http://localhost:8000/admins/login"
         data = {"username": username, "password": password}
         headers = {
@@ -342,7 +349,10 @@ class Login(AbstractWidget):
                 access_token = data["access_token"]
                 print("Login successful!")
                 js.window.localStorage.setItem("access_token", access_token)
-                js.window.location.href = "/home"
+                if isUser:
+                    js.window.location.href = "/home"
+                elif isAdmin:
+                    js.window.location.href = "/admin_home"
             else:
                 message = data.get("detail", "Unknown error")
                 print("Login failed:", message)
@@ -789,6 +799,22 @@ class Cart(AbstractWidget):
             button.onclick = lambda event: update_quantity(event, 1)
 
 
+class TableUser(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+
+    def drawWidget(self):
+        pass
+
+
+class AdminHome(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+
+    def drawWidget(self):
+        pass
+
+
 if __name__ == "__main__":
     location_path = js.window.location.pathname
 
@@ -807,5 +833,7 @@ if __name__ == "__main__":
         content.drawWidget([Menu("content")])
     elif location_path == "/cart":
         content.drawWidget([Cart("content")])
+    elif location_path == "/admin_home":
+        content.drawWidget([AdminHome("content")])
     else:
         content.drawWidget([NotFound("content")])
