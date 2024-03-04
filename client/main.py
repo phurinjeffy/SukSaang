@@ -127,18 +127,16 @@ class Navbar(AbstractWidget):
             "/cart": "Cart",
             "": "Logout",
         }
+        location_path = js.window.location.pathname
+        self.status = "ADMIN" if location_path.startswith("/admin") else "USER" if location_path not in ["/", "/login", "/register", "/admin_login", "/admin_register"] else False
 
-    def redirect(self, event):
-        if js.window.location.pathname in [
-            "/",
-            "/login",
-            "/register",
-            "/admin_login",
-            "/admin_register",
-        ]:
-            js.window.location.href = "/"
-        else:
+    def title_redirect(self, event):
+        if self.status == "USER":
             js.window.location.href = "/home"
+        elif self.status == "ADMIN":
+            js.window.location.href = "/admin_home"
+        else:
+            js.window.location.href = "/"
 
     def toggle_menu(self, event):
         self.nav = not self.nav
@@ -167,8 +165,6 @@ class Navbar(AbstractWidget):
 
     def drawWidget(self):
         content = document.createElement("div")
-        location_path = js.window.location.pathname
-        user = True if location_path not in ["/", "/login", "/register", "/admin_login", "/admin_register"] else False
 
         li_elements = ""
         for url, text in self.link_mapping.items():
@@ -179,25 +175,25 @@ class Navbar(AbstractWidget):
             """
 
         content.innerHTML = f"""
-            <div class="w-screen h-24 px-8 text-white flex {'bg-gradient-to-br from-blue-500 to-blue-400 justify-between' if user else 'backdrop-blur-lg justify-center'} items-center fixed z-10">
+            <div class="w-screen h-24 px-8 text-white flex {'bg-gradient-to-br from-blue-500 to-blue-400 justify-between' if self.status == "USER" else 'backdrop-blur-lg justify-center'} items-center fixed z-10">
                 <a class="title font-signature font-extrabold text-5xl cursor-pointer">SukSaang</a>
                 <div class="menu-container"></div>
                 <ul class="hidden md:flex flex-row">
-                    {li_elements if user else ""}
+                    {li_elements if self.status == "USER" else ""}
                 </ul>
                 <div class="menu cursor-pointer pr-4 z-10 text-gray-100 md:hidden">
-                    {f'<img src="/close.svg" class="menu-btn w-10" />' if self.nav else f'<img src="/menu.svg" class="menu-btn w-10" />' if user else ""}
+                    {f'<img src="/close.svg" class="menu-btn w-10" />' if self.nav else f'<img src="/menu.svg" class="menu-btn w-10" />' if self.status == "USER" else ""}
                 </div>
             </div>
         """
 
         title = content.querySelector(".title")
-        title.onclick = self.redirect
+        title.onclick = self.title_redirect
 
         menu = content.querySelector(".menu")
         menu.onclick = self.toggle_menu
         
-        if user:
+        if self.status == "USER":
             logout = content.querySelector(".logout")
             logout.onclick = self.logout_click
 
