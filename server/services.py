@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from database import connection
 from models import *
 from datetime import datetime, timedelta
+from typing import Optional
 
 # ------------------ token ------------------------
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -334,7 +335,54 @@ async def delete_menu(food_name: str):
             detail=str(e),
         )
 
+async def edit_menu(
+    food_name: str,
+    category: Optional[str] = None,
+    name: Optional[str] = None,
+    price: Optional[int] = None,
+    description: Optional[str] = None,
+    type: Optional[str] = None,
+    cost: Optional[int] = None,
+    ingredients: Optional[list] = None,
+    sweetness: Optional[int] = None
+):
+    try:
+        if food_name not in connection.root.menus:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Menu '{food_name}' not found"
+            )
 
+        menu = connection.root.menus[food_name]
+        
+        if category is not None:
+            menu.category = category
+        if name is not None:
+            menu.name = name
+        if price is not None:
+            menu.price = price
+        if description is not None:
+            menu.description = description
+        if type is not None:
+            menu.type = type
+        if cost is not None:
+            menu.cost = cost
+        if ingredients is not None:
+            menu.ingredients = ingredients
+        if sweetness is not None:
+            menu.sweetness = sweetness
+        
+        connection.transaction_manager.commit()
+        
+        return {"message": f"Menu '{food_name}' updated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update menu information",
+        )
+    
 # ------------ Customer Order ------------------
 async def get_orders(username: str):
     try:
