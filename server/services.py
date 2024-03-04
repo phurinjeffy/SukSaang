@@ -360,15 +360,14 @@ async def delete_menu(food_name: str):
 async def get_orders(username: str):
     try:
         if username in connection.root.users:
+            user = connection.root.users[username]
             orders = []
-            user_orders = connection.root.users[username].orders
-            for item in user_orders:
-                orders.append(
-                    {
-                        "name": item.name,
-                        "price": item.price,
-                    }
-                )
+            for food_name, quantity in user.orders.items():
+                orders.append({
+                    "name": food_name,
+                    "quantity": quantity,
+                    "price": connection.root.menus[food_name].price,
+                })
             return {"orders": orders}
         else:
             return {"message": "User not found."}
@@ -379,15 +378,17 @@ async def get_orders(username: str):
         )
 
 
-async def add_order(username: str, food_name: str, amount: int):
+async def add_order(username: str, food_name: str, quantity: int):
     try:
-        if food_name in connection.root.menus:
-            food = connection.root.menus[food_name]
-        else:
+        if food_name not in connection.root.menus:
             return {"message": "The menu doesn't have this food"}
         if username in connection.root.users:
-            for _ in range(amount):
-                connection.root.users[username].orders.append(food)
+            user = connection.root.users[username]
+            if food_name not in user.orders:
+                user.orders[food_name] = quantity
+            else:
+                user.orders[food_name] += quantity
+            connection.transaction_manager.commit()
             return {"message": "Order added successfully"}
     except Exception as e:
         raise HTTPException(
@@ -396,15 +397,20 @@ async def add_order(username: str, food_name: str, amount: int):
         )
 
 
-async def delete_order(username: str, food_name: str):
+async def delete_order(username: str, food_name: str, quantity: int = 1):
     try:
         if username in connection.root.users:
-            user_obj = connection.root.users[username]
-            for food in user_obj.orders:
-                if food.name == food_name:
-                    user_obj.orders.remove(food)
-                    return {"message": "Order deleted successfully"}
-            return {"error": "Food item not found in user's order list"}
+            user = connection.root.users[username]
+            if food_name in user.orders:
+                current_quantity = user.orders.get(food_name, 0)
+                if quantity >= current_quantity:
+                    del user.orders[food_name]
+                else:
+                    user.orders[food_name] -= quantity
+                connection.transaction_manager.commit()
+                return {"message": "Order deleted successfully"}
+            else:
+                return {"error": "Food item not found in user's order list"}
         else:
             return {"error": "User not found"}
     except Exception as e:
