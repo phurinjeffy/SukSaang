@@ -616,7 +616,13 @@ class Cart(AbstractWidget):
         """
         self.element.appendChild(content)
 
+class Cart(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
 
+    def drawWidget(self):
+        return super().drawWidget()
+    
 if __name__ == "__main__":
     location_path = js.window.location.pathname
 
