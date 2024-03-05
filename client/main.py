@@ -860,7 +860,7 @@ class AdminTable(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
         self.table = None
         self.fetch_table_info()
-        
+
     def fetch_table_info(self):
         url = "http://localhost:8000/tables"
         response = requests.get(url)
@@ -877,7 +877,7 @@ class AdminTable(AbstractWidget):
                     {table}
                 </div>
             """
-            
+
         content = document.createElement("div")
         content.innerHTML = f"""
             <div class="flex flex-row justify-center items-center text-white">
@@ -915,31 +915,72 @@ class AdminMenu(AbstractWidget):
         else:
             print("Error fetching menu:", response.text)
 
+    def edit_menu(self, food_name, updated_data):
+        url = f"http://localhost:8000/menus/{food_name}?"
+        headers = {"Content-Type": "application/json"}
+        query_params = "&".join(
+            [f"{key}={value}" for key, value in updated_data.items()]
+        )
+        url += query_params
+        response = requests.patch(url, headers=headers)
+        if response.status_code == 200:
+            print(f"Menu '{food_name}' updated successfully")
+        else:
+            print(f"Failed to update menu '{food_name}':", response.text)
+
+    def toggle_edit_mode(self, event):
+        row = event.target.closest("tr")
+        cells = list(row.querySelectorAll("td"))
+        edit_button = row.querySelector(".edit-btn")
+
+        if edit_button.innerHTML == "Save":
+            updated_data = {}
+            for cell in cells[:-1]:
+                if cell.classList.contains("edit-mode"):
+                    field_name = cell.dataset.field
+                    value = cell.querySelector("input").value
+                    updated_data[field_name] = value
+                    cell.innerHTML = value
+            food_name = cells[0].textContent.strip()
+            self.edit_menu(food_name, updated_data)
+            edit_button.innerHTML = "Edit"
+        else:
+            for cell in cells[:-1]:
+                if cell.classList.contains("edit-mode"):
+                    cell.classList.remove("edit-mode")
+                    cell.innerHTML = cell.dataset.originalValue
+                else:
+                    cell.classList.add("edit-mode")
+                    cell.dataset.originalValue = cell.innerHTML.strip()
+                    if cell.dataset.field:
+                        cell.innerHTML = f'<input class="text-black" type="text" value="{cell.innerHTML.strip()}" />'
+            edit_button.innerHTML = "Save"
+
     def drawWidget(self):
         items_container = ""
         for item in self.menu:
             items_container += f"""
                 <tr class="border-b border-gray-500 font-light">
-                    <td>
-                        <div class="flex flex-row justify-start items-center gap-4 p-4 pr-0">
-                            <img class="w-14 w-14 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
-                            <p class="capitalize text-base sm:text-lg">{item['name']}</p>
-                        </div>
+                    <td class="p-4 pr-0" data-field="name">
+                        {item['name']}
                     </td>
-                    <td class="text-right">
+                    <td class="text-right" data-field="description">
                         {item['description']}
                     </td>
-                    <td class="text-right">
+                    <td class="text-right" data-field="type">
                         {item['type']}
                     </td>
-                    <td class="text-right">
-                        ฿ {item['price']}
+                    <td class="text-right" data-field="price">
+                        {item['price']}
                     </td>
-                    <td class="text-right">
-                        ฿​ {item['cost']}
+                    <td class="text-right" data-field="cost">
+                        {item['cost']}
                     </td>
-                    <td class="text-right">
+                    <td class="text-right" data-field="ingredients">
                         {item['ingredients']['data']}
+                    </td>
+                    <td class="edit-btn text-right cursor-pointer">
+                        Edit
                     </td>
                 </tr>
             """
@@ -952,11 +993,12 @@ class AdminMenu(AbstractWidget):
                         <thead>
                             <tr class="border-b border-gray-500">
                                 <th class="font-light text-left p-4 pr-0">Name</th>
-                                <th class="font-light text-right">Price</th>
                                 <th class="font-light text-right">Description</th>
                                 <th class="font-light text-right">Type</th>
+                                <th class="font-light text-right">Price</th>
                                 <th class="font-light text-right">Cost</th>
-                                <th class="font-light text-right p-4 pl-0">Ingredients</th>
+                                <th class="font-light text-right">Ingredients</th>
+                                <th class="font-light text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -964,12 +1006,13 @@ class AdminMenu(AbstractWidget):
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-10 text-white bg-blue-500 rounded-full p-8 cursor-pointer">
-                    Save Changes
-                </div>
             </div>
         """
         self.element.appendChild(content)
+
+        edit_buttons = content.querySelectorAll(".edit-btn")
+        for button in edit_buttons:
+            button.onclick = self.toggle_edit_mode
 
 
 if __name__ == "__main__":
