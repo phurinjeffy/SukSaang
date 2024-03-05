@@ -272,7 +272,7 @@ async def login_admin(username: str, password: str):
         user = connection.root.admins[username]
         if user.password == password:
             access_token = create_access_token(username)  # Generate JWT token
-            log.log_info(f"Admin {username} logged in successfully")
+            log.log_info(f"Admin '{username}' logged in successfully")
             return {"access_token": access_token, "token_type": "bearer"}
     log.log_error(f"HTTPException in login_admin: Invalid username or password")
     raise HTTPException(

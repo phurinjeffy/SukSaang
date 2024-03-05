@@ -51,7 +51,6 @@ class AbstractWidget(ABC):
     def __init__(self, element_id):
         self.element_id = element_id
         self._element = None
-        check_token()
 
     @property
     def element(self):
@@ -67,6 +66,7 @@ class AbstractWidget(ABC):
 class Layout(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        check_token()
 
     def drawWidget(self, widgets):
         self.content = document.createElement("div")
