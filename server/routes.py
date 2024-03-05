@@ -94,7 +94,8 @@ async def add_menu(
 ):
     return await _services.add_menu(category, name, price, description, type, cost, ingredients, sweetness)
 
-@router.patch("/menus/edit")
+
+@router.patch("/menus/{food_name}")
 async def edit_menu(
     food_name: str,
     category: Optional[str] = None,
@@ -107,6 +108,7 @@ async def edit_menu(
     sweetness: Optional[int] = None
 ):
     return await _services.edit_menu(food_name, category, name, price, description, type, cost, ingredients, sweetness)
+
 
 @router.delete("/menus/{food_name}")
 async def delete_menu(food_name: str):

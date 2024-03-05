@@ -335,6 +335,7 @@ async def delete_menu(food_name: str):
             detail=str(e),
         )
 
+
 async def edit_menu(
     food_name: str,
     category: Optional[str] = None,
@@ -382,7 +383,8 @@ async def edit_menu(
             status_code=500,
             detail="Failed to update menu information",
         )
-    
+
+
 # ------------ Customer Order ------------------
 async def get_orders(username: str):
     try:
