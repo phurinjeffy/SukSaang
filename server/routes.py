@@ -3,6 +3,7 @@ from database import *
 from models import *
 from schemas import *
 import services as _services
+from typing import Optional
 
 router = APIRouter()
 
@@ -93,11 +94,23 @@ async def add_menu(
 ):
     return await _services.add_menu(category, name, price, description, type, cost, ingredients, sweetness)
 
+@router.patch("/menus/edit")
+async def edit_menu(
+    food_name: str,
+    category: Optional[str] = None,
+    name: Optional[str] = None,
+    price: Optional[int] = None,
+    description: Optional[str] = None,
+    type: Optional[str] = None,
+    cost: Optional[int] = None,
+    ingredients: Optional[list] = None,
+    sweetness: Optional[int] = None
+):
+    return await _services.edit_menu(food_name, category, name, price, description, type, cost, ingredients, sweetness)
 
 @router.delete("/menus/{food_name}")
 async def delete_menu(food_name: str):
     return await _services.delete_menu(food_name)
-
 
 # ------------------ order ------------------
 @router.get("/users/{username}/orders")
