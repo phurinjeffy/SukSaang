@@ -858,12 +858,30 @@ class AdminHome(AbstractWidget):
 class AdminTable(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        self.table = None
+        self.fetch_table_info()
+        
+    def fetch_table_info(self):
+        url = "http://localhost:8000/tables"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.table = response.json()["tables"]
+        else:
+            print("Error fetching menu:", response.text)
 
     def drawWidget(self):
+        tables_container = ""
+        for table in self.table:
+            tables_container += f"""
+                <div>
+                    {table}
+                </div>
+            """
+            
         content = document.createElement("div")
         content.innerHTML = f"""
             <div class="flex flex-row justify-center items-center text-white">
-                TABLE
+                {tables_container}
             </div>
         """
         self.element.appendChild(content)

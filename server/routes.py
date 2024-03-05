@@ -131,12 +131,12 @@ async def delete_order(username: str, food_name: str, quantity: int):
 
 
 #------------------ Table ----------------------
-@router.get("/tables/")
+@router.get("/tables")
 async def get_tables():
     return await _services.get_tables()
 
 
-@router.post("/tables/")
+@router.post("/tables")
 async def add_table(table_num : int):
     return await _services.add_table(table_num)
 
