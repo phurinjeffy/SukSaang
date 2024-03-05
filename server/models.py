@@ -1,3 +1,4 @@
+import logging
 import persistent
 from abc import ABC, abstractmethod
 
@@ -121,3 +122,28 @@ class Drink(Food, persistent.Persistent):
 class Dessert(Food, persistent.Persistent):
     def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
         Food.__init__(self, name, price, description, type, cost, ingredients)
+        
+        
+class Log:
+    def __init__(self, filename='app.log', level=logging.INFO):
+        self.filename = filename
+        self.level = level
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(level)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        file_handler = logging.FileHandler(filename)
+        file_handler.setLevel(level)
+        file_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
+
+    def log_info(self, message):
+        self.logger.info(message)
+
+    def log_error(self, message):
+        self.logger.error(message)
+
+    def log_warning(self, message):
+        self.logger.warning(message)
+
+    def log_debug(self, message):
+        self.logger.debug(message)
