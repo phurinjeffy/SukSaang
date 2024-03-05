@@ -1,3 +1,4 @@
+import json
 import js
 from pyscript import document
 import requests
@@ -916,13 +917,9 @@ class AdminMenu(AbstractWidget):
             print("Error fetching menu:", response.text)
 
     def edit_menu(self, food_name, updated_data):
-        url = f"http://localhost:8000/menus/{food_name}?"
+        url = f"http://localhost:8000/menus/{food_name}"
         headers = {"Content-Type": "application/json"}
-        query_params = "&".join(
-            [f"{key}={value}" for key, value in updated_data.items()]
-        )
-        url += query_params
-        response = requests.patch(url, headers=headers)
+        response = requests.patch(url, headers=headers, params=updated_data)
         if response.status_code == 200:
             print(f"Menu '{food_name}' updated successfully")
         else:
@@ -942,7 +939,7 @@ class AdminMenu(AbstractWidget):
                     field_name = cell.dataset.field
                     value = cell.querySelector("input").value
                     updated_data[field_name] = value
-                    cell.innerHTML = value                    
+                    cell.innerHTML = value
             self.edit_menu(food_name, updated_data)
             edit_button.innerHTML = "Edit"
         else:
