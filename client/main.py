@@ -853,8 +853,8 @@ class AdminHome(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
-        
-        
+
+
 class AdminTable(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
@@ -867,8 +867,8 @@ class AdminTable(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
-        
-        
+
+
 class AdminLog(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
@@ -881,17 +881,74 @@ class AdminLog(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
-        
+
 
 class AdminMenu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        self.menu = None
+        self.fetch_menu_info()
+
+    def fetch_menu_info(self):
+        url = "http://localhost:8000/menus"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.menu = response.json()["menus"]
+        else:
+            print("Error fetching menu:", response.text)
 
     def drawWidget(self):
+        items_container = ""
+        for item in self.menu:
+            items_container += f"""
+                <tr class="border-b border-gray-500 font-light">
+                    <td>
+                        <div class="flex flex-row justify-start items-center gap-4 p-4 pr-0">
+                            <img class="w-14 w-14 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                            <p class="capitalize text-base sm:text-lg">{item['name']}</p>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        {item['description']}
+                    </td>
+                    <td class="text-right">
+                        {item['type']}
+                    </td>
+                    <td class="text-right">
+                        ฿ {item['price']}
+                    </td>
+                    <td class="text-right">
+                        ฿​ {item['cost']}
+                    </td>
+                    <td class="text-right">
+                        {item['ingredients']['data']}
+                    </td>
+                </tr>
+            """
+
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="flex flex-row justify-center items-center text-white">
-                MENU
+            <div class="w-full flex flex-col items-center text-white gap-8 py-10">
+                <div class="w-screen px-10">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-500">
+                                <th class="font-light text-left p-4 pr-0">Name</th>
+                                <th class="font-light text-right">Price</th>
+                                <th class="font-light text-right">Description</th>
+                                <th class="font-light text-right">Type</th>
+                                <th class="font-light text-right">Cost</th>
+                                <th class="font-light text-right p-4 pl-0">Ingredients</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items_container}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-10 text-white bg-blue-500 rounded-full p-8 cursor-pointer">
+                    Save Changes
+                </div>
             </div>
         """
         self.element.appendChild(content)
