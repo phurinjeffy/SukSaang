@@ -359,6 +359,8 @@ async def edit_menu(
         if category is not None:
             menu.category = category
         if name is not None:
+            if name != food_name:
+                connection.root.menus[name] = connection.root.menus.pop(food_name)
             menu.name = name
         if price is not None:
             menu.price = price

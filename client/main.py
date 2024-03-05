@@ -935,13 +935,14 @@ class AdminMenu(AbstractWidget):
 
         if edit_button.innerHTML == "Save":
             updated_data = {}
+            food_name = cells[0].dataset.originalValue
             for cell in cells[:-1]:
                 if cell.classList.contains("edit-mode"):
+                    cell.classList.remove("edit-mode")
                     field_name = cell.dataset.field
                     value = cell.querySelector("input").value
                     updated_data[field_name] = value
-                    cell.innerHTML = value
-            food_name = cells[0].textContent.strip()
+                    cell.innerHTML = value                    
             self.edit_menu(food_name, updated_data)
             edit_button.innerHTML = "Edit"
         else:
@@ -953,7 +954,7 @@ class AdminMenu(AbstractWidget):
                     cell.classList.add("edit-mode")
                     cell.dataset.originalValue = cell.innerHTML.strip()
                     if cell.dataset.field:
-                        cell.innerHTML = f'<input class="text-black" type="text" value="{cell.innerHTML.strip()}" />'
+                        cell.innerHTML = f'<input class="text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
             edit_button.innerHTML = "Save"
 
     def drawWidget(self):
@@ -964,20 +965,20 @@ class AdminMenu(AbstractWidget):
                     <td class="p-4 pr-0" data-field="name">
                         {item['name']}
                     </td>
-                    <td class="text-right" data-field="description">
+                    <td class="text-left" data-field="description">
                         {item['description']}
                     </td>
-                    <td class="text-right" data-field="type">
+                    <td class="text-left" data-field="type">
                         {item['type']}
+                    </td>
+                    <td class="text-left" data-field="ingredients">
+                        {item['ingredients']['data']}
                     </td>
                     <td class="text-right" data-field="price">
                         {item['price']}
                     </td>
                     <td class="text-right" data-field="cost">
                         {item['cost']}
-                    </td>
-                    <td class="text-right" data-field="ingredients">
-                        {item['ingredients']['data']}
                     </td>
                     <td class="edit-btn text-right cursor-pointer">
                         Edit
@@ -993,11 +994,11 @@ class AdminMenu(AbstractWidget):
                         <thead>
                             <tr class="border-b border-gray-500">
                                 <th class="font-light text-left p-4 pr-0">Name</th>
-                                <th class="font-light text-right">Description</th>
-                                <th class="font-light text-right">Type</th>
+                                <th class="font-light text-left">Description</th>
+                                <th class="font-light text-left">Type</th>
+                                <th class="font-light text-left">Ingredients</th>
                                 <th class="font-light text-right">Price</th>
                                 <th class="font-light text-right">Cost</th>
-                                <th class="font-light text-right">Ingredients</th>
                                 <th class="font-light text-right">Action</th>
                             </tr>
                         </thead>
