@@ -128,7 +128,16 @@ class Navbar(AbstractWidget):
             "": "Logout",
         }
         location_path = js.window.location.pathname
-        self.status = "ADMIN" if location_path.startswith("/admin") else "USER" if location_path not in ["/", "/login", "/register", "/admin_login", "/admin_register"] else False
+        self.status = (
+            "ADMIN"
+            if location_path.startswith("/admin")
+            else (
+                "USER"
+                if location_path
+                not in ["/", "/login", "/register", "/admin_login", "/admin_register"]
+                else False
+            )
+        )
 
     def title_redirect(self, event):
         if self.status == "USER":
@@ -159,7 +168,7 @@ class Navbar(AbstractWidget):
             """
         menu_elements += "</ul>"
         return menu_elements
-    
+
     def logout_click(self, event):
         js.window.localStorage.removeItem("access_token")
 
@@ -192,7 +201,7 @@ class Navbar(AbstractWidget):
 
         menu = content.querySelector(".menu")
         menu.onclick = self.toggle_menu
-        
+
         if self.status == "USER":
             logout = content.querySelector(".logout")
             logout.onclick = self.logout_click
@@ -803,12 +812,89 @@ class TableUser(AbstractWidget):
         pass
 
 
+class AdminSidebar(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+        self.link_mapping = {
+            "/admin_table": "View Table",
+            "/admin_log": "View Log",
+            "/admin_menu": "Adjust Menu",
+        }
+
+    def drawWidget(self):
+        li_elements = ""
+        for url, text in self.link_mapping.items():
+            li_elements += f"""
+                <li class="px-4 cursor-pointer capitalize font-medium text-white hover:scale-105 duration-200">
+                    <a href="{url}" class="{text.lower()}">{text}</a>
+                </li>
+            """
+
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="flex flex-row justify-center items-center text-white my-10">
+                <ul class="flex flex-row justify-center items-center bg-zinc-900 rounded-full p-10">
+                    {li_elements}
+                </ul>
+            </div>
+        """
+        self.element.appendChild(content)
+
+
 class AdminHome(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
 
     def drawWidget(self):
-        pass
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="flex flex-row justify-center items-center text-white">
+                HOME
+            </div>
+        """
+        self.element.appendChild(content)
+        
+        
+class AdminTable(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+
+    def drawWidget(self):
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="flex flex-row justify-center items-center text-white">
+                TABLE
+            </div>
+        """
+        self.element.appendChild(content)
+        
+        
+class AdminLog(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+
+    def drawWidget(self):
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="flex flex-row justify-center items-center text-white">
+                LOG
+            </div>
+        """
+        self.element.appendChild(content)
+        
+
+class AdminMenu(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+
+    def drawWidget(self):
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="flex flex-row justify-center items-center text-white">
+                MENU
+            </div>
+        """
+        self.element.appendChild(content)
 
 
 if __name__ == "__main__":
@@ -830,6 +916,12 @@ if __name__ == "__main__":
     elif location_path == "/cart":
         content.drawWidget([Cart("content")])
     elif location_path == "/admin_home":
-        content.drawWidget([AdminHome("content")])
+        content.drawWidget([AdminSidebar("content"), AdminHome("content")])
+    elif location_path == "/admin_table":
+        content.drawWidget([AdminSidebar("content"), AdminTable("content")])
+    elif location_path == "/admin_log":
+        content.drawWidget([AdminSidebar("content"), AdminLog("content")])
+    elif location_path == "/admin_menu":
+        content.drawWidget([AdminSidebar("content"), AdminMenu("content")])
     else:
         content.drawWidget([NotFound("content")])
