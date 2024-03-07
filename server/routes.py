@@ -41,7 +41,9 @@ async def login_user(username: str = Body(...), password: str = Body(...)):
 
 # ------------------ admin ------------------
 @router.get("/admins/me", response_model=AdminBase)
-async def get_current_admin(current_admin: Admin = Depends(_services.get_current_admin)):
+async def get_current_admin(
+    current_admin: Admin = Depends(_services.get_current_admin),
+):
     return current_admin
 
 
@@ -90,9 +92,11 @@ async def add_menu(
     type: str = Body(...),
     cost: int = Body(...),
     ingredients: list = Body(...),
-    sweetness: int = Body(...)
+    sweetness: int = Body(...),
 ):
-    return await _services.add_menu(category, name, price, description, type, cost, ingredients, sweetness)
+    return await _services.add_menu(
+        category, name, price, description, type, cost, ingredients, sweetness
+    )
 
 
 @router.patch("/menus/{food_name}")
@@ -104,15 +108,26 @@ async def edit_menu(
     description: Optional[str] = None,
     type: Optional[str] = None,
     cost: Optional[int] = None,
-    ingredients: Optional[list] = None,
-    sweetness: Optional[int] = None
+    ingredients: Optional[str] = None,
+    sweetness: Optional[int] = None,
 ):
-    return await _services.edit_menu(food_name, category, name, price, description, type, cost, ingredients, sweetness)
+    return await _services.edit_menu(
+        food_name,
+        category,
+        name,
+        price,
+        description,
+        type,
+        cost,
+        ingredients,
+        sweetness,
+    )
 
 
 @router.delete("/menus/{food_name}")
 async def delete_menu(food_name: str):
     return await _services.delete_menu(food_name)
+
 
 # ------------------ order ------------------
 @router.get("/users/{username}/orders")
@@ -130,14 +145,14 @@ async def delete_order(username: str, food_name: str, quantity: int):
     return await _services.delete_order(username, food_name, quantity)
 
 
-#------------------ Table ----------------------
+# ------------------ Table ----------------------
 @router.get("/tables")
 async def get_tables():
     return await _services.get_tables()
 
 
 @router.post("/tables")
-async def add_table(table_num : int):
+async def add_table(table_num: int):
     return await _services.add_table(table_num)
 
 

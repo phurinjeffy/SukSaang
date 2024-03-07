@@ -1,5 +1,6 @@
 import jwt
 import os
+import ast
 from dotenv import load_dotenv
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -399,7 +400,7 @@ async def edit_menu(
     description: Optional[str] = None,
     type: Optional[str] = None,
     cost: Optional[int] = None,
-    ingredients: Optional[list] = None,
+    ingredients: Optional[str] = None,
     sweetness: Optional[int] = None,
 ):
     try:
@@ -423,7 +424,8 @@ async def edit_menu(
         if cost is not None:
             menu.cost = cost
         if ingredients is not None:
-            menu.ingredients = ingredients
+            ingredients_list = ast.literal_eval(ingredients)
+            menu.ingredients = ingredients_list
         if sweetness is not None:
             menu.sweetness = sweetness
 
