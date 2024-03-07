@@ -891,12 +891,47 @@ class AdminTable(AbstractWidget):
 class AdminLog(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        self.logs = None
+        self.fetch_log_info()
+
+    def fetch_log_info(self):
+        url = "http://localhost:8000/logs"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.logs = response.json()
+        else:
+            print("Error fetching logs:", response.text)
 
     def drawWidget(self):
+        table_rows = ""
+        for log in self.logs:
+            l = log.split(" - ", 2)
+            if len(l) == 3:
+                table_rows += f"""
+                    <tr>
+                        <td class="px-4 py-2 text-left bg-gray-800 border">{l[0]}</td>
+                        <td class="px-4 py-2 text-left bg-gray-800 border">{l[1]}</td>
+                        <td class="px-4 py-2 text-left bg-gray-800 border">{l[2]}</td>
+                    </tr>
+                """
+            else:
+                print("Unexpected log format:", log)
+
         content = document.createElement("div")
         content.innerHTML = f"""
             <div class="flex flex-row justify-center items-center text-white">
-                LOG
+                <table class="table-auto w-full mx-12 mb-12">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2 text-left bg-gray-900 border">Timestamp</th>
+                            <th class="px-4 py-2 text-left bg-gray-900 border">Level</th>
+                            <th class="px-4 py-2 text-left bg-gray-900 border">Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {table_rows}
+                    </tbody>
+                </table>
             </div>
         """
         self.element.appendChild(content)

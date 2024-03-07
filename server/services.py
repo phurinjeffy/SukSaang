@@ -434,7 +434,7 @@ async def edit_menu(
         log.log_info(f"{food_name}: edit_menu operation successful")
         return {"message": f"Menu '{food_name}' updated successfully"}
     except HTTPException as he:
-        log.log_error(f"HTTPException in edit_menu: {he.detail}")
+        log.log_error(f"HTTPException in edit_menu: {he.detail.strip()}")
         raise
     except Exception as e:
         log.log_error(f"Error in edit_menu: {str(e)}")

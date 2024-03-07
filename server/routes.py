@@ -3,10 +3,21 @@ from database import *
 from models import *
 from schemas import *
 import services as _services
-from typing import Optional
+from typing import Optional, List
 
 router = APIRouter()
 
+
+# ------------------ Log ----------------------
+@router.get("/logs", response_model=List[str])
+def get_logs():
+    try:
+        with open("app.log", "r") as file:
+            logs = file.readlines()
+        return logs
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 # ------------------ user ------------------
 @router.get("/users/me", response_model=UserBase)
