@@ -922,8 +922,10 @@ class AdminMenu(AbstractWidget):
         response = requests.patch(url, headers=headers, params=updated_data)
         if response.status_code == 200:
             print(f"Menu '{food_name}' updated successfully")
+            return True
         else:
             print(f"Failed to update menu '{food_name}':", response.text)
+            return False
 
     def toggle_edit_mode(self, event):
         row = event.target.closest("tr")
@@ -933,25 +935,28 @@ class AdminMenu(AbstractWidget):
         if edit_button.innerHTML == "Save":
             updated_data = {}
             food_name = cells[0].dataset.originalValue
+            updated_cells = []
+
             for cell in cells[:-1]:
-                if cell.classList.contains("edit-mode"):
-                    cell.classList.remove("edit-mode")
-                    field_name = cell.dataset.field
-                    value = cell.querySelector("input").value
-                    updated_data[field_name] = value
+                field_name = cell.dataset.field
+                value = cell.querySelector("input").value
+                updated_data[field_name] = value
+                updated_cells.append((cell, value))
+
+            success = self.edit_menu(food_name, updated_data)
+            if success:
+                for cell, value in updated_cells:
                     cell.innerHTML = value
-            self.edit_menu(food_name, updated_data)
-            edit_button.innerHTML = "Edit"
+                    cell.classList.remove("edit-mode")
+                edit_button.innerHTML = "Edit"
+            else:
+                js.alert("Failed to update menu.")
         else:
             for cell in cells[:-1]:
-                if cell.classList.contains("edit-mode"):
-                    cell.classList.remove("edit-mode")
-                    cell.innerHTML = cell.dataset.originalValue
-                else:
-                    cell.classList.add("edit-mode")
-                    cell.dataset.originalValue = cell.innerHTML.strip()
-                    if cell.dataset.field:
-                        cell.innerHTML = f'<input class="text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
+                cell.classList.add("edit-mode")
+                cell.dataset.originalValue = cell.innerHTML.strip()
+                if cell.dataset.field:
+                    cell.innerHTML = f'<input class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
             edit_button.innerHTML = "Save"
 
     def drawWidget(self):
