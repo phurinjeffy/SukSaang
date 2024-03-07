@@ -643,7 +643,7 @@ class Detail(AbstractWidget):
                             <span class="font-medium mr-1">Type: </span> {self.item['type']}
                         </li>
                         <li>
-                            <span class="font-medium mr-1">Ingredients: </span> {self.item['ingredients']['data']}
+                            <span class="font-medium mr-1">Ingredients: </span> {self.item['ingredients']}
                         </li>
                     </ul>
                     <div class="flex flex-row gap-4">
@@ -974,7 +974,7 @@ class AdminMenu(AbstractWidget):
                         {item['type']}
                     </td>
                     <td class="text-left" data-field="ingredients">
-                        {item['ingredients']['data']}
+                        {item['ingredients']}
                     </td>
                     <td class="text-right" data-field="price">
                         {item['price']}

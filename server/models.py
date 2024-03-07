@@ -105,7 +105,7 @@ class Food(ABC):
         self.description = description
         self.type = type
         self.cost = cost
-        self.ingredients = persistent.list.PersistentList(ingredients)
+        self.ingredients = ingredients
 
 
 class MainDish(Food, persistent.Persistent):
