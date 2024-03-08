@@ -961,13 +961,13 @@ class AdminMenu(AbstractWidget):
         else:
             print(f"Failed to update menu '{food_name}':", response.text)
             return False
-        
+
     def add_clicked(self, event):
         new_container = document.querySelector(".new-container")
         new_container.classList.remove("hidden")
         add_btn = new_container.querySelector(".add-btn")
         add_btn.onclick = self.add_menu
-        
+
     def add_menu(self, event):
         new_menu_data = {
             "category": document.querySelector("#new-item-category").value,
@@ -976,7 +976,12 @@ class AdminMenu(AbstractWidget):
             "description": document.querySelector("#new-item-description").value,
             "type": document.querySelector("#new-item-type").value,
             "cost": document.querySelector("#new-item-cost").value,
-            "ingredients": [ingredient.strip() for ingredient in document.querySelector("#new-item-ingredients").value.split(',')]
+            "ingredients": [
+                ingredient.strip()
+                for ingredient in document.querySelector(
+                    "#new-item-ingredients"
+                ).value.split(",")
+            ],
         }
 
         url = f"http://localhost:8000/menus"
@@ -988,7 +993,26 @@ class AdminMenu(AbstractWidget):
             self.append_menu_to_table(new_menu_data)
         else:
             print(f"Failed to add menu:", response.text)
-            
+
+    def delete_menu(self, food_name):
+        url = f"http://localhost:8000/menus/{food_name}"
+        response = requests.delete(url)
+        if response.status_code == 200:
+            print(f"Menu '{food_name}' deleted successfully")
+            return True
+        else:
+            print(f"Failed to delete menu '{food_name}':", response.text)
+            return False
+
+    def delete_menu_row(self, event):
+        row = event.target.closest("tr")
+        food_name = row.querySelector("td").dataset.originalValue
+        confirm = js.window.confirm(f"Are you sure you want to remove '{food_name}'?")
+        if confirm:
+            success = self.delete_menu(food_name)
+            if success:
+                row.remove()
+
     def append_menu_to_table(self, new_menu_data):
         self.menu.append(new_menu_data)
         tbody = document.querySelector("tbody")
@@ -1015,7 +1039,7 @@ class AdminMenu(AbstractWidget):
             food_name = cells[0].dataset.originalValue
             updated_cells = []
 
-            for cell in cells[:-1]:
+            for cell in cells[:-2]:
                 field_name = cell.dataset.field
                 value = cell.querySelector("input").value
                 updated_data[field_name] = value
@@ -1027,6 +1051,8 @@ class AdminMenu(AbstractWidget):
                     cell.innerHTML = value
                     cell.classList.remove("edit-mode")
                 edit_button.innerHTML = "Edit"
+                delete_button = row.querySelector(".delete-btn")
+                delete_button.remove()
             else:
                 js.alert("Failed to update menu.")
         else:
@@ -1036,6 +1062,13 @@ class AdminMenu(AbstractWidget):
                 if cell.dataset.field:
                     cell.innerHTML = f'<input class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
             edit_button.innerHTML = "Save"
+            delete_button = document.createElement("td")
+            delete_button.className = (
+                "delete-btn text-right cursor-pointer text-red-500"
+            )
+            delete_button.innerHTML = "Delete"
+            delete_button.onclick = self.delete_menu_row
+            row.appendChild(delete_button)
 
     def drawWidget(self):
         items_container = ""
@@ -1111,7 +1144,7 @@ class AdminMenu(AbstractWidget):
         edit_buttons = content.querySelectorAll(".edit-btn")
         for button in edit_buttons:
             button.onclick = self.toggle_edit_mode
-            
+
         new_button = content.querySelector(".new-btn")
         new_button.onclick = self.add_clicked
 
