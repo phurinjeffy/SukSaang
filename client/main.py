@@ -123,21 +123,31 @@ class Navbar(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.nav = False
-        self.link_mapping = {
-            "/menu": "Menu",
-            "/cart": "Cart",
-            "": "Logout",
-        }
         location_path = js.window.location.pathname
         self.status = (
             "ADMIN"
             if location_path.startswith("/admin")
+            and location_path not in ["/admin_login", "/admin_register"]
             else (
                 "USER"
                 if location_path
                 not in ["/", "/login", "/register", "/admin_login", "/admin_register"]
                 else False
             )
+        )
+        self.link_mapping = (
+            {
+                "/menu": "Menu",
+                "/cart": "Cart",
+                "": "Logout",
+            }
+            if self.status == "USER"
+            else {
+                "/admin_table": "View Table",
+                "/admin_log": "View Log",
+                "/admin_menu": "Adjust Menu",
+                "": "Logout",
+            }
         )
 
     def title_redirect(self, event):
@@ -185,14 +195,14 @@ class Navbar(AbstractWidget):
             """
 
         content.innerHTML = f"""
-            <div class="w-screen h-24 px-8 text-white flex {'bg-gradient-to-br from-blue-500 to-blue-400 justify-between' if self.status == "USER" else 'backdrop-blur-lg justify-center'} items-center fixed z-10">
+            <div class="w-screen h-24 px-8 text-white flex {'bg-gradient-to-br from-blue-500 to-blue-400 justify-between' if self.status == "USER" else 'backdrop-blur-lg justify-between' if self.status == "ADMIN" else 'backdrop-blur-lg justify-center'} items-center fixed z-10">
                 <a class="title font-signature font-extrabold text-5xl cursor-pointer">SukSaang</a>
                 <div class="menu-container"></div>
                 <ul class="hidden md:flex flex-row">
-                    {li_elements if self.status == "USER" else ""}
+                    {li_elements if self.status in ["USER", "ADMIN"] else ""}
                 </ul>
                 <div class="menu cursor-pointer pr-4 z-10 text-gray-100 md:hidden">
-                    {f'<img src="/close.svg" class="menu-btn w-10" />' if self.nav else f'<img src="/menu.svg" class="menu-btn w-10" />' if self.status == "USER" else ""}
+                    {f'<img src="/close.svg" class="menu-btn w-10" />' if self.nav else f'<img src="/menu.svg" class="menu-btn w-10" />' if self.status in ["USER", "ADMIN"] else ""}
                 </div>
             </div>
         """
@@ -203,7 +213,7 @@ class Navbar(AbstractWidget):
         menu = content.querySelector(".menu")
         menu.onclick = self.toggle_menu
 
-        if self.status == "USER":
+        if self.status in ["USER", "ADMIN"]:
             logout = content.querySelector(".logout")
             logout.onclick = self.logout_click
 
@@ -813,35 +823,6 @@ class TableUser(AbstractWidget):
         pass
 
 
-class AdminSidebar(AbstractWidget):
-    def __init__(self, element_id):
-        AbstractWidget.__init__(self, element_id)
-        self.link_mapping = {
-            "/admin_table": "View Table",
-            "/admin_log": "View Log",
-            "/admin_menu": "Adjust Menu",
-        }
-
-    def drawWidget(self):
-        li_elements = ""
-        for url, text in self.link_mapping.items():
-            li_elements += f"""
-                <li class="px-4 cursor-pointer capitalize font-medium text-white hover:scale-105 duration-200">
-                    <a href="{url}" class="{text.lower()}">{text}</a>
-                </li>
-            """
-
-        content = document.createElement("div")
-        content.innerHTML = f"""
-            <div class="flex flex-row justify-center items-center text-white my-10">
-                <ul class="flex flex-row justify-center items-center bg-zinc-900 rounded-full p-10">
-                    {li_elements}
-                </ul>
-            </div>
-        """
-        self.element.appendChild(content)
-
-
 class AdminHome(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
@@ -919,8 +900,11 @@ class AdminLog(AbstractWidget):
 
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="flex flex-row justify-center items-center text-white">
-                <table class="table-auto w-full mx-12 mb-12">
+            <div class="flex flex-col justify-center items-center text-white mx-12 pb-12">
+                <div class="text-4xl font-semibold my-6">
+                    Logs
+                </div>
+                <table class="table-auto w-full">
                     <thead>
                         <tr>
                             <th class="px-4 py-2 text-left bg-gray-900 border">Timestamp</th>
@@ -941,6 +925,7 @@ class AdminMenu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.menu = []
+        self.add_toggle = False
         self.fetch_menu_info()
 
     def fetch_menu_info(self):
@@ -963,10 +948,14 @@ class AdminMenu(AbstractWidget):
             return False
 
     def add_clicked(self, event):
+        self.add_toggle = not self.add_toggle
         new_container = document.querySelector(".new-container")
-        new_container.classList.remove("hidden")
-        add_btn = new_container.querySelector(".add-btn")
-        add_btn.onclick = self.add_menu
+        if self.add_toggle:
+            new_container.classList.remove("hidden")
+            add_btn = new_container.querySelector(".add-btn")
+            add_btn.onclick = self.add_menu
+        else:
+            new_container.classList.add("hidden")
 
     def add_menu(self, event):
         new_menu_data = {
@@ -990,6 +979,12 @@ class AdminMenu(AbstractWidget):
         if response.status_code == 200:
             print(f"Menu added successfully")
             document.querySelector(".new-container").classList.add("hidden")
+            document.querySelector("#new-item-name").value = ""
+            document.querySelector("#new-item-price").value = ""
+            document.querySelector("#new-item-description").value = ""
+            document.querySelector("#new-item-type").value = ""
+            document.querySelector("#new-item-cost").value = ""
+            document.querySelector("#new-item-ingredients").value = ""
             self.append_menu_to_table(new_menu_data)
         else:
             print(f"Failed to add menu:", response.text)
@@ -1063,10 +1058,8 @@ class AdminMenu(AbstractWidget):
                     cell.innerHTML = f'<input class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
             edit_button.innerHTML = "Save"
             delete_button = document.createElement("td")
-            delete_button.className = (
-                "delete-btn text-right cursor-pointer text-red-500"
-            )
-            delete_button.innerHTML = "Delete"
+            delete_button.className = "delete-btn cursor-pointer"
+            delete_button.innerHTML = f"<img src='/trash.svg' class='w-6' />"
             delete_button.onclick = self.delete_menu_row
             row.appendChild(delete_button)
 
@@ -1102,7 +1095,10 @@ class AdminMenu(AbstractWidget):
         content = document.createElement("div")
         content.innerHTML = f"""
             <div class="w-full flex flex-col items-center text-white gap-8 py-10">
-                <div class="w-screen px-10">
+                <div class="text-4xl font-semibold">
+                    Adjust Menu
+                </div>
+                <div class="w-screen px-10 my-6">
                     <table class="w-full">
                         <thead>
                             <tr class="border-b border-gray-500">
@@ -1134,8 +1130,9 @@ class AdminMenu(AbstractWidget):
                     <input id="new-item-cost" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Cost">
                     <div class="add-btn cursor-pointer">Add</div>
                 </div>
-                <div class="new-btn cursor-pointer">
-                    New
+                <div class="new-btn cursor-pointer flex flex-col justify-center items-center hover:scale-105 duration-300 gap-2">
+                    <img src="/add.svg" class="w-10" />
+                    Add Item
                 </div>
             </div>
         """
@@ -1168,12 +1165,12 @@ if __name__ == "__main__":
     elif location_path == "/cart":
         content.drawWidget([Cart("content")])
     elif location_path == "/admin_home":
-        content.drawWidget([AdminSidebar("content"), AdminHome("content")])
+        content.drawWidget([AdminHome("content")])
     elif location_path == "/admin_table":
-        content.drawWidget([AdminSidebar("content"), AdminTable("content")])
+        content.drawWidget([AdminTable("content")])
     elif location_path == "/admin_log":
-        content.drawWidget([AdminSidebar("content"), AdminLog("content")])
+        content.drawWidget([AdminLog("content")])
     elif location_path == "/admin_menu":
-        content.drawWidget([AdminSidebar("content"), AdminMenu("content")])
+        content.drawWidget([AdminMenu("content")])
     else:
         content.drawWidget([NotFound("content")])

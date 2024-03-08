@@ -372,7 +372,7 @@ async def add_menu(
 async def delete_menu(food_name: str):
     try:
         if food_name in connection.root.menus:
-            del connection.root[food_name]
+            del connection.root.menus[food_name]
             connection.transaction_manager.commit()
             log.log_info(f"{food_name}: delete_menu operation successful")
             return {"message": f"Menu Item '{food_name}' deleted successfully"}
