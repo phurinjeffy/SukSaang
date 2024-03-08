@@ -940,7 +940,7 @@ class AdminLog(AbstractWidget):
 class AdminMenu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.menu = None
+        self.menu = []
         self.fetch_menu_info()
 
     def fetch_menu_info(self):
@@ -961,6 +961,49 @@ class AdminMenu(AbstractWidget):
         else:
             print(f"Failed to update menu '{food_name}':", response.text)
             return False
+        
+    def add_clicked(self, event):
+        new_container = document.querySelector(".new-container")
+        new_container.classList.remove("hidden")
+        add_btn = new_container.querySelector(".add-btn")
+        add_btn.onclick = self.add_menu
+        
+    def add_menu(self, event):
+        new_menu_data = {
+            "category": document.querySelector("#new-item-category").value,
+            "name": document.querySelector("#new-item-name").value,
+            "price": document.querySelector("#new-item-price").value,
+            "description": document.querySelector("#new-item-description").value,
+            "type": document.querySelector("#new-item-type").value,
+            "cost": document.querySelector("#new-item-cost").value,
+            "ingredients": [ingredient.strip() for ingredient in document.querySelector("#new-item-ingredients").value.split(',')]
+        }
+
+        url = f"http://localhost:8000/menus"
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(url, headers=headers, json=new_menu_data)
+        if response.status_code == 200:
+            print(f"Menu added successfully")
+            document.querySelector(".new-container").classList.add("hidden")
+            self.append_menu_to_table(new_menu_data)
+        else:
+            print(f"Failed to add menu:", response.text)
+            
+    def append_menu_to_table(self, new_menu_data):
+        self.menu.append(new_menu_data)
+        tbody = document.querySelector("tbody")
+        item_row = document.createElement("tr")
+        item_row.className = "border-b border-gray-500 font-light"
+        item_row.innerHTML = f"""
+            <td class="p-4 pr-0" data-field="name">{new_menu_data['name']}</td>
+            <td class="text-left" data-field="description">{new_menu_data['description']}</td>
+            <td class="text-left" data-field="type">{new_menu_data['type']}</td>
+            <td class="text-left" data-field="ingredients">{new_menu_data['ingredients']}</td>
+            <td class="text-right" data-field="price">{new_menu_data['price']}</td>
+            <td class="text-right" data-field="cost">{new_menu_data['cost']}</td>
+            <td class="edit-btn text-right cursor-pointer">Edit</td>
+        """
+        tbody.appendChild(item_row)
 
     def toggle_edit_mode(self, event):
         row = event.target.closest("tr")
@@ -1044,6 +1087,23 @@ class AdminMenu(AbstractWidget):
                         </tbody>
                     </table>
                 </div>
+                <div class="new-container hidden flex flex-row justify-center items-center gap-2">
+                    <select id="new-item-category" class="w-full text-black border border-gray-300 rounded px-3 py-1">
+                        <option value="MAIN">Main</option>
+                        <option value="DRINK">Drink</option>
+                        <option value="DESSERT">Dessert</option>
+                    </select>
+                    <input id="new-item-name" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Name">
+                    <input id="new-item-description" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Description">
+                    <input id="new-item-type" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Type">
+                    <input id="new-item-ingredients" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Ingredients">
+                    <input id="new-item-price" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Price">
+                    <input id="new-item-cost" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Cost">
+                    <div class="add-btn cursor-pointer">Add</div>
+                </div>
+                <div class="new-btn cursor-pointer">
+                    New
+                </div>
             </div>
         """
         self.element.appendChild(content)
@@ -1051,6 +1111,9 @@ class AdminMenu(AbstractWidget):
         edit_buttons = content.querySelectorAll(".edit-btn")
         for button in edit_buttons:
             button.onclick = self.toggle_edit_mode
+            
+        new_button = content.querySelector(".new-btn")
+        new_button.onclick = self.add_clicked
 
 
 if __name__ == "__main__":

@@ -103,7 +103,7 @@ async def add_menu(
     type: str = Body(...),
     cost: int = Body(...),
     ingredients: list = Body(...),
-    sweetness: int = Body(...),
+    sweetness: int = Body(1),
 ):
     return await _services.add_menu(
         category, name, price, description, type, cost, ingredients, sweetness
