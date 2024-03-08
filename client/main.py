@@ -830,8 +830,13 @@ class AdminHome(AbstractWidget):
     def drawWidget(self):
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="flex flex-row justify-center items-center text-white">
-                HOME
+            <div class="w-full flex flex-col items-center text-white gap-8 py-10">
+                <div class="text-4xl font-semibold">
+                    Statistics
+                </div>
+                <div class="w-screen px-10 my-6">
+
+                </div>
             </div>
         """
         self.element.appendChild(content)
@@ -855,15 +860,29 @@ class AdminTable(AbstractWidget):
         tables_container = ""
         for table in self.table:
             tables_container += f"""
-                <div>
-                    {table}
-                </div>
+                <tr class="border-b border-gray-500 font-light">
+                    <td>{table}</td>
+                </tr>
             """
 
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="flex flex-row justify-center items-center text-white">
-                {tables_container}
+            <div class="w-full flex flex-col items-center text-white gap-8 py-10">
+                <div class="text-4xl font-semibold">
+                    Tables
+                </div>
+                <div class="w-screen px-10 my-6">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-500">
+                                <th class="font-light text-left p-4 pr-0">Table</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {tables_container}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         """
         self.element.appendChild(content)
