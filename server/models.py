@@ -79,9 +79,10 @@ class Menu(persistent.Persistent):
 
 
 class Table(persistent.Persistent):
-    def __init__(self, table_num, customers=[]):
+    def __init__(self, table_num, customers=[], available=True):
         self.table_num = table_num
         self.customers = persistent.list.PersistentList(customers)
+        self.available = available
 
     def add_customers(self, customer):
         self.customers.append(customer)
@@ -99,29 +100,30 @@ class Statistic(persistent.Persistent):
 
 
 class Food(ABC):
-    def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], photo="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg"):
         self.name = name
         self.price = price
         self.description = description
         self.type = type
         self.cost = cost
         self.ingredients = ingredients
+        self.photo = photo
 
 
 class MainDish(Food, persistent.Persistent):
-    def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
-        Food.__init__(self, name, price, description, type, cost, ingredients)
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], photo="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg"):
+        Food.__init__(self, name, price, description, type, cost, ingredients, photo)
         
 
 class Drink(Food, persistent.Persistent):
-    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], sweetness=1):
-        Food.__init__(self, name, price, description, type, cost, ingredients)
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], photo="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg", sweetness=1):
+        Food.__init__(self, name, price, description, type, cost, ingredients, photo)
         self.sweetness = sweetness
 
 
 class Dessert(Food, persistent.Persistent):
-    def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
-        Food.__init__(self, name, price, description, type, cost, ingredients)
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], photo="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg"):
+        Food.__init__(self, name, price, description, type, cost, ingredients, photo)
         
         
 class Log:

@@ -548,7 +548,7 @@ class Menu(AbstractWidget):
         for item in self.menu:
             menu_container += f"""
                 <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer">
-                    <img class="w-36 w-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                    <img class="w-36 h-36 mb-1" src="{item['photo']}" />
                     <h3 class="capitalize font-light text-sm sm:text-lg">{item['name']}</h3>
                     <p class="text-sm font-light">฿ {item['price']}</p>
                 </div>
@@ -861,7 +861,9 @@ class AdminTable(AbstractWidget):
         for table in self.table:
             tables_container += f"""
                 <tr class="border-b border-gray-500 font-light">
-                    <td>{table}</td>
+                    <td class="p-4 pr-0">{table['table_num']}</td>
+                    <td>{table['customers']}</td>
+                    <td>{table['available']}</td>
                 </tr>
             """
 
@@ -876,6 +878,8 @@ class AdminTable(AbstractWidget):
                         <thead>
                             <tr class="border-b border-gray-500">
                                 <th class="font-light text-left p-4 pr-0">Table</th>
+                                <th class="font-light text-left">Customers</th>
+                                <th class="font-light text-left">Availability</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -954,95 +958,7 @@ class AdminMenu(AbstractWidget):
             self.menu = response.json()["menus"]
         else:
             print("Error fetching menu:", response.text)
-
-    def edit_menu(self, food_name, updated_data):
-        url = f"http://localhost:8000/menus/{food_name}"
-        headers = {"Content-Type": "application/json"}
-        response = requests.patch(url, headers=headers, params=updated_data)
-        if response.status_code == 200:
-            print(f"Menu '{food_name}' updated successfully")
-            return True
-        else:
-            print(f"Failed to update menu '{food_name}':", response.text)
-            return False
-
-    def add_clicked(self, event):
-        self.add_toggle = not self.add_toggle
-        new_container = document.querySelector(".new-container")
-        if self.add_toggle:
-            new_container.classList.remove("hidden")
-            add_btn = new_container.querySelector(".add-btn")
-            add_btn.onclick = self.add_menu
-        else:
-            new_container.classList.add("hidden")
-
-    def add_menu(self, event):
-        new_menu_data = {
-            "category": document.querySelector("#new-item-category").value,
-            "name": document.querySelector("#new-item-name").value,
-            "price": document.querySelector("#new-item-price").value,
-            "description": document.querySelector("#new-item-description").value,
-            "type": document.querySelector("#new-item-type").value,
-            "cost": document.querySelector("#new-item-cost").value,
-            "ingredients": [
-                ingredient.strip()
-                for ingredient in document.querySelector(
-                    "#new-item-ingredients"
-                ).value.split(",")
-            ],
-        }
-
-        url = f"http://localhost:8000/menus"
-        headers = {"Content-Type": "application/json"}
-        response = requests.post(url, headers=headers, json=new_menu_data)
-        if response.status_code == 200:
-            print(f"Menu added successfully")
-            document.querySelector(".new-container").classList.add("hidden")
-            document.querySelector("#new-item-name").value = ""
-            document.querySelector("#new-item-price").value = ""
-            document.querySelector("#new-item-description").value = ""
-            document.querySelector("#new-item-type").value = ""
-            document.querySelector("#new-item-cost").value = ""
-            document.querySelector("#new-item-ingredients").value = ""
-            self.append_menu_to_table(new_menu_data)
-        else:
-            print(f"Failed to add menu:", response.text)
-
-    def delete_menu(self, food_name):
-        url = f"http://localhost:8000/menus/{food_name}"
-        response = requests.delete(url)
-        if response.status_code == 200:
-            print(f"Menu '{food_name}' deleted successfully")
-            return True
-        else:
-            print(f"Failed to delete menu '{food_name}':", response.text)
-            return False
-
-    def delete_menu_row(self, event):
-        row = event.target.closest("tr")
-        food_name = row.querySelector("td").dataset.originalValue
-        confirm = js.window.confirm(f"Are you sure you want to remove '{food_name}'?")
-        if confirm:
-            success = self.delete_menu(food_name)
-            if success:
-                row.remove()
-
-    def append_menu_to_table(self, new_menu_data):
-        self.menu.append(new_menu_data)
-        tbody = document.querySelector("tbody")
-        item_row = document.createElement("tr")
-        item_row.className = "border-b border-gray-500 font-light"
-        item_row.innerHTML = f"""
-            <td class="p-4 pr-0" data-field="name">{new_menu_data['name']}</td>
-            <td class="text-left" data-field="description">{new_menu_data['description']}</td>
-            <td class="text-left" data-field="type">{new_menu_data['type']}</td>
-            <td class="text-left" data-field="ingredients">{new_menu_data['ingredients']}</td>
-            <td class="text-right" data-field="price">{new_menu_data['price']}</td>
-            <td class="text-right" data-field="cost">{new_menu_data['cost']}</td>
-            <td class="edit-btn text-right cursor-pointer">Edit</td>
-        """
-        tbody.appendChild(item_row)
-
+            
     def toggle_edit_mode(self, event):
         row = event.target.closest("tr")
         cells = list(row.querySelectorAll("td"))
@@ -1081,6 +997,90 @@ class AdminMenu(AbstractWidget):
             delete_button.innerHTML = f"<img src='/trash.svg' class='w-6' />"
             delete_button.onclick = self.delete_menu_row
             row.appendChild(delete_button)
+
+    def edit_menu(self, food_name, updated_data):
+        url = f"http://localhost:8000/menus/{food_name}"
+        headers = {"Content-Type": "application/json"}
+        response = requests.patch(url, headers=headers, params=updated_data)
+        if response.status_code == 200:
+            print(f"Menu '{food_name}' updated successfully")
+            return True
+        else:
+            print(f"Failed to update menu '{food_name}':", response.text)
+            return False
+
+    def add_clicked(self, event):
+        self.add_toggle = not self.add_toggle
+        new_container = document.querySelector(".new-container")
+        if self.add_toggle:
+            new_container.classList.remove("hidden")
+            add_btn = new_container.querySelector(".add-btn")
+            add_btn.onclick = self.add_menu
+        else:
+            new_container.classList.add("hidden")
+
+    def add_menu(self, event):
+        form = document.querySelector(".new-container")
+        
+        form_data = {
+            "category": form.querySelector("#new-category").value,
+            "name": form.querySelector("#new-name").value,
+            "description": form.querySelector("#new-description").value,
+            "type": form.querySelector("#new-type").value,
+            "price": form.querySelector("#new-price").value,
+            "cost": form.querySelector("#new-cost").value,
+            "ingredients": form.querySelector("#new-ingredients").value.split(","),
+        }
+        
+        # photo_file = form.querySelector("#new-photo").files.item(0)
+        # files = {
+        #     "photo": (photo_file.name, photo_file, photo_file.type)
+        # }
+
+        url = "http://localhost:8000/menus"
+        response = requests.post(url, data=form_data)
+
+        if response.status_code == 200:
+            print(f"Menu added successfully")
+            # form.classList.add("hidden")
+            # self.append_menu_to_table(form_data)
+        else:
+            print(f"Failed to add menu:", response.text)
+
+    # def append_menu_to_table(self, new_menu_data):
+    #     self.menu.append(new_menu_data)
+    #     tbody = document.querySelector("tbody")
+    #     item_row = document.createElement("tr")
+    #     item_row.className = "border-b border-gray-500 font-light"
+    #     item_row.innerHTML = f"""
+    #         <td class="p-4 pr-0" data-field="name">{new_menu_data['name']}</td>
+    #         <td class="text-left" data-field="description">{new_menu_data['description']}</td>
+    #         <td class="text-left" data-field="type">{new_menu_data['type']}</td>
+    #         <td class="text-left" data-field="ingredients">{new_menu_data['ingredients']}</td>
+    #         <td class="text-right" data-field="price">{new_menu_data['price']}</td>
+    #         <td class="text-right" data-field="cost">{new_menu_data['cost']}</td>
+    #         <td class="edit-btn text-right cursor-pointer">Edit</td>
+    #     """
+    #     tbody.appendChild(item_row)
+
+    def delete_menu(self, food_name):
+        url = f"http://localhost:8000/menus/{food_name}"
+        response = requests.delete(url)
+        if response.status_code == 200:
+            print(f"Menu '{food_name}' deleted successfully")
+            return True
+        else:
+            print(f"Failed to delete menu '{food_name}':", response.text)
+            return False
+
+    def delete_menu_row(self, event):
+        row = event.target.closest("tr")
+        food_name = row.querySelector("td").dataset.originalValue
+        confirm = js.window.confirm(f"Are you sure you want to remove '{food_name}'?")
+        if confirm:
+            success = self.delete_menu(food_name)
+            if success:
+                row.remove()
 
     def drawWidget(self):
         items_container = ""
@@ -1135,20 +1135,21 @@ class AdminMenu(AbstractWidget):
                         </tbody>
                     </table>
                 </div>
-                <div class="new-container hidden flex flex-row justify-center items-center gap-2">
-                    <select id="new-item-category" class="w-full text-black border border-gray-300 rounded px-3 py-1">
+                <form class="new-container hidden flex flex-row justify-center items-center gap-2">
+                    <select id="new-category" class="w-full text-black border border-gray-300 rounded px-3 py-1">
                         <option value="MAIN">Main</option>
                         <option value="DRINK">Drink</option>
                         <option value="DESSERT">Dessert</option>
                     </select>
-                    <input id="new-item-name" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Name">
-                    <input id="new-item-description" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Description">
-                    <input id="new-item-type" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Type">
-                    <input id="new-item-ingredients" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Ingredients">
-                    <input id="new-item-price" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Price">
-                    <input id="new-item-cost" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Cost">
-                    <div class="add-btn cursor-pointer">Add</div>
-                </div>
+                    <input id="new-photo" class="w-full border border-gray-300 rounded px-3 py-1" type="file" accept="image/*">
+                    <input id="new-name" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Name">
+                    <input id="new-description" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Description">
+                    <input id="new-type" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Type">
+                    <input id="new-ingredients" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Ingredients">
+                    <input id="new-price" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Price">
+                    <input id="new-cost" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Cost">
+                    <button class="add-btn">Add</button>
+                </form>
                 <div class="new-btn cursor-pointer flex flex-col justify-center items-center hover:scale-105 duration-300 gap-2">
                     <img src="/add.svg" class="w-10" />
                     Add Item

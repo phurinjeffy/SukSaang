@@ -38,9 +38,9 @@ def init_db():
         if not hasattr(root, "tables"):
             root.tables = BTrees.OOBTree.BTree()
             # Adding default tables
-            root.tables[1] = Table(1)
-            root.tables[2] = Table(2)
-            root.tables[3] = Table(3)
+            root.tables[1] = Table(1, customers=[], available=True)
+            root.tables[2] = Table(2, customers=[], available=True)
+            root.tables[3] = Table(3, customers=[], available=True)
             
         print("Database loaded from file.")
     except Exception as e:

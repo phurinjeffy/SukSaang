@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body, Depends
+from fastapi import APIRouter, HTTPException, Body, Depends, UploadFile, File
 from database import *
 from models import *
 from schemas import *
@@ -104,9 +104,10 @@ async def add_menu(
     cost: int = Body(...),
     ingredients: list = Body(...),
     sweetness: int = Body(1),
+    photo: UploadFile = File(None),
 ):
     return await _services.add_menu(
-        category, name, price, description, type, cost, ingredients, sweetness
+        category, name, price, description, type, cost, ingredients, sweetness, photo
     )
 
 

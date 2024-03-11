@@ -1,8 +1,10 @@
 import jwt
 import os
 import ast
+import boto3
 from dotenv import load_dotenv
-from fastapi import HTTPException, status, Depends
+from tempfile import NamedTemporaryFile
+from fastapi import HTTPException, status, Depends, UploadFile
 from fastapi.security import OAuth2PasswordBearer
 from database import connection
 from models import *
@@ -19,6 +21,9 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+s3 = boto3.resource("s3")
+bucket = s3.Bucket(S3_BUCKET_NAME)
 
 def create_access_token(username: str):
     expiration_time = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -292,7 +297,9 @@ async def get_menu(menu_item: str):
                 "price": item.price,
                 "description": item.description,
                 "type": item.type,
+                "cost": item.cost,
                 "ingredients": item.ingredients,
+                "photo": item.photo,
             }
         else:
             raise HTTPException(
@@ -322,6 +329,7 @@ async def get_menus():
                     "type": menu.type,
                     "cost": menu.cost,
                     "ingredients": menu.ingredients,
+                    "photo": menu.photo,
                 }
             )
         log.log_info(f"get_menus operation successful")
@@ -342,18 +350,27 @@ async def add_menu(
     cost: int,
     ingredients: list,
     sweetness: int,
+    photo: UploadFile,
 ):
     try:
         if name in connection.root.menus:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Menu already exists"
             )
-        if category.upper() == "DRINK":
-            menu = Drink(name, price, description, type, cost, ingredients, sweetness)
-        elif category.upper() == "DESSERT":
-            menu = Dessert(name, price, description, type, cost, ingredients)
+        
+        if photo != None:
+            bucket.upload_fileobj(photo.file, photo.filename)
+            photo_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{photo.filename}"
         else:
-            menu = MainDish(name, price, description, type, cost, ingredients)
+            photo_url = None
+        
+        if category.upper() == "DRINK":
+            menu = Drink(name, price, description, type, cost, ingredients, photo_url, sweetness)
+        elif category.upper() == "DESSERT":
+            menu = Dessert(name, price, description, type, cost, ingredients, photo_url)
+        else:
+            menu = MainDish(name, price, description, type, cost, ingredients, photo_url)
+            
         connection.root.menus[name] = menu
         connection.transaction_manager.commit()
         log.log_info(f"{name}: add_menu operation successful")
@@ -530,8 +547,14 @@ async def delete_order(username: str, food_name: str, quantity: int = 1):
 async def get_tables():
     try:
         all_table = []
-        for table in connection.root.tables:
-            all_table.append({"table_num": table})
+        for i, table in connection.root.tables.items():
+            all_table.append(
+                {
+                    "table_num": table.table_num,
+                    "customers": table.customers,
+                    "available": table.available,
+                }
+            )
         log.log_info(f"get_tables operation successful")
         return {"tables": all_table}
     except Exception as e:
