@@ -1,11 +1,23 @@
-from fastapi import APIRouter, HTTPException, Body, Depends
+from fastapi import APIRouter, HTTPException, Body, Depends, UploadFile, File
 from database import *
 from models import *
 from schemas import *
 import services as _services
+from typing import Optional, List
 
 router = APIRouter()
 
+
+# ------------------ Log ----------------------
+@router.get("/logs", response_model=List[str])
+def get_logs():
+    try:
+        with open("app.log", "r") as file:
+            logs = file.readlines()
+        return logs
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 # ------------------ user ------------------
 @router.get("/users/me", response_model=UserBase)
@@ -91,10 +103,36 @@ async def add_menu(
     type: str = Body(...),
     cost: int = Body(...),
     ingredients: list = Body(...),
-    sweetness: int = Body(...),
+    sweetness: int = Body(1),
+    photo: UploadFile = File(None),
 ):
     return await _services.add_menu(
-        category, name, price, description, type, cost, ingredients, sweetness
+        category, name, price, description, type, cost, ingredients, sweetness, photo
+    )
+
+
+@router.patch("/menus/{food_name}")
+async def edit_menu(
+    food_name: str,
+    category: Optional[str] = None,
+    name: Optional[str] = None,
+    price: Optional[int] = None,
+    description: Optional[str] = None,
+    type: Optional[str] = None,
+    cost: Optional[int] = None,
+    ingredients: Optional[str] = None,
+    sweetness: Optional[int] = None,
+):
+    return await _services.edit_menu(
+        food_name,
+        category,
+        name,
+        price,
+        description,
+        type,
+        cost,
+        ingredients,
+        sweetness,
     )
 
 
@@ -120,12 +158,12 @@ async def delete_order(username: str, food_name: str, quantity: int):
 
 
 # ------------------ Table ----------------------
-@router.get("/tables/")
+@router.get("/tables")
 async def get_tables():
     return await _services.get_tables()
 
 
-@router.post("/tables/")
+@router.post("/tables")
 async def add_table(table_num: int):
     return await _services.add_table(table_num)
 

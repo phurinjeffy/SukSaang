@@ -1,3 +1,4 @@
+import json
 import js
 from pyscript import document
 import requests
@@ -50,7 +51,6 @@ class AbstractWidget(ABC):
     def __init__(self, element_id):
         self.element_id = element_id
         self._element = None
-        check_token()
 
     @property
     def element(self):
@@ -66,6 +66,7 @@ class AbstractWidget(ABC):
 class Layout(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        check_token()
 
     def drawWidget(self, widgets):
         self.content = document.createElement("div")
@@ -122,23 +123,40 @@ class Navbar(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.nav = False
-        self.link_mapping = {
-            "/menu": "Menu",
-            "/cart": "Cart",
-            "": "Logout",
-        }
+        location_path = js.window.location.pathname
+        self.status = (
+            "ADMIN"
+            if location_path.startswith("/admin")
+            and location_path not in ["/admin_login", "/admin_register"]
+            else (
+                "USER"
+                if location_path
+                not in ["/", "/login", "/register", "/admin_login", "/admin_register"]
+                else False
+            )
+        )
+        self.link_mapping = (
+            {
+                "/menu": "Menu",
+                "/cart": "Cart",
+                "": "Logout",
+            }
+            if self.status == "USER"
+            else {
+                "/admin_table": "View Table",
+                "/admin_log": "View Log",
+                "/admin_menu": "Adjust Menu",
+                "": "Logout",
+            }
+        )
 
-    def redirect(self, event):
-        if js.window.location.pathname in [
-            "/",
-            "/login",
-            "/register",
-            "/admin_login",
-            "/admin_register",
-        ]:
-            js.window.location.href = "/"
-        else:
+    def title_redirect(self, event):
+        if self.status == "USER":
             js.window.location.href = "/home"
+        elif self.status == "ADMIN":
+            js.window.location.href = "/admin_home"
+        else:
+            js.window.location.href = "/"
 
     def toggle_menu(self, event):
         self.nav = not self.nav
@@ -161,14 +179,12 @@ class Navbar(AbstractWidget):
             """
         menu_elements += "</ul>"
         return menu_elements
-    
+
     def logout_click(self, event):
         js.window.localStorage.removeItem("access_token")
 
     def drawWidget(self):
         content = document.createElement("div")
-        location_path = js.window.location.pathname
-        user = True if location_path not in ["/", "/login", "/register", "/admin_login", "/admin_register"] else False
 
         li_elements = ""
         for url, text in self.link_mapping.items():
@@ -179,25 +195,25 @@ class Navbar(AbstractWidget):
             """
 
         content.innerHTML = f"""
-            <div class="w-screen h-24 px-8 text-white flex {'bg-gradient-to-br from-blue-500 to-blue-400 justify-between' if user else 'backdrop-blur-lg justify-center'} items-center fixed z-10">
+            <div class="w-screen h-24 px-8 text-white flex {'bg-gradient-to-br from-blue-500 to-blue-400 justify-between' if self.status == "USER" else 'backdrop-blur-lg justify-between' if self.status == "ADMIN" else 'backdrop-blur-lg justify-center'} items-center fixed z-10">
                 <a class="title font-signature font-extrabold text-5xl cursor-pointer">SukSaang</a>
                 <div class="menu-container"></div>
                 <ul class="hidden md:flex flex-row">
-                    {li_elements if user else ""}
+                    {li_elements if self.status in ["USER", "ADMIN"] else ""}
                 </ul>
                 <div class="menu cursor-pointer pr-4 z-10 text-gray-100 md:hidden">
-                    {f'<img src="/close.svg" class="menu-btn w-10" />' if self.nav else f'<img src="/menu.svg" class="menu-btn w-10" />' if user else ""}
+                    {f'<img src="/close.svg" class="menu-btn w-10" />' if self.nav else f'<img src="/menu.svg" class="menu-btn w-10" />' if self.status in ["USER", "ADMIN"] else ""}
                 </div>
             </div>
         """
 
         title = content.querySelector(".title")
-        title.onclick = self.redirect
+        title.onclick = self.title_redirect
 
         menu = content.querySelector(".menu")
         menu.onclick = self.toggle_menu
-        
-        if user:
+
+        if self.status in ["USER", "ADMIN"]:
             logout = content.querySelector(".logout")
             logout.onclick = self.logout_click
 
@@ -533,7 +549,7 @@ class Menu(AbstractWidget):
         for item in self.menu:
             menu_container += f"""
                 <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer">
-                    <img class="w-36 w-36 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                    <img class="w-36 h-36 mb-1" src="{item['photo']}" />
                     <h3 class="capitalize font-light text-sm sm:text-lg">{item['name']}</h3>
                     <p class="text-sm font-light">฿ {item['price']}</p>
                 </div>
@@ -638,7 +654,7 @@ class Detail(AbstractWidget):
                             <span class="font-medium mr-1">Type: </span> {self.item['type']}
                         </li>
                         <li>
-                            <span class="font-medium mr-1">Ingredients: </span> {self.item['ingredients']['data']}
+                            <span class="font-medium mr-1">Ingredients: </span> {self.item['ingredients']}
                         </li>
                     </ul>
                     <div class="flex flex-row gap-4">
@@ -813,7 +829,342 @@ class AdminHome(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
 
     def drawWidget(self):
-        pass
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="w-full flex flex-col items-center text-white gap-8 py-10">
+                <div class="text-4xl font-semibold">
+                    Statistics
+                </div>
+                <div class="w-screen px-10 my-6">
+
+                </div>
+            </div>
+        """
+        self.element.appendChild(content)
+
+
+class AdminTable(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+        self.table = None
+        self.fetch_table_info()
+
+    def fetch_table_info(self):
+        url = "http://localhost:8000/tables"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.table = response.json()["tables"]
+        else:
+            print("Error fetching menu:", response.text)
+
+    def drawWidget(self):
+        tables_container = ""
+        for table in self.table:
+            tables_container += f"""
+                <tr class="border-b border-gray-500 font-light">
+                    <td class="p-4 pr-0">{table['table_num']}</td>
+                    <td>{table['customers']}</td>
+                    <td>{table['available']}</td>
+                </tr>
+            """
+
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="w-full flex flex-col items-center text-white gap-8 py-10">
+                <div class="text-4xl font-semibold">
+                    Tables
+                </div>
+                <div class="w-screen px-10 my-6">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-500">
+                                <th class="font-light text-left p-4 pr-0">Table</th>
+                                <th class="font-light text-left">Customers</th>
+                                <th class="font-light text-left">Availability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {tables_container}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        """
+        self.element.appendChild(content)
+
+
+class AdminLog(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+        self.logs = None
+        self.fetch_log_info()
+
+    def fetch_log_info(self):
+        url = "http://localhost:8000/logs"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.logs = response.json()
+        else:
+            print("Error fetching logs:", response.text)
+
+    def drawWidget(self):
+        table_rows = ""
+        for log in self.logs:
+            l = log.split(" - ", 2)
+            if len(l) == 3:
+                table_rows += f"""
+                    <tr>
+                        <td class="px-4 py-2 text-left bg-gray-800 border">{l[0]}</td>
+                        <td class="px-4 py-2 text-left bg-gray-800 border">{l[1]}</td>
+                        <td class="px-4 py-2 text-left bg-gray-800 border">{l[2]}</td>
+                    </tr>
+                """
+            else:
+                print("Unexpected log format:", log)
+
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="flex flex-col justify-center items-center text-white mx-12 pb-12">
+                <div class="text-4xl font-semibold my-6">
+                    Logs
+                </div>
+                <table class="table-auto w-full">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2 text-left bg-gray-900 border">Timestamp</th>
+                            <th class="px-4 py-2 text-left bg-gray-900 border">Level</th>
+                            <th class="px-4 py-2 text-left bg-gray-900 border">Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {table_rows}
+                    </tbody>
+                </table>
+            </div>
+        """
+        self.element.appendChild(content)
+
+
+class AdminMenu(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+        self.menu = []
+        self.add_toggle = False
+        self.fetch_menu_info()
+
+    def fetch_menu_info(self):
+        url = "http://localhost:8000/menus"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.menu = response.json()["menus"]
+        else:
+            print("Error fetching menu:", response.text)
+            
+    def toggle_edit_mode(self, event):
+        row = event.target.closest("tr")
+        cells = list(row.querySelectorAll("td"))
+        edit_button = row.querySelector(".edit-btn")
+
+        if edit_button.innerHTML == "Save":
+            updated_data = {}
+            food_name = cells[0].dataset.originalValue
+            updated_cells = []
+
+            for cell in cells[:-2]:
+                field_name = cell.dataset.field
+                value = cell.querySelector("input").value
+                updated_data[field_name] = value
+                updated_cells.append((cell, value))
+
+            success = self.edit_menu(food_name, updated_data)
+            if success:
+                for cell, value in updated_cells:
+                    cell.innerHTML = value
+                    cell.classList.remove("edit-mode")
+                edit_button.innerHTML = "Edit"
+                delete_button = row.querySelector(".delete-btn")
+                delete_button.remove()
+            else:
+                js.alert("Failed to update menu.")
+        else:
+            for cell in cells[:-1]:
+                cell.classList.add("edit-mode")
+                cell.dataset.originalValue = cell.innerHTML.strip()
+                if cell.dataset.field:
+                    cell.innerHTML = f'<input class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
+            edit_button.innerHTML = "Save"
+            delete_button = document.createElement("td")
+            delete_button.className = "delete-btn cursor-pointer"
+            delete_button.innerHTML = f"<img src='/trash.svg' class='w-6' />"
+            delete_button.onclick = self.delete_menu_row
+            row.appendChild(delete_button)
+
+    def edit_menu(self, food_name, updated_data):
+        url = f"http://localhost:8000/menus/{food_name}"
+        headers = {"Content-Type": "application/json"}
+        response = requests.patch(url, headers=headers, params=updated_data)
+        if response.status_code == 200:
+            print(f"Menu '{food_name}' updated successfully")
+            return True
+        else:
+            print(f"Failed to update menu '{food_name}':", response.text)
+            return False
+
+    def add_clicked(self, event):
+        self.add_toggle = not self.add_toggle
+        new_container = document.querySelector(".new-container")
+        if self.add_toggle:
+            new_container.classList.remove("hidden")
+            add_btn = new_container.querySelector(".add-btn")
+            add_btn.onclick = self.add_menu
+        else:
+            new_container.classList.add("hidden")
+
+    def add_menu(self, event):
+        form = document.querySelector(".new-container")
+        
+        form_data = {
+            "category": form.querySelector("#new-category").value,
+            "name": form.querySelector("#new-name").value,
+            "description": form.querySelector("#new-description").value,
+            "type": form.querySelector("#new-type").value,
+            "price": form.querySelector("#new-price").value,
+            "cost": form.querySelector("#new-cost").value,
+            "ingredients": form.querySelector("#new-ingredients").value.split(","),
+        }
+        
+        # photo_file = form.querySelector("#new-photo").files.item(0)
+        # files = {
+        #     "photo": (photo_file.name, photo_file, photo_file.type)
+        # }
+
+        url = "http://localhost:8000/menus"
+        response = requests.post(url, data=form_data)
+
+        if response.status_code == 200:
+            print(f"Menu added successfully")
+            # form.classList.add("hidden")
+            # self.append_menu_to_table(form_data)
+        else:
+            print(f"Failed to add menu:", response.text)
+
+    # def append_menu_to_table(self, new_menu_data):
+    #     self.menu.append(new_menu_data)
+    #     tbody = document.querySelector("tbody")
+    #     item_row = document.createElement("tr")
+    #     item_row.className = "border-b border-gray-500 font-light"
+    #     item_row.innerHTML = f"""
+    #         <td class="p-4 pr-0" data-field="name">{new_menu_data['name']}</td>
+    #         <td class="text-left" data-field="description">{new_menu_data['description']}</td>
+    #         <td class="text-left" data-field="type">{new_menu_data['type']}</td>
+    #         <td class="text-left" data-field="ingredients">{new_menu_data['ingredients']}</td>
+    #         <td class="text-right" data-field="price">{new_menu_data['price']}</td>
+    #         <td class="text-right" data-field="cost">{new_menu_data['cost']}</td>
+    #         <td class="edit-btn text-right cursor-pointer">Edit</td>
+    #     """
+    #     tbody.appendChild(item_row)
+
+    def delete_menu(self, food_name):
+        url = f"http://localhost:8000/menus/{food_name}"
+        response = requests.delete(url)
+        if response.status_code == 200:
+            print(f"Menu '{food_name}' deleted successfully")
+            return True
+        else:
+            print(f"Failed to delete menu '{food_name}':", response.text)
+            return False
+
+    def delete_menu_row(self, event):
+        row = event.target.closest("tr")
+        food_name = row.querySelector("td").dataset.originalValue
+        confirm = js.window.confirm(f"Are you sure you want to remove '{food_name}'?")
+        if confirm:
+            success = self.delete_menu(food_name)
+            if success:
+                row.remove()
+
+    def drawWidget(self):
+        items_container = ""
+        for item in self.menu:
+            items_container += f"""
+                <tr class="border-b border-gray-500 font-light">
+                    <td class="p-4 pr-0" data-field="name">
+                        {item['name']}
+                    </td>
+                    <td class="text-left" data-field="description">
+                        {item['description']}
+                    </td>
+                    <td class="text-left" data-field="type">
+                        {item['type']}
+                    </td>
+                    <td class="text-left" data-field="ingredients">
+                        {item['ingredients']}
+                    </td>
+                    <td class="text-right" data-field="price">
+                        {item['price']}
+                    </td>
+                    <td class="text-right" data-field="cost">
+                        {item['cost']}
+                    </td>
+                    <td class="edit-btn text-right cursor-pointer">
+                        Edit
+                    </td>
+                </tr>
+            """
+
+        content = document.createElement("div")
+        content.innerHTML = f"""
+            <div class="w-full flex flex-col items-center text-white gap-8 py-10">
+                <div class="text-4xl font-semibold">
+                    Adjust Menu
+                </div>
+                <div class="w-screen px-10 my-6">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-500">
+                                <th class="font-light text-left p-4 pr-0">Name</th>
+                                <th class="font-light text-left">Description</th>
+                                <th class="font-light text-left">Type</th>
+                                <th class="font-light text-left">Ingredients</th>
+                                <th class="font-light text-right">Price</th>
+                                <th class="font-light text-right">Cost</th>
+                                <th class="font-light text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items_container}
+                        </tbody>
+                    </table>
+                </div>
+                <form class="new-container hidden flex flex-row justify-center items-center gap-2">
+                    <select id="new-category" class="w-full text-black border border-gray-300 rounded px-3 py-1">
+                        <option value="MAIN">Main</option>
+                        <option value="DRINK">Drink</option>
+                        <option value="DESSERT">Dessert</option>
+                    </select>
+                    <input id="new-photo" class="w-full border border-gray-300 rounded px-3 py-1" type="file" accept="image/*">
+                    <input id="new-name" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Name">
+                    <input id="new-description" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Description">
+                    <input id="new-type" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Type">
+                    <input id="new-ingredients" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Ingredients">
+                    <input id="new-price" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Price">
+                    <input id="new-cost" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Cost">
+                    <button class="add-btn">Add</button>
+                </form>
+                <div class="new-btn cursor-pointer flex flex-col justify-center items-center hover:scale-105 duration-300 gap-2">
+                    <img src="/add.svg" class="w-10" />
+                    Add Item
+                </div>
+            </div>
+        """
+        self.element.appendChild(content)
+
+        edit_buttons = content.querySelectorAll(".edit-btn")
+        for button in edit_buttons:
+            button.onclick = self.toggle_edit_mode
+
+        new_button = content.querySelector(".new-btn")
+        new_button.onclick = self.add_clicked
 
 
 if __name__ == "__main__":
@@ -836,5 +1187,11 @@ if __name__ == "__main__":
         content.drawWidget([Cart("content")])
     elif location_path == "/admin_home":
         content.drawWidget([AdminHome("content")])
+    elif location_path == "/admin_table":
+        content.drawWidget([AdminTable("content")])
+    elif location_path == "/admin_log":
+        content.drawWidget([AdminLog("content")])
+    elif location_path == "/admin_menu":
+        content.drawWidget([AdminMenu("content")])
     else:
         content.drawWidget([NotFound("content")])

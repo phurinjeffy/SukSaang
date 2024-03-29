@@ -1,3 +1,4 @@
+import logging
 import persistent
 from abc import ABC, abstractmethod
 
@@ -78,9 +79,10 @@ class Menu(persistent.Persistent):
 
 
 class Table(persistent.Persistent):
-    def __init__(self, table_num, customers=[]):
+    def __init__(self, table_num, customers=[], available=True):
         self.table_num = table_num
         self.customers = persistent.list.PersistentList(customers)
+        self.available = available
 
     def add_customers(self, customer):
         self.customers.append(customer)
@@ -98,26 +100,52 @@ class Statistic(persistent.Persistent):
 
 
 class Food(ABC):
-    def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], photo="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg"):
         self.name = name
         self.price = price
         self.description = description
         self.type = type
         self.cost = cost
-        self.ingredients = persistent.list.PersistentList(ingredients)
+        self.ingredients = ingredients
+        self.photo = photo
 
 
 class MainDish(Food, persistent.Persistent):
-    def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
-        Food.__init__(self, name, price, description, type, cost, ingredients)
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], photo="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg"):
+        Food.__init__(self, name, price, description, type, cost, ingredients, photo)
         
 
 class Drink(Food, persistent.Persistent):
-    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], sweetness=1):
-        Food.__init__(self, name, price, description, type, cost, ingredients)
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], photo="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg", sweetness=1):
+        Food.__init__(self, name, price, description, type, cost, ingredients, photo)
         self.sweetness = sweetness
 
 
 class Dessert(Food, persistent.Persistent):
-    def __init__(self, name, price, description="", type="", cost=0, ingredients=[]):
-        Food.__init__(self, name, price, description, type, cost, ingredients)
+    def __init__(self, name, price, description="", type="", cost=0, ingredients=[], photo="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg"):
+        Food.__init__(self, name, price, description, type, cost, ingredients, photo)
+        
+        
+class Log:
+    def __init__(self, filename='app.log', level=logging.INFO):
+        self.filename = filename
+        self.level = level
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(level)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        file_handler = logging.FileHandler(filename)
+        file_handler.setLevel(level)
+        file_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
+
+    def log_info(self, message):
+        self.logger.info(message)
+
+    def log_error(self, message):
+        self.logger.error(message)
+
+    def log_warning(self, message):
+        self.logger.warning(message)
+
+    def log_debug(self, message):
+        self.logger.debug(message)
