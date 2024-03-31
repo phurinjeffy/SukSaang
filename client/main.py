@@ -1056,6 +1056,7 @@ class AdminMenu(AbstractWidget):
             def file_loaded(event):
                 file_data = reader.result.split(",")[1]  # Extract base64 data
                 files["photo"] = (photo_file.name, file_data, photo_file.type)
+                form_data["photo"] = (photo_file.name, file_data, photo_file.type)
                 upload_file()
 
             reader.onload = file_loaded
@@ -1070,7 +1071,10 @@ class AdminMenu(AbstractWidget):
         item_row = document.createElement("tr")
         item_row.className = "border-b border-gray-500 font-light"
         item_row.innerHTML = f"""
-            <td class="p-4 pr-0" data-field="name">{new_menu_data['name']}</td>
+            <td class="p-4 pr-0 flex gap-4 items-center" data-field="name">
+                <img class="w-10 h-10" src="{new_menu_data['photo']}" />
+                {new_menu_data['name']}
+            </td>
             <td class="text-left" data-field="description">{new_menu_data['description']}</td>
             <td class="text-left" data-field="type">{new_menu_data['type']}</td>
             <td class="text-left" data-field="ingredients">{new_menu_data['ingredients']}</td>
@@ -1104,7 +1108,8 @@ class AdminMenu(AbstractWidget):
         for item in self.menu:
             items_container += f"""
                 <tr class="border-b border-gray-500 font-light">
-                    <td class="p-4 pr-0" data-field="name">
+                    <td class="p-4 pr-0 flex gap-4 items-center" data-field="name">
+                        <img class="w-10 h-10" src="{item['photo']}" />
                         {item['name']}
                     </td>
                     <td class="text-left" data-field="description">
