@@ -1020,6 +1020,17 @@ class AdminMenu(AbstractWidget):
             new_container.classList.add("hidden")
 
     def add_menu(self, event):
+        def upload_file():
+            url = "http://localhost:8000/menus"
+            response = requests.post(url, data=form_data, files=files)
+
+            if response.status_code == 200:
+                print(f"Menu added successfully")
+                form.classList.add("hidden")
+                self.append_menu_to_table(form_data)
+            else:
+                print(f"Failed to add menu:", response.text)
+                
         form = document.querySelector(".new-container")
 
         form_data = {
@@ -1045,42 +1056,13 @@ class AdminMenu(AbstractWidget):
             def file_loaded(event):
                 file_data = reader.result.split(",")[1]  # Extract base64 data
                 files["photo"] = (photo_file.name, file_data, photo_file.type)
-                # upload_file()
-                url = "http://localhost:8000/menus"
-                response = requests.post(url, data=form_data, files=files)
-
-                if response.status_code == 200:
-                    print(f"Menu added successfully")
-                    form.classList.add("hidden")
-                    self.append_menu_to_table(form_data)
-                else:
-                    print(f"Failed to add menu:", response.text)
+                upload_file()
 
             reader.onload = file_loaded
 
         else:
             print("No photo selected.")
-            url = "http://localhost:8000/menus"
-            response = requests.post(url, data=form_data)
-
-            if response.status_code == 200:
-                print(f"Menu added successfully")
-                form.classList.add("hidden")
-                self.append_menu_to_table(form_data)
-            else:
-                print(f"Failed to add menu:", response.text)
-
-        def upload_file():
-            url = "http://localhost:8000/menus"
-            response = requests.post(url, data=form_data, files=files)
-
-            if response.status_code == 200:
-                print(f"Menu added successfully")
-                form.classList.add("hidden")
-                self.append_menu_to_table(form_data)
-            else:
-                print(f"Failed to add menu:", response.text)
-
+            upload_file()
 
     def append_menu_to_table(self, new_menu_data):
         self.menu.append(new_menu_data)
