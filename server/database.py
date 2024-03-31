@@ -50,7 +50,6 @@ def init_db():
         root.admins = BTrees.OOBTree.BTree()
         root.menus = BTrees.OOBTree.BTree()
         root.tables = BTrees.OOBTree.BTree()
-        root.bookings = BTrees.OOBTree.BTree()
 
 
 def close_db_connection():

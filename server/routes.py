@@ -186,14 +186,3 @@ async def show_table_orders(table_num: int):
 @router.get("/table/{table_num}/payment")
 async def show_table_payment(table_num: int):
     return await _services.show_table_payment(table_num)
-
-# ------------------ Booking Table ------------------
-
-@router.post("/users/{username}/tables")
-async def book_table(username: str, table: str):
-    return await _services.book_table(username, table)
-
-# ------------------ Check Out ------------------
-@router.post("/users/{username}/checkout")
-async def check_out(username: str):
-    return await _services.check_out(username)

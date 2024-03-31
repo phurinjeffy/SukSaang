@@ -100,27 +100,6 @@ async def get_users():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
-async def retrieve_user_info(access_token: str):
-    try:
-        user = connection.root.users.get(access_token=access_token)
-        if user:
-            return {
-                "username": user.username,
-                "email": user.email,
-                # Include other user information you want to retrieve
-            }
-        else:
-            return None  # Return None if user is not found
-    except Exception as e:
-        raise e  # You can handle the exception as per your application's requirements
-    
-async def get_user(access_token: str):
-    try:
-        # Assuming you have a function to retrieve user info based on access token
-        user_info = await retrieve_user_info(access_token)
-        return user_info
-    except Exception as e:
-        raise e 
 
 async def create_user(username: str, password: str):
     try:
@@ -711,41 +690,4 @@ async def show_table_payment(table_num: int):
         log.log_error(f"Error in show_table_payment: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
-
-    
-async def book_table(username: str, table: str):
-    try:
-        if username in connection.root.users and table in connection.root.bookings:
-            tables_obj = connection.root.bookings[table]
-            if tables_obj:
-                connection.root.bookings[table] = False
-                connection.root.users[username].table = table
-                return {"message": f"Table {table} booked successfully"}
-            else:
-                return {"message": "Table is unavailable"}
-        else:
-            return {"message": "Invalid table or username"}
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Cannot book table: " + str(e)
-        )
-    
-async def check_out(username: str):
-    try:
-        if username in connection.root.users:
-            table = connection.root.users[username].table
-            tables_obj = connection.root.bookings[table]
-            connection.root.bookings[table] = True
-            connection.root.users[username].table = ""
-            return {"message": f"Check out table {table} successfully"}
-        else:
-            return {"message": "Invalid username"}
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Cannot check out",
         )

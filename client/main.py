@@ -332,7 +332,6 @@ class Register(AbstractWidget):
 class Login(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        access_token = None
 
     def redirect_to_register(self, event):
         if js.window.location.pathname == "/login":
