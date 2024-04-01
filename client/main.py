@@ -509,12 +509,12 @@ class Home(AbstractWidget):
         menu_btn = content.querySelector(".menu-btn")
         menu_btn.onclick = self.redirect_to_menu
 
-
 class Menu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.menu = None
         self.categories = ["rice", "noodle", "pasta", "steak", "soup", "sides"]
+        self.selected_category = None
         self.fetch_menu_info()
         self.opened_modal = None
 
@@ -534,18 +534,29 @@ class Menu(AbstractWidget):
         self.opened_modal = Detail("content", menu_item_name)
         self.opened_modal.drawWidget()
 
+    def handle_category_click(self, event):
+        category = event.currentTarget.querySelector("p").textContent.lower()
+        self.selected_category = category
+        self.drawWidget()
+
     def drawWidget(self):
+        # Filter menu items based on selected category
+        if self.selected_category:
+            filtered_menu = [item for item in self.menu if item.get('type', '').lower() == self.selected_category]
+        else:
+            filtered_menu = self.menu
+
         svg_images = ""
         for category in self.categories:
             svg_images += f"""
-                <div class="flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer">
+                <div class="flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer category-item">
                     <img class="w-24 h-24 m-1" src="/category/{category}.svg" />
                     <p class="capitalize font-light text-base">{category}</p>
                 </div>
             """
 
         menu_container = ""
-        for item in self.menu:
+        for item in filtered_menu:
             menu_container += f"""
                 <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer">
                     <img class="w-36 h-36 mb-1" src="{item['photo']}" />
@@ -553,6 +564,10 @@ class Menu(AbstractWidget):
                     <p class="text-sm font-light">฿ {item['price']}</p>
                 </div>
             """
+
+        # Remove existing content
+        if self.element.firstChild:
+            self.element.removeChild(self.element.firstChild)
 
         content = document.createElement("div")
         content.innerHTML = f"""
@@ -567,15 +582,7 @@ class Menu(AbstractWidget):
                 </div>
                 <div class="w-full">
                     <div class="text-2xl font-extralight bg-blue-100 p-6">
-                        Recommended
-                    </div>
-                    <div class="flex flex-row gap-8 bg-white border-b border-slate-400 border-opacity-75 p-10">
-                        {menu_container}
-                    </div>
-                </div>
-                <div class="w-full">
-                    <div class="text-2xl font-extralight bg-blue-100 p-6">
-                        Most Popular
+                        {self.selected_category.capitalize() if self.selected_category else 'Recommended'}
                     </div>
                     <div class="flex flex-row gap-8 bg-white border-b border-slate-400 border-opacity-75 p-10">
                         {menu_container}
@@ -589,9 +596,16 @@ class Menu(AbstractWidget):
         """
         self.element.appendChild(content)
 
+        # Bind event for category items
+        category_items = self.element.querySelectorAll(".category-item")
+        for category_item in category_items:
+            category_item.onclick = self.handle_category_click
+
+        # Bind event for menu items
         menu_items = self.element.querySelectorAll(".menu-item")
         for menu_item in menu_items:
             menu_item.onclick = self.handle_menu_item_click
+
 
 
 class Detail(AbstractWidget):
