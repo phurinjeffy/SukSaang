@@ -972,7 +972,7 @@ class AdminMenu(AbstractWidget):
             self.menu = response.json()["menus"]
         else:
             print("Error fetching menu:", response.text)
-            
+
     def toggle_edit_mode(self, event):
         row = event.target.closest("tr")
         cells = list(row.querySelectorAll("td"))
@@ -1034,8 +1034,19 @@ class AdminMenu(AbstractWidget):
             new_container.classList.add("hidden")
 
     def add_menu(self, event):
+        def upload_file():
+            url = "http://localhost:8000/menus"
+            response = requests.post(url, data=form_data, files=files)
+
+            if response.status_code == 200:
+                print(f"Menu added successfully")
+                form.classList.add("hidden")
+                self.append_menu_to_table(form_data)
+            else:
+                print(f"Failed to add menu:", response.text)
+                
         form = document.querySelector(".new-container")
-        
+
         form_data = {
             "category": form.querySelector("#new-category").value,
             "name": form.querySelector("#new-name").value,
@@ -1045,37 +1056,47 @@ class AdminMenu(AbstractWidget):
             "cost": form.querySelector("#new-cost").value,
             "ingredients": form.querySelector("#new-ingredients").value.split(","),
         }
-        
-        # photo_file = form.querySelector("#new-photo").files.item(0)
-        # files = {
-        #     "photo": (photo_file.name, photo_file, photo_file.type)
-        # }
 
-        url = "http://localhost:8000/menus"
-        response = requests.post(url, data=form_data)
+        files = {}
+        photo_input = form.querySelector("#new-photo")
+        if photo_input and photo_input.files.length > 0:
+            photo_file = photo_input.files.item(0)
 
-        if response.status_code == 200:
-            print(f"Menu added successfully")
-            # form.classList.add("hidden")
-            # self.append_menu_to_table(form_data)
+            # Use FileReader API to read the file as base64 encoded string
+            reader = js.FileReader.new()
+            reader.readAsDataURL(photo_file)
+
+            # Define a callback function to handle the file reading completion
+            def file_loaded(event):
+                file_data = reader.result.split(",")[1]  # Extract base64 data
+                files["photo"] = (photo_file.name, file_data, photo_file.type)
+                form_data["photo"] = (photo_file.name, file_data, photo_file.type)
+                upload_file()
+
+            reader.onload = file_loaded
+
         else:
-            print(f"Failed to add menu:", response.text)
+            print("No photo selected.")
+            upload_file()
 
-    # def append_menu_to_table(self, new_menu_data):
-    #     self.menu.append(new_menu_data)
-    #     tbody = document.querySelector("tbody")
-    #     item_row = document.createElement("tr")
-    #     item_row.className = "border-b border-gray-500 font-light"
-    #     item_row.innerHTML = f"""
-    #         <td class="p-4 pr-0" data-field="name">{new_menu_data['name']}</td>
-    #         <td class="text-left" data-field="description">{new_menu_data['description']}</td>
-    #         <td class="text-left" data-field="type">{new_menu_data['type']}</td>
-    #         <td class="text-left" data-field="ingredients">{new_menu_data['ingredients']}</td>
-    #         <td class="text-right" data-field="price">{new_menu_data['price']}</td>
-    #         <td class="text-right" data-field="cost">{new_menu_data['cost']}</td>
-    #         <td class="edit-btn text-right cursor-pointer">Edit</td>
-    #     """
-    #     tbody.appendChild(item_row)
+    def append_menu_to_table(self, new_menu_data):
+        self.menu.append(new_menu_data)
+        tbody = document.querySelector("tbody")
+        item_row = document.createElement("tr")
+        item_row.className = "border-b border-gray-500 font-light"
+        item_row.innerHTML = f"""
+            <td class="p-4 pr-0 flex gap-4 items-center" data-field="name">
+                <img class="w-10 h-10" src="{new_menu_data['photo']}" />
+                {new_menu_data['name']}
+            </td>
+            <td class="text-left" data-field="description">{new_menu_data['description']}</td>
+            <td class="text-left" data-field="type">{new_menu_data['type']}</td>
+            <td class="text-left" data-field="ingredients">{new_menu_data['ingredients']}</td>
+            <td class="text-right" data-field="price">{new_menu_data['price']}</td>
+            <td class="text-right" data-field="cost">{new_menu_data['cost']}</td>
+            <td class="edit-btn text-right cursor-pointer">Edit</td>
+        """
+        tbody.appendChild(item_row)
 
     def delete_menu(self, food_name):
         url = f"http://localhost:8000/menus/{food_name}"
@@ -1101,7 +1122,8 @@ class AdminMenu(AbstractWidget):
         for item in self.menu:
             items_container += f"""
                 <tr class="border-b border-gray-500 font-light">
-                    <td class="p-4 pr-0" data-field="name">
+                    <td class="p-4 pr-0 flex gap-4 items-center" data-field="name">
+                        <img class="w-10 h-10" src="{item['photo']}" />
                         {item['name']}
                     </td>
                     <td class="text-left" data-field="description">
@@ -1149,7 +1171,7 @@ class AdminMenu(AbstractWidget):
                         </tbody>
                     </table>
                 </div>
-                <form class="new-container hidden flex flex-row justify-center items-center gap-2">
+                <div class="new-container hidden flex flex-row justify-center items-center gap-2">
                     <select id="new-category" class="w-full text-black border border-gray-300 rounded px-3 py-1">
                         <option value="MAIN">Main</option>
                         <option value="DRINK">Drink</option>
@@ -1163,7 +1185,7 @@ class AdminMenu(AbstractWidget):
                     <input id="new-price" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Price">
                     <input id="new-cost" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Cost">
                     <button class="add-btn">Add</button>
-                </form>
+                </div>
                 <div class="new-btn cursor-pointer flex flex-col justify-center items-center hover:scale-105 duration-300 gap-2">
                     <img src="/add.svg" class="w-10" />
                     Add Item
