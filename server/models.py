@@ -148,4 +148,4 @@ class Log:
         self.logger.warning(message)
 
     def log_debug(self, message):
-        self.logger.debug(message)
+        self.logger.debug(message)/Users/yokurawee/Documents/jeff-SukSaang/server/mydata.fs
