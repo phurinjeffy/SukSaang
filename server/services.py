@@ -597,13 +597,14 @@ async def add_table_customer(table_num: str, user: str):
                 status_code=status.HTTP_404_NOT_FOUND, detail="Table not found"
             )
 
-        table = connection.root.tables[table_num]
-        if any(user == customer.username for customer in table.customers):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"User '{user}' is already at table '{table_num}'",
-            )
-        table.customers.append(connection.root.users[user])
+        for table in connection.root.tables.values():
+            if any(user == customer.username for customer in table.customers):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"User '{user}' is already booked at another table",
+                )
+
+        connection.root.tables[table_num].customers.append(connection.root.users[user])
         connection.transaction_manager.commit()
 
         log.log_info(f"Table {table_num}: User '{user}' added to table successfully")
