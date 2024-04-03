@@ -450,6 +450,9 @@ class Home(AbstractWidget):
     def redirect_to_menu(self, event):
         js.window.location.href = "/menu"
 
+    def redirect_to_user_walkin(self, event):
+        js.window.location.href = "/tables"
+
     def drawWidget(self):
         current_hour = js.Date.new().getHours()
 
@@ -498,7 +501,7 @@ class Home(AbstractWidget):
                     <img class="" src="/delivery.svg" />
                     <p class="">Delivery</p>
                 </div>
-                <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
+                <div class="walkin-btn w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
                     <img class="" src="/walkin.svg" />
                     <p class="">Walk In</p>
                 </div>
@@ -508,6 +511,9 @@ class Home(AbstractWidget):
 
         menu_btn = content.querySelector(".menu-btn")
         menu_btn.onclick = self.redirect_to_menu
+
+        walkin_btn = content.querySelector(".walkin-btn")
+        walkin_btn.onclick = self.redirect_to_user_walkin
 
 class Menu(AbstractWidget):
     def __init__(self, element_id):
@@ -832,9 +838,93 @@ class Cart(AbstractWidget):
 class TableUser(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        self.tables = None
+        self.fetch_table_info()
+        self.username = fetch_user_info()
+        self.table_select = 0
+
+    def fetch_table_info(self):
+        url = "http://localhost:8000/tables"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.tables = response.json()["tables"]
+        else:
+            print("Error fetching logs:", response.text)
+
+
+    def redirect_to_menu(self):
+        js.window.location.href = "/menu"
 
     def drawWidget(self):
-        pass
+        tables_container = document.createElement("div")
+        tables_container.setAttribute("class", "w-full flex flex-wrap justify-center")
+
+        for table in self.tables:
+            table_div = document.createElement("div")
+            table_div.onclick = self.tableClicked
+            table_div.setAttribute("class", "table-item p-2 m-2 bg-lightgray rounded cursor-pointer")
+            table_div.setAttribute("data-table-id", str(table['table_num']))
+            if table['customers']:
+                table_div.style.backgroundColor = "lightblue"
+            else:
+                table_div.style.backgroundColor = "lightgray"
+            table_div.innerHTML = f"""
+                <div class="text-lg font-semibold">Table {table['table_num']}</div>
+            """
+            tables_container.appendChild(table_div)
+
+        self.element.appendChild(tables_container)
+
+        confirm_button = document.createElement("button")
+        confirm_button.setAttribute("class", "confirm-button")
+        confirm_button.innerHTML = "Confirm Table"
+        confirm_button.onclick = self.confirmBooking
+        self.element.appendChild(confirm_button)
+
+    def tableClicked(self, event):
+        global prev_table_color
+        table_div = event.target.closest(".table-item")
+        if table_div:
+            table_id = table_div.getAttribute("data-table-id")
+            if self.table_select != table_id:
+                prev_table_div = self.element.querySelector(f'.table-item[data-table-id="{self.table_select}"]')
+                if prev_table_div:
+                    # print(prev_table_div.style.backgroundColor)
+                    if prev_table_color == "lightblue":
+                        prev_table_div.style.backgroundColor = "lightblue"
+                    elif prev_table_color == "lightgray":
+                        prev_table_div.style.backgroundColor = "lightgray"  
+            self.table_select = table_id
+            prev_table_color = table_div.style.backgroundColor
+            # print("prev_color_out: ", prev_table_color)
+            table_div.style.backgroundColor = "yellow"
+            # print("Table clicked:", table_id)
+
+
+    def confirmBooking(self, event):
+        if self.table_select is not None:
+            table_id = self.table_select
+            for table in self.tables:
+                if str(table['table_num']) == self.table_select:
+                    if table['available']:
+                        self.table_add_customer()
+                    else:
+                        print(f"Table {table_id} is not available for booking.")
+                    break
+        else:
+            print("No table selected.") 
+
+    def table_add_customer(self):
+        table_num = self.table_select
+
+        url = f"http://localhost:8000/tables/{int(table_num)}/customers"
+        response = requests.post(url, self.username)
+
+        if response.status_code == 200:
+            print(f"Customer added successfully")
+            self.redirect_to_menu()
+        else:
+            print(f"Failed to add customer:", response.text)
 
 
 class AdminHome(AbstractWidget):
@@ -860,6 +950,8 @@ class AdminTable(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.table = None
+        self.customers = None
+        self.orders = None
         self.fetch_table_info()
 
     def fetch_table_info(self):
@@ -869,14 +961,35 @@ class AdminTable(AbstractWidget):
             self.table = response.json()["tables"]
         else:
             print("Error fetching menu:", response.text)
+        
+    def fetch_table_customer_orders(self, table_num):
+        url = f"http://localhost:8000/tables/{table_num}/orders"
+        response = requests.get(url)
+        if response.status_code == 200:
+            orders_data = response.json()
+            self.orders = orders_data
+        else:
+            print("Error fetching table info:", response.text)
+
+    def fetch_table_customer_info(self, table_num):
+        url = f"http://localhost:8000/tables/{table_num}/customers"
+        response = requests.get(url)
+        if response.status_code == 200:
+            customers_data = response.json()
+            self.customers = customers_data
+        else:
+            print("Error fetching table info:", response.text)
 
     def drawWidget(self):
         tables_container = ""
         for table in self.table:
+            self.fetch_table_customer_info(int(table['table_num']))
+            self.fetch_table_customer_orders(int(table['table_num']))
             tables_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td class="p-4 pr-0">{table['table_num']}</td>
-                    <td>{table['customers']}</td>
+                    <td>{self.customers}</td>
+                    <td>{self.orders}</td>
                     <td>{table['available']}</td>
                 </tr>
             """
@@ -893,6 +1006,7 @@ class AdminTable(AbstractWidget):
                             <tr class="border-b border-gray-500">
                                 <th class="font-light text-left p-4 pr-0">Table</th>
                                 <th class="font-light text-left">Customers</th>
+                                <th class="font-light text-left">Orders</th>
                                 <th class="font-light text-left">Availability</th>
                             </tr>
                         </thead>
@@ -1216,6 +1330,8 @@ if __name__ == "__main__":
         content.drawWidget([Register("content")])
     elif location_path == "/home":
         content.drawWidget([Home("content")])
+    elif location_path == "/tables":
+        content.drawWidget([TableUser("content")])
     elif location_path == "/menu":
         content.drawWidget([Menu("content")])
     elif location_path == "/cart":
