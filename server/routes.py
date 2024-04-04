@@ -156,6 +156,13 @@ async def add_order(username: str, food_name: str, quantity: int):
 async def delete_order(username: str, food_name: str, quantity: int):
     return await _services.delete_order(username, food_name, quantity)
 
+@router.post("/users/{username}/orders/place_order")
+async def place_order():
+    return await _services.place_order()
+
+@router.post("/handle_place_order")
+async def handle_place_order():
+    return await _services.handle_place_order()
 
 # ------------------ Table ----------------------
 @router.get("/tables")
@@ -186,3 +193,4 @@ async def show_table_orders(table_num: int):
 @router.get("/table/{table_num}/payment")
 async def show_table_payment(table_num: int):
     return await _services.show_table_payment(table_num)
+

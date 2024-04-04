@@ -512,10 +512,8 @@ class Home(AbstractWidget):
 class Menu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.menu = None
         self.categories = ["rice", "noodle", "pasta", "steak", "soup", "sides"]
         self.selected_category = None
-        self.fetch_menu_info()
         self.opened_modal = None
 
     def fetch_menu_info(self):
@@ -540,9 +538,16 @@ class Menu(AbstractWidget):
         self.drawWidget()
 
     def drawWidget(self):
+        # Fetch menu information every time drawWidget is called
+        self.fetch_menu_info()
+
         # Filter menu items based on selected category
         if self.selected_category:
-            filtered_menu = [item for item in self.menu if item.get('type', '').lower() == self.selected_category]
+            filtered_menu = [
+                item
+                for item in self.menu
+                if item.get("type", "").lower() == self.selected_category
+            ]
         else:
             filtered_menu = self.menu
 
@@ -605,7 +610,6 @@ class Menu(AbstractWidget):
         menu_items = self.element.querySelectorAll(".menu-item")
         for menu_item in menu_items:
             menu_item.onclick = self.handle_menu_item_click
-
 
 
 class Detail(AbstractWidget):
@@ -710,15 +714,29 @@ class Cart(AbstractWidget):
         self.username = fetch_user_info()
         self.orders = None
         self.subtotal = 0
+        self.check = 0
+        
         self.fetch_orders_info()
+        
+    def redirect_to_menu(self, event):
+        self.orders = []  # Empty the cart
+        self.subtotal = 0  # Reset the subtotal to zero
+        self.check = 1
+        self.drawWidget()
+        # self.element.innerHTML = ' '
+        
+        # Use JavaScript to reload the page after clearing the cart
+        js.window.location.href = "/menu"
+
 
     def fetch_orders_info(self):
-        url = f"http://localhost:8000/users/{self.username}/orders"
-        response = requests.get(url)
-        if response.status_code == 200:
-            self.orders = response.json()["orders"]
-        else:
-            print("Error fetching menu:", response.text)
+        if self.check == 0:
+            url = f"http://localhost:8000/users/{self.username}/orders"
+            response = requests.get(url)
+            if response.status_code == 200:
+                self.orders = response.json()["orders"]
+            else:
+                print("Error fetching menu:", response.text)
 
     def delete_order(self, food_name, quantity):
         url = f"http://localhost:8000/users/{self.username}/orders/{food_name}?quantity={quantity}"
@@ -727,9 +745,22 @@ class Cart(AbstractWidget):
         }
         response = requests.delete(url, headers=headers)
         if response.status_code == 200:
-            print("Succesfully Updated Quantity")
+            print("Successfully Updated Quantity")
         else:
             print("Error:", response.text)
+            
+    def place_order(self):
+        url = f"http://localhost:8000/place_order"
+        response = requests.post(url, json={"username": self.username, "orders": self.orders})
+        if response.status_code == 200:
+            redirect_url = response.json()["redirect_url"]
+            # Clear orders and subtotal after placing the order
+            self.orders = []
+            self.subtotal = 0
+            return redirect_url
+        else:
+            print("Error placing order:", response.text)
+            return None
 
     def drawWidget(self):
         items_container = ""
@@ -784,12 +815,18 @@ class Cart(AbstractWidget):
                 <div class="font-base">
                     Subtotal: ฿ <span class="subtotal">{self.subtotal}</span>
                 </div>
-                <div class="mt-10 text-white bg-blue-500 rounded-full p-8 cursor-pointer">
+                <button class="place-order-btn mt-10 text-white bg-blue-500 rounded-full p-8 cursor-pointer">
                     Place Order
-                </div>
+                </button>
             </div>
         """
+        self.element.innerHTML = (
+            ""  # Clear the content of the element before appending the new content
+        )
         self.element.appendChild(content)
+
+        place_order_btn = self.element.querySelector(".place-order-btn")
+        place_order_btn.onclick = self.redirect_to_menu
 
         def update_quantity(event, amount):
             item_index = int(event.target.dataset.index)
@@ -1044,7 +1081,7 @@ class AdminMenu(AbstractWidget):
                 self.append_menu_to_table(form_data)
             else:
                 print(f"Failed to add menu:", response.text)
-                
+
         form = document.querySelector(".new-container")
 
         form_data = {

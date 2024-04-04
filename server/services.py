@@ -10,6 +10,7 @@ from database import connection
 from models import *
 from datetime import datetime, timedelta
 from typing import Optional
+from fastapi.responses import JSONResponse
 
 log = Log()
 
@@ -664,7 +665,21 @@ async def show_table_orders(table_num: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
+        
+async def place_order():
+    redirect_url = "http://localhost:5173/menu"
+    return {"redirect_url": redirect_url}
 
+async def handle_place_order():
+    redirect_url = await place_order()
+    if redirect_url:
+        print("Redirecting to:", redirect_url["redirect_url"])
+        return JSONResponse(content=redirect_url)
+    else:
+        print("Failed to place order")
+        raise HTTPException(status_code=500, detail="Failed to place order")
+
+    
 
 async def show_table_payment(table_num: int):
     try:
