@@ -454,7 +454,7 @@ class Home(AbstractWidget):
 
     def redirect_to_user_walkin(self, event):
         js.window.location.href = "/tables"
-        
+
     def redirect_to_user_booking(self, event):
         js.window.location.href = "/booking"
 
@@ -519,7 +519,7 @@ class Home(AbstractWidget):
 
         walkin_btn = content.querySelector(".walkin-btn")
         walkin_btn.onclick = self.redirect_to_user_walkin
-        
+
         booking_btn = content.querySelector(".booking-btn")
         booking_btn.onclick = self.redirect_to_user_booking
 
@@ -975,6 +975,7 @@ class TableUser(AbstractWidget):
         else:
             print(f"Failed to add customer:", response.text)
 
+
 class Booking(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
@@ -991,10 +992,8 @@ class Booking(AbstractWidget):
         else:
             print("Error fetching logs:", response.text)
 
-
     def redirect_to_menu(self):
         js.window.location.href = "/menu"
-
 
     def drawWidget(self):
         tables_container = document.createElement("div")
@@ -1003,9 +1002,11 @@ class Booking(AbstractWidget):
         for table in self.tables:
             table_div = document.createElement("div")
             table_div.onclick = self.tableClicked
-            table_div.setAttribute("class", "table-item p-2 m-2 bg-lightgray rounded cursor-pointer")
-            table_div.setAttribute("data-table-id", str(table['table_num']))
-            if table['customers']:
+            table_div.setAttribute(
+                "class", "table-item p-2 m-2 bg-lightgray rounded cursor-pointer"
+            )
+            table_div.setAttribute("data-table-id", str(table["table_num"]))
+            if table["customers"]:
                 table_div.style.backgroundColor = "lightblue"
             else:
                 table_div.style.backgroundColor = "lightgray"
@@ -1028,29 +1029,32 @@ class Booking(AbstractWidget):
         if table_div:
             table_id = table_div.getAttribute("data-table-id")
             if self.table_select != table_id:
-                prev_table_div = self.element.querySelector(f'.table-item[data-table-id="{self.table_select}"]')
+                prev_table_div = self.element.querySelector(
+                    f'.table-item[data-table-id="{self.table_select}"]'
+                )
                 if prev_table_div:
                     # print(prev_table_div.style.backgroundColor)
                     if prev_table_color == "lightblue":
                         prev_table_div.style.backgroundColor = "lightblue"
                     elif prev_table_color == "lightgray":
-                        prev_table_div.style.backgroundColor = "lightgray"  
+                        prev_table_div.style.backgroundColor = "lightgray"
             self.table_select = table_id
             prev_table_color = table_div.style.backgroundColor
             # print("prev_color_out: ", prev_table_color)
             table_div.style.backgroundColor = "yellow"
             # print("Table clicked:", table_id)
 
-
     def confirmBooking(self, event):
         if self.table_select is not None:
             table_id = self.table_select
             for table in self.tables:
-                if str(table['table_num']) == self.table_select:
-                    if table['available'] and not table['customers']:
+                if str(table["table_num"]) == self.table_select:
+                    if table["available"] and not table["customers"]:
                         self.table_add_customer()
                     else:
-                        print(f"Table {table_id} is already booked or is not available for booking.")
+                        print(
+                            f"Table {table_id} is already booked or is not available for booking."
+                        )
                     break
         else:
             print("No table selected.")
@@ -1066,8 +1070,8 @@ class Booking(AbstractWidget):
             self.redirect_to_menu()
         else:
             print(f"Failed to add customer:", response.text)
-            
-            
+
+
 class AdminHome(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
@@ -1330,11 +1334,13 @@ class AdminMenu(AbstractWidget):
 
         if edit_button.innerHTML == "Save":
             updated_data = {}
-            food_name = cells[0].dataset.originalValue
+            food_name = cells[1].dataset.originalValue
             updated_cells = []
 
             for cell in cells[:-2]:
                 field_name = cell.dataset.field
+                if field_name == 'photo':
+                    continue
                 value = cell.querySelector("input").value
                 updated_data[field_name] = value
                 updated_cells.append((cell, value))
@@ -1354,7 +1360,8 @@ class AdminMenu(AbstractWidget):
                 cell.classList.add("edit-mode")
                 cell.dataset.originalValue = cell.innerHTML.strip()
                 if cell.dataset.field:
-                    cell.innerHTML = f'<input class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
+                    if cell.dataset.field != 'photo':
+                        cell.innerHTML = f'<input class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
             edit_button.innerHTML = "Save"
             delete_button = document.createElement("td")
             delete_button.className = "delete-btn cursor-pointer"
@@ -1394,6 +1401,8 @@ class AdminMenu(AbstractWidget):
                 js.window.location.reload(True)
             else:
                 print(f"Failed to add menu:", response.text)
+                error = document.querySelector(".error-msg")
+                error.innerHTML = f"Failed to add menu: {response.text}"
 
         form = document.querySelector(".new-container")
 
@@ -1429,25 +1438,6 @@ class AdminMenu(AbstractWidget):
             print("No photo selected.")
             upload_file()
 
-    def append_menu_to_table(self, new_menu_data):
-        self.menu.append(new_menu_data)
-        tbody = document.querySelector("tbody")
-        item_row = document.createElement("tr")
-        item_row.className = "border-b border-gray-500 font-light"
-        item_row.innerHTML = f"""
-            <td class="p-4 pr-0 flex gap-4 items-center" data-field="name">
-                <img class="w-10 h-10" src="{new_menu_data['photo']}" />
-                {new_menu_data['name']}
-            </td>
-            <td class="text-left" data-field="description">{new_menu_data['description']}</td>
-            <td class="text-left" data-field="type">{new_menu_data['type']}</td>
-            <td class="text-left" data-field="ingredients">{new_menu_data['ingredients']}</td>
-            <td class="text-right" data-field="price">{new_menu_data['price']}</td>
-            <td class="text-right" data-field="cost">{new_menu_data['cost']}</td>
-            <td class="edit-btn text-right cursor-pointer">Edit</td>
-        """
-        tbody.appendChild(item_row)
-
     def delete_menu(self, food_name):
         url = f"http://localhost:8000/menus/{food_name}"
         response = requests.delete(url)
@@ -1460,7 +1450,8 @@ class AdminMenu(AbstractWidget):
 
     def delete_menu_row(self, event):
         row = event.target.closest("tr")
-        food_name = row.querySelector("td").dataset.originalValue
+        cells = list(row.querySelectorAll("td"))
+        food_name = cells[1].dataset.originalValue
         confirm = js.window.confirm(f"Are you sure you want to remove '{food_name}'?")
         if confirm:
             success = self.delete_menu(food_name)
@@ -1472,8 +1463,10 @@ class AdminMenu(AbstractWidget):
         for item in self.menu:
             items_container += f"""
                 <tr class="border-b border-gray-500 font-light">
-                    <td class="p-4 pr-0 flex gap-4 items-center" data-field="name">
+                    <td class="p-4 pr-0 flex gap-4 items-center" data-field="photo">
                         <img class="w-10 h-10" src="{item['photo']}" />
+                    </td>
+                    <td class="text-left" data-field="name">
                         {item['name']}
                     </td>
                     <td class="text-left" data-field="description">
@@ -1508,6 +1501,7 @@ class AdminMenu(AbstractWidget):
                         <thead>
                             <tr class="border-b border-gray-500">
                                 <th class="font-light text-left p-4 pr-0">Name</th>
+                                <th class="font-light text-left"></th>
                                 <th class="font-light text-left">Description</th>
                                 <th class="font-light text-left">Type</th>
                                 <th class="font-light text-left">Ingredients</th>
@@ -1540,6 +1534,7 @@ class AdminMenu(AbstractWidget):
                     <img src="/add.svg" class="w-10" />
                     Add Item
                 </div>
+                <div class="error-msg text-red-500 text-center"></div>
             </div>
         """
         self.element.appendChild(content)
