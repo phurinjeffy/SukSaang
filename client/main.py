@@ -1,3 +1,5 @@
+import base64
+import binascii
 import json
 import js
 from pyscript import document
@@ -452,6 +454,9 @@ class Home(AbstractWidget):
 
     def redirect_to_user_walkin(self, event):
         js.window.location.href = "/tables"
+        
+    def redirect_to_user_booking(self, event):
+        js.window.location.href = "/booking"
 
     def drawWidget(self):
         current_hour = js.Date.new().getHours()
@@ -492,7 +497,7 @@ class Home(AbstractWidget):
             <div class="mt-14 mb-10 text-3xl font-semibold text-blue-950">
                 Your food adventure starts here.
             </div>
-            <div class="flex lg:flex-row flex-col justify-center items-center gap-6 bg-blue-400 py-10 px-14 rounded-xl text-white">
+            <div class="booking-btn flex lg:flex-row flex-col justify-center items-center gap-6 bg-blue-400 py-10 px-14 rounded-xl text-white">
                 <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
                     <img class="" src="/table.svg" />
                     <p class="">Book Table</p>
@@ -514,6 +519,10 @@ class Home(AbstractWidget):
 
         walkin_btn = content.querySelector(".walkin-btn")
         walkin_btn.onclick = self.redirect_to_user_walkin
+        
+        booking_btn = content.querySelector(".booking-btn")
+        booking_btn.onclick = self.redirect_to_user_booking
+
 
 class Menu(AbstractWidget):
     def __init__(self, element_id):
@@ -721,19 +730,18 @@ class Cart(AbstractWidget):
         self.orders = None
         self.subtotal = 0
         self.check = 0
-        
+
         self.fetch_orders_info()
-        
+
     def redirect_to_menu(self, event):
         self.orders = []  # Empty the cart
         self.subtotal = 0  # Reset the subtotal to zero
         self.check = 1
         self.drawWidget()
         # self.element.innerHTML = ' '
-        
+
         # Use JavaScript to reload the page after clearing the cart
         js.window.location.href = "/menu"
-
 
     def fetch_orders_info(self):
         if self.check == 0:
@@ -754,10 +762,12 @@ class Cart(AbstractWidget):
             print("Successfully Updated Quantity")
         else:
             print("Error:", response.text)
-            
+
     def place_order(self):
         url = f"http://localhost:8000/place_order"
-        response = requests.post(url, json={"username": self.username, "orders": self.orders})
+        response = requests.post(
+            url, json={"username": self.username, "orders": self.orders}
+        )
         if response.status_code == 200:
             redirect_url = response.json()["redirect_url"]
             # Clear orders and subtotal after placing the order
@@ -888,9 +898,103 @@ class TableUser(AbstractWidget):
         else:
             print("Error fetching logs:", response.text)
 
+    def redirect_to_menu(self):
+        js.window.location.href = "/menu"
+
+    def drawWidget(self):
+        tables_container = document.createElement("div")
+        tables_container.setAttribute("class", "w-full flex flex-wrap justify-center")
+
+        for table in self.tables:
+            table_div = document.createElement("div")
+            table_div.onclick = self.tableClicked
+            table_div.setAttribute(
+                "class", "table-item p-2 m-2 bg-lightgray rounded cursor-pointer"
+            )
+            table_div.setAttribute("data-table-id", str(table["table_num"]))
+            if table["customers"]:
+                table_div.style.backgroundColor = "lightblue"
+            else:
+                table_div.style.backgroundColor = "lightgray"
+            table_div.innerHTML = f"""
+                <div class="text-lg font-semibold">Table {table['table_num']}</div>
+            """
+            tables_container.appendChild(table_div)
+
+        self.element.appendChild(tables_container)
+
+        confirm_button = document.createElement("button")
+        confirm_button.setAttribute("class", "confirm-button")
+        confirm_button.innerHTML = "Confirm Table"
+        confirm_button.onclick = self.confirmBooking
+        self.element.appendChild(confirm_button)
+
+    def tableClicked(self, event):
+        global prev_table_color
+        table_div = event.target.closest(".table-item")
+        if table_div:
+            table_id = table_div.getAttribute("data-table-id")
+            if self.table_select != table_id:
+                prev_table_div = self.element.querySelector(
+                    f'.table-item[data-table-id="{self.table_select}"]'
+                )
+                if prev_table_div:
+                    # print(prev_table_div.style.backgroundColor)
+                    if prev_table_color == "lightblue":
+                        prev_table_div.style.backgroundColor = "lightblue"
+                    elif prev_table_color == "lightgray":
+                        prev_table_div.style.backgroundColor = "lightgray"
+            self.table_select = table_id
+            prev_table_color = table_div.style.backgroundColor
+            # print("prev_color_out: ", prev_table_color)
+            table_div.style.backgroundColor = "yellow"
+            # print("Table clicked:", table_id)
+
+    def confirmBooking(self, event):
+        if self.table_select is not None:
+            table_id = self.table_select
+            for table in self.tables:
+                if str(table["table_num"]) == self.table_select:
+                    if table["available"]:
+                        self.table_add_customer()
+                    else:
+                        print(f"Table {table_id} is not available for booking.")
+                    break
+        else:
+            print("No table selected.")
+
+    def table_add_customer(self):
+        table_num = self.table_select
+
+        url = f"http://localhost:8000/tables/{int(table_num)}/customers"
+        response = requests.post(url, self.username)
+
+        if response.status_code == 200:
+            print(f"Customer added successfully")
+            self.redirect_to_menu()
+        else:
+            print(f"Failed to add customer:", response.text)
+
+class Booking(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+        self.tables = None
+        self.fetch_table_info()
+        self.username = fetch_user_info()
+        self.table_select = 0
+
+    def fetch_table_info(self):
+        url = "http://localhost:8000/tables"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.tables = response.json()["tables"]
+        else:
+            print("Error fetching logs:", response.text)
+
 
     def redirect_to_menu(self):
         js.window.location.href = "/menu"
+
 
     def drawWidget(self):
         tables_container = document.createElement("div")
@@ -943,13 +1047,13 @@ class TableUser(AbstractWidget):
             table_id = self.table_select
             for table in self.tables:
                 if str(table['table_num']) == self.table_select:
-                    if table['available']:
+                    if table['available'] and not table['customers']:
                         self.table_add_customer()
                     else:
-                        print(f"Table {table_id} is not available for booking.")
+                        print(f"Table {table_id} is already booked or is not available for booking.")
                     break
         else:
-            print("No table selected.") 
+            print("No table selected.")
 
     def table_add_customer(self):
         table_num = self.table_select
@@ -962,8 +1066,8 @@ class TableUser(AbstractWidget):
             self.redirect_to_menu()
         else:
             print(f"Failed to add customer:", response.text)
-
-
+            
+            
 class AdminHome(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
@@ -1000,7 +1104,7 @@ class AdminTable(AbstractWidget):
             self.table = response.json()["tables"]
         else:
             print("Error fetching menu:", response.text)
-        
+
     def fetch_table_customer_orders(self, table_num):
         url = f"http://localhost:8000/tables/{table_num}/orders"
         response = requests.get(url)
@@ -1018,7 +1122,7 @@ class AdminTable(AbstractWidget):
             self.customers = customers_data
         else:
             print("Error fetching table info:", response.text)
-    
+
     def show_table_payment(self, table_num):
         url = f"http://localhost:8000/table/{table_num}/payment"
         response = requests.get(url)
@@ -1030,42 +1134,42 @@ class AdminTable(AbstractWidget):
 
     def show_image(self, payment):
         img_src = f"https://promptpay.io/0987067067/{payment}.png"
-        img = document.createElement('img')
+        img = document.createElement("img")
         img.src = img_src
-        img.style.maxWidth = '80%'
-        img.style.maxHeight = '80%'
+        img.style.maxWidth = "80%"
+        img.style.maxHeight = "80%"
 
-        modal = document.createElement('div')
-        modal.style.position = 'fixed'
-        modal.style.zIndex = '1'
-        modal.style.left = '0'
-        modal.style.top = '0'
-        modal.style.width = '100%'
-        modal.style.height = '100%'
-        modal.style.backgroundColor = 'rgba(0,0,0,0.5)'
-        modal.style.display = 'flex'
-        modal.style.justifyContent = 'center'
-        modal.style.alignItems = 'center'
+        modal = document.createElement("div")
+        modal.style.position = "fixed"
+        modal.style.zIndex = "1"
+        modal.style.left = "0"
+        modal.style.top = "0"
+        modal.style.width = "100%"
+        modal.style.height = "100%"
+        modal.style.backgroundColor = "rgba(0,0,0,0.5)"
+        modal.style.display = "flex"
+        modal.style.justifyContent = "center"
+        modal.style.alignItems = "center"
         modal.appendChild(img)
         modal.onclick = lambda: modal.remove()
         document.body.appendChild(modal)
-        
+
     def check_out(self, tableNum):
         url = f"http://localhost:8000/table/{tableNum}/checkout"
         response = requests.put(url)
         if response.ok:
-            print('Check out successful')
+            print("Check out successful")
         else:
-            print('Error checking out')
-            print('Error:', response.text)
+            print("Error checking out")
+            print("Error:", response.text)
 
     def drawWidget(self):
         tables_container = ""
         for table in self.table:
-            self.fetch_table_customer_info(int(table['table_num']))
-            self.fetch_table_customer_orders(int(table['table_num']))
-            self.show_table_payment(int(table['table_num']))
-            self.total_payment = str(self.payment['total_payment'])
+            self.fetch_table_customer_info(int(table["table_num"]))
+            self.fetch_table_customer_orders(int(table["table_num"]))
+            self.show_table_payment(int(table["table_num"]))
+            self.total_payment = str(self.payment["total_payment"])
             tables_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td class="p-4 pr-0">{table['table_num']}</td>
@@ -1105,7 +1209,7 @@ class AdminTable(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
-    
+
         script = document.createElement("script")
         script.innerHTML = """
             function showImage(payment) {
@@ -1287,7 +1391,7 @@ class AdminMenu(AbstractWidget):
             if response.status_code == 200:
                 print(f"Menu added successfully")
                 form.classList.add("hidden")
-                self.append_menu_to_table(form_data)
+                js.window.location.reload(True)
             else:
                 print(f"Failed to add menu:", response.text)
 
@@ -1464,6 +1568,8 @@ if __name__ == "__main__":
         content.drawWidget([Home("content")])
     elif location_path == "/tables":
         content.drawWidget([TableUser("content")])
+    elif location_path == "/booking":
+        content.drawWidget([Booking("content")])
     elif location_path == "/menu":
         content.drawWidget([Menu("content")])
     elif location_path == "/cart":

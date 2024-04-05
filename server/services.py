@@ -2,6 +2,8 @@ import jwt
 import os
 import ast
 import boto3
+import base64
+from io import BytesIO
 from dotenv import load_dotenv
 from tempfile import NamedTemporaryFile
 from fastapi import HTTPException, status, Depends, UploadFile
@@ -25,6 +27,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 s3 = boto3.resource("s3")
 bucket = s3.Bucket(S3_BUCKET_NAME)
+
 
 def create_access_token(username: str):
     expiration_time = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -358,20 +361,30 @@ async def add_menu(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Menu already exists"
             )
-        
-        if photo != None:
-            bucket.upload_fileobj(photo.file, photo.filename)
+
+        photo_url = None
+        if photo:
+            # Read the uploaded file content
+            photo_content = photo.file.read()
+            # Create a BytesIO object to wrap the content
+            photo_content_bytesio = BytesIO(photo_content)
+            # Decode the photo content from base64
+            decoded_photo = base64.b64decode(photo_content_bytesio.read())
+            # Upload the decoded photo content to the bucket
+            bucket.upload_fileobj(BytesIO(decoded_photo), photo.filename)
             photo_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{photo.filename}"
-        else:
-            photo_url = None
-        
+
         if category.upper() == "DRINK":
-            menu = Drink(name, price, description, type, cost, ingredients, photo_url, sweetness)
+            menu = Drink(
+                name, price, description, type, cost, ingredients, photo_url, sweetness
+            )
         elif category.upper() == "DESSERT":
             menu = Dessert(name, price, description, type, cost, ingredients, photo_url)
         else:
-            menu = MainDish(name, price, description, type, cost, ingredients, photo_url)
-            
+            menu = MainDish(
+                name, price, description, type, cost, ingredients, photo_url
+            )
+
         connection.root.menus[name] = menu
         connection.transaction_manager.commit()
         log.log_info(f"{name}: add_menu operation successful")
@@ -666,10 +679,12 @@ async def show_table_orders(table_num: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
-        
+
+
 async def place_order():
     redirect_url = "http://localhost:5173/menu"
     return {"redirect_url": redirect_url}
+
 
 async def handle_place_order():
     redirect_url = await place_order()
@@ -680,7 +695,6 @@ async def handle_place_order():
         print("Failed to place order")
         raise HTTPException(status_code=500, detail="Failed to place order")
 
-    
 
 async def show_table_payment(table_num: int):
     try:
@@ -707,6 +721,7 @@ async def show_table_payment(table_num: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
+
 
 async def table_checkout(table_num: int):
     try:

@@ -8,6 +8,12 @@ class Account(ABC):
         self.username = username
         self.password = password
         self.hashed_password = hashed_password
+        
+        
+class Order(persistent.Persistent):
+    def __init__(self, food, quantity):
+        self.food = food
+        self.quantity = quantity
 
 
 class User(Account, persistent.Persistent):
