@@ -689,7 +689,7 @@ async def show_table_payment(table_num: int):
 
             for customer in connection.root.tables[table_num].customers:
                 for order in customer.orders:
-                    total_payment += order.price
+                    total_payment += connection.root.menus[order].price
 
             log.log_info(
                 f"Table {table_num}: Retrieved payment information successfully"
@@ -704,6 +704,29 @@ async def show_table_payment(table_num: int):
         raise
     except Exception as e:
         log.log_error(f"Error in show_table_payment: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+async def table_checkout(table_num: int):
+    try:
+        if table_num in connection.root.tables:
+            table = connection.root.tables[table_num]
+            for customer in table.customers:
+                customer.orders.clear()
+            table.customers.clear()
+            connection.transaction_manager.commit()
+            log.log_info(f"Table {table_num}: Checked out successfully")
+            return {"message": f"Table {table_num} checked out successfully"}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Table not found"
+            )
+    except HTTPException as he:
+        log.log_error(f"HTTPException in table_checkout: {he.detail}")
+        raise
+    except Exception as e:
+        log.log_error(f"Error in table_checkout: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
