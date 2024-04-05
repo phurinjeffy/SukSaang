@@ -194,3 +194,7 @@ async def show_table_orders(table_num: int):
 async def show_table_payment(table_num: int):
     return await _services.show_table_payment(table_num)
 
+@router.put("/table/{table_num}/checkout")
+async def show_table_payment(table_num: int):
+    return await _services.table_checkout(table_num)
+

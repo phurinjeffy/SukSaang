@@ -989,6 +989,8 @@ class AdminTable(AbstractWidget):
         self.table = None
         self.customers = None
         self.orders = None
+        self.payment = 0
+        self.total_payment = None
         self.fetch_table_info()
 
     def fetch_table_info(self):
@@ -1016,18 +1018,63 @@ class AdminTable(AbstractWidget):
             self.customers = customers_data
         else:
             print("Error fetching table info:", response.text)
+    
+    def show_table_payment(self, table_num):
+        url = f"http://localhost:8000/table/{table_num}/payment"
+        response = requests.get(url)
+        if response.status_code == 200:
+            payment_data = response.json()
+            self.payment = payment_data
+        else:
+            print("Error fetching table info:", response.text)
+
+    def show_image(self, payment):
+        img_src = f"https://promptpay.io/0987067067/{payment}.png"
+        img = document.createElement('img')
+        img.src = img_src
+        img.style.maxWidth = '80%'
+        img.style.maxHeight = '80%'
+
+        modal = document.createElement('div')
+        modal.style.position = 'fixed'
+        modal.style.zIndex = '1'
+        modal.style.left = '0'
+        modal.style.top = '0'
+        modal.style.width = '100%'
+        modal.style.height = '100%'
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)'
+        modal.style.display = 'flex'
+        modal.style.justifyContent = 'center'
+        modal.style.alignItems = 'center'
+        modal.appendChild(img)
+        modal.onclick = lambda: modal.remove()
+        document.body.appendChild(modal)
+        
+    def check_out(self, tableNum):
+        url = f"http://localhost:8000/table/{tableNum}/checkout"
+        response = requests.put(url)
+        if response.ok:
+            print('Check out successful')
+        else:
+            print('Error checking out')
+            print('Error:', response.text)
 
     def drawWidget(self):
         tables_container = ""
         for table in self.table:
             self.fetch_table_customer_info(int(table['table_num']))
             self.fetch_table_customer_orders(int(table['table_num']))
+            self.show_table_payment(int(table['table_num']))
+            self.total_payment = str(self.payment['total_payment'])
             tables_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td class="p-4 pr-0">{table['table_num']}</td>
                     <td>{self.customers}</td>
                     <td>{self.orders}</td>
+                    <td>{self.total_payment}</td>
                     <td>{table['available']}</td>
+                    <td><button onclick="showImage({self.total_payment})">Pay</button></td>
+                    <td><button onclick="check_out({int(table['table_num'])})">Check Out</button></td>
                 </tr>
             """
 
@@ -1044,7 +1091,10 @@ class AdminTable(AbstractWidget):
                                 <th class="font-light text-left p-4 pr-0">Table</th>
                                 <th class="font-light text-left">Customers</th>
                                 <th class="font-light text-left">Orders</th>
+                                <th class="font-light text-left">Payment</th>
                                 <th class="font-light text-left">Availability</th>
+                                <th class="font-light text-left">Payment</th>
+                                <th class="font-light text-left">Checkout</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1055,6 +1105,51 @@ class AdminTable(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
+    
+        script = document.createElement("script")
+        script.innerHTML = """
+            function showImage(payment) {
+                var imgSrc = 'https://promptpay.io/' + '0987067067' + '/' + payment + '.png';
+                var modal = document.createElement('div');
+                modal.style.position = 'fixed';
+                modal.style.zIndex = '1';
+                modal.style.left = '0';
+                modal.style.top = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                modal.style.display = 'flex';
+                modal.style.justifyContent = 'center';
+                modal.style.alignItems = 'center';
+                var img = document.createElement('img');
+                img.src = imgSrc;
+                img.style.maxWidth = '80%';
+                img.style.maxHeight = '80%';
+                modal.appendChild(img);
+                modal.onclick = function() {
+                    modal.remove();
+                };
+                document.body.appendChild(modal);
+            }
+
+        function check_out(tableNum) {
+            fetch(`http://localhost:8000/table/${tableNum}/checkout`, {
+                method: 'PUT',
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Check out successful');
+                    window.location.reload();
+                } else {
+                    console.error('Error checking out');
+                }
+            })
+            .catch(error => {
+                console.error('Error checking out:', error);
+            });
+        }
+        """
+        document.body.appendChild(script)
 
 
 class AdminLog(AbstractWidget):
