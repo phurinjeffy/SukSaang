@@ -579,7 +579,7 @@ class Menu(AbstractWidget):
         for item in filtered_menu:
             menu_container += f"""
                 <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer">
-                    <img class="w-36 h-36 mb-1" src="{item['photo']}" />
+                    <img class="w-32 h-32 mb-1" src="{item['photo']}" />
                     <h3 class="capitalize font-light text-sm sm:text-lg">{item['name']}</h3>
                     <p class="text-sm font-light">฿ {item['price']}</p>
                 </div>
@@ -610,7 +610,6 @@ class Menu(AbstractWidget):
                 </div>
                 <div class="fixed bottom-0 right-0 rounded-lg bg-blue-400 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
                     <img class="w-10 h-10" src="/cart.svg"/>
-                    <p class="hidden sm:block text-white">Total Amount: ฿ {0}</p>
                 </div>
             </div>
         """
@@ -673,7 +672,7 @@ class Detail(AbstractWidget):
             <div class="w-2/5 bg-blue-300 rounded-lg p-8 border border-white shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <span class="close text-white cursor-pointer">&times;</span>
                 <div class="flex flex-col justify-center items-center text-white gap-6">
-                    <img class="w-44 w-44" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                    <img class="w-44 w-44" src={self.item['photo']} />
                     <p class="font-semibold text-lg">{self.item['name']}</p>
                     <ul class="list-disc font-extralight text-sm">
                         <li>
@@ -1180,7 +1179,6 @@ class AdminTable(AbstractWidget):
                     <td>{self.customers}</td>
                     <td>{self.orders}</td>
                     <td>{self.total_payment}</td>
-                    <td>{table['available']}</td>
                     <td><button onclick="showImage({self.total_payment})">Pay</button></td>
                     <td><button onclick="check_out({int(table['table_num'])})">Check Out</button></td>
                 </tr>
@@ -1199,8 +1197,7 @@ class AdminTable(AbstractWidget):
                                 <th class="font-light text-left p-4 pr-0">Table</th>
                                 <th class="font-light text-left">Customers</th>
                                 <th class="font-light text-left">Orders</th>
-                                <th class="font-light text-left">Payment</th>
-                                <th class="font-light text-left">Availability</th>
+                                <th class="font-light text-left">Amount (฿)</th>
                                 <th class="font-light text-left">Payment</th>
                                 <th class="font-light text-left">Checkout</th>
                             </tr>
@@ -1339,7 +1336,7 @@ class AdminMenu(AbstractWidget):
 
             for cell in cells[:-2]:
                 field_name = cell.dataset.field
-                if field_name == 'photo':
+                if field_name == "photo":
                     continue
                 value = cell.querySelector("input").value
                 updated_data[field_name] = value
@@ -1360,7 +1357,7 @@ class AdminMenu(AbstractWidget):
                 cell.classList.add("edit-mode")
                 cell.dataset.originalValue = cell.innerHTML.strip()
                 if cell.dataset.field:
-                    if cell.dataset.field != 'photo':
+                    if cell.dataset.field != "photo":
                         cell.innerHTML = f'<input class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
             edit_button.innerHTML = "Save"
             delete_button = document.createElement("td")
@@ -1515,7 +1512,7 @@ class AdminMenu(AbstractWidget):
                         </tbody>
                     </table>
                 </div>
-                <div class="new-container hidden flex flex-row justify-center items-center gap-2">
+                <div class="new-container hidden flex flex-col justify-center items-center gap-2">
                     <select id="new-category" class="w-full text-black border border-gray-300 rounded px-3 py-1">
                         <option value="MAIN">Main</option>
                         <option value="DRINK">Drink</option>
