@@ -1,5 +1,3 @@
-import base64
-import binascii
 import json
 import js
 from pyscript import document
@@ -1112,8 +1110,7 @@ class AdminTable(AbstractWidget):
         url = f"http://localhost:8000/tables/{table_num}/orders"
         response = requests.get(url)
         if response.status_code == 200:
-            orders_data = response.json()
-            self.orders = orders_data
+            self.orders = response.json()
         else:
             print("Error fetching table info:", response.text)
 
@@ -1121,8 +1118,7 @@ class AdminTable(AbstractWidget):
         url = f"http://localhost:8000/tables/{table_num}/customers"
         response = requests.get(url)
         if response.status_code == 200:
-            customers_data = response.json()
-            self.customers = customers_data
+            self.customers = response.json()
         else:
             print("Error fetching table info:", response.text)
 
@@ -1130,8 +1126,7 @@ class AdminTable(AbstractWidget):
         url = f"http://localhost:8000/table/{table_num}/payment"
         response = requests.get(url)
         if response.status_code == 200:
-            payment_data = response.json()
-            self.payment = payment_data
+            self.payment = response.json()
         else:
             print("Error fetching table info:", response.text)
 
@@ -1170,14 +1165,15 @@ class AdminTable(AbstractWidget):
         tables_container = ""
         for table in self.table:
             self.fetch_table_customer_info(int(table["table_num"]))
-            self.fetch_table_customer_orders(int(table["table_num"]))
+            # self.fetch_table_customer_orders(int(table["table_num"]))
             self.show_table_payment(int(table["table_num"]))
             self.total_payment = str(self.payment["total_payment"])
+
             tables_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td class="p-4 pr-0">{table['table_num']}</td>
                     <td>{self.customers}</td>
-                    <td>{self.orders}</td>
+                    <td class="view-order cursor-pointer" id="view-order-{table['table_num']}">View Order</td>
                     <td>{self.total_payment}</td>
                     <td><button onclick="showImage({self.total_payment})">Pay</button></td>
                     <td><button onclick="check_out({int(table['table_num'])})">Check Out</button></td>
@@ -1210,6 +1206,15 @@ class AdminTable(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
+
+        # Define a function to handle the click event for viewing orders
+        def handle_view_order_click(table_num):
+            return lambda event: self.handle_view_order(table_num)
+
+        # Attach event handlers for the "View Order" buttons
+        for table in self.table:
+            view_order_button = content.querySelector(f"#view-order-{table['table_num']}")
+            view_order_button.onclick = handle_view_order_click(int(table["table_num"]))
 
         script = document.createElement("script")
         script.innerHTML = """
@@ -1255,6 +1260,16 @@ class AdminTable(AbstractWidget):
         }
         """
         document.body.appendChild(script)
+    
+    def handle_view_order(self, table_num):
+        url = f"http://localhost:8000/tables/{table_num}/orders"
+        response = requests.get(url)
+        if response.status_code == 200:
+            orders = response.json()
+            # Display orders in a popup
+            js.alert(orders)
+        else:
+            print("Error fetching orders:", response.text)
 
 
 class AdminLog(AbstractWidget):

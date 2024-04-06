@@ -662,7 +662,14 @@ async def show_table_orders(table_num: int):
             all_orders = []
 
             for customer in connection.root.tables[table_num].customers:
-                customer_orders = [order for order in customer.orders]
+                customer_orders = []
+                for order_name in customer.orders:
+                    order = {
+                        "name": order_name,
+                        "quantity": customer.orders[order_name],
+                        "price": connection.root.menus[order_name].price
+                    }
+                    customer_orders.append(order)
                 all_orders.extend(customer_orders)
 
             log.log_info(f"Table {table_num}: Retrieved orders successfully")
