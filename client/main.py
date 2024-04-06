@@ -456,9 +456,6 @@ class Home(AbstractWidget):
     def redirect_to_user_walkin(self, event):
         js.window.location.href = "/tables"
 
-    def redirect_to_user_booking(self, event):
-        js.window.location.href = "/booking"
-
     def drawWidget(self):
         current_hour = js.Date.new().getHours()
 
@@ -499,17 +496,13 @@ class Home(AbstractWidget):
                 Your food adventure starts here.
             </div>
             <div class="flex lg:flex-row flex-col justify-center items-center gap-6 bg-blue-400 py-10 px-14 rounded-xl text-white">
-                <div class="booking-btn w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
-                    <img class="" src="/table.svg" />
-                    <p class="">Book Table</p>
-                </div>
-                <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
-                    <img class="" src="/delivery.svg" />
-                    <p class="">Delivery</p>
-                </div>
                 <div class="walkin-btn w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
                     <img class="" src="/walkin.svg" />
                     <p class="">Walk In</p>
+                </div>
+                <div onclick="window.location.href='/menu'" class="menu-btn w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
+                    <img class="" src="/table.svg" />
+                    <p class="">Menu</p>
                 </div>
             </div>
         """
@@ -520,9 +513,6 @@ class Home(AbstractWidget):
 
         walkin_btn = content.querySelector(".walkin-btn")
         walkin_btn.onclick = self.redirect_to_user_walkin
-
-        booking_btn = content.querySelector(".booking-btn")
-        booking_btn.onclick = self.redirect_to_user_booking
 
 
 class Menu(AbstractWidget):
