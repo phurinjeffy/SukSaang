@@ -644,6 +644,7 @@ async def place_order(username: str):
         if username in connection.root.users:
             user = connection.root.users[username]
             user.orders = user.cart
+            user.cart = {}
             connection.transaction_manager.commit()
             log.log_info(
                 f"{username}: place_order operation successful"

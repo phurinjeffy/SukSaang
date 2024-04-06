@@ -769,6 +769,7 @@ class Cart(AbstractWidget):
             self.subtotal = 0  # Reset the subtotal to zero
             self.check = 1
             self.drawWidget()
+            js.alert("Placed Order Successfully")
         else:
             print("Error placing order:", response.text)
 
