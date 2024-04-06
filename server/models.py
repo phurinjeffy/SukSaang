@@ -24,11 +24,13 @@ class User(Account, persistent.Persistent):
         hashed_password="",
         address="",
         table=0,
+        cart=None,
         orders=None,
     ):
         Account.__init__(self, username, password, hashed_password)
         self.address = address
         self.table = table
+        self.cart = cart if cart is not None else {}
         self.orders = orders if orders is not None else {}
 
     def add_order(self, order):

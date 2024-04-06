@@ -739,7 +739,7 @@ class Cart(AbstractWidget):
 
         # Use JavaScript to reload the page after clearing the cart
         js.window.location.href = "/menu"
-        
+
     def fetch_menu_item_info(self, menu_name):
         url = f"http://localhost:8000/menus/{menu_name}"
         response = requests.get(url)
@@ -787,7 +787,7 @@ class Cart(AbstractWidget):
         items_container = ""
         for i, item in enumerate(self.orders):
             total = int(item["price"] * item["quantity"])
-            menu = self.fetch_menu_item_info(item['name'])
+            menu = self.fetch_menu_item_info(item["name"])
             items_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td>
@@ -1102,8 +1102,6 @@ class AdminTable(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
         self.table = None
         self.customers = None
-        self.payment = 0
-        self.total_payment = None
         self.opened_modal = None
         self.fetch_table_info()
 
@@ -1114,7 +1112,7 @@ class AdminTable(AbstractWidget):
             self.table = response.json()["tables"]
         else:
             print("Error fetching menu:", response.text)
-            
+
     def handle_view_order(self, table_num):
         url = f"http://localhost:8000/tables/{table_num}/orders"
         response = requests.get(url)
@@ -1137,36 +1135,6 @@ class AdminTable(AbstractWidget):
         else:
             print("Error fetching table info:", response.text)
 
-    def show_table_payment(self, table_num):
-        url = f"http://localhost:8000/table/{table_num}/payment"
-        response = requests.get(url)
-        if response.status_code == 200:
-            self.payment = response.json()
-        else:
-            print("Error fetching table info:", response.text)
-
-    def show_image(self, payment):
-        img_src = f"https://promptpay.io/0987067067/{payment}.png"
-        img = document.createElement("img")
-        img.src = img_src
-        img.style.maxWidth = "80%"
-        img.style.maxHeight = "80%"
-
-        modal = document.createElement("div")
-        modal.style.position = "fixed"
-        modal.style.zIndex = "1"
-        modal.style.left = "0"
-        modal.style.top = "0"
-        modal.style.width = "100%"
-        modal.style.height = "100%"
-        modal.style.backgroundColor = "rgba(0,0,0,0.5)"
-        modal.style.display = "flex"
-        modal.style.justifyContent = "center"
-        modal.style.alignItems = "center"
-        modal.appendChild(img)
-        modal.onclick = lambda: modal.remove()
-        document.body.appendChild(modal)
-
     def check_out(self, tableNum):
         url = f"http://localhost:8000/table/{tableNum}/checkout"
         response = requests.put(url)
@@ -1180,16 +1148,12 @@ class AdminTable(AbstractWidget):
         tables_container = ""
         for table in self.table:
             self.fetch_table_customer_info(int(table["table_num"]))
-            self.show_table_payment(int(table["table_num"]))
-            self.total_payment = str(self.payment["total_payment"])
 
             tables_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td class="p-4 pr-0">{table['table_num']}</td>
                     <td>{self.customers}</td>
                     <td class="view-order cursor-pointer" id="view-order-{table['table_num']}">View Order</td>
-                    <td>{self.total_payment}</td>
-                    <td><button onclick="showImage({self.total_payment})">Pay</button></td>
                     <td><button onclick="check_out({int(table['table_num'])})">Check Out</button></td>
                 </tr>
             """
@@ -1207,9 +1171,7 @@ class AdminTable(AbstractWidget):
                                 <th class="font-light text-left p-4 pr-0">Table</th>
                                 <th class="font-light text-left">Customers</th>
                                 <th class="font-light text-left">Orders</th>
-                                <th class="font-light text-left">Amount (฿)</th>
-                                <th class="font-light text-left">Payment</th>
-                                <th class="font-light text-left">Checkout</th>
+                                <th class="font-light text-left">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1232,46 +1194,22 @@ class AdminTable(AbstractWidget):
 
         script = document.createElement("script")
         script.innerHTML = """
-            function showImage(payment) {
-                var imgSrc = 'https://promptpay.io/' + '0987067067' + '/' + payment + '.png';
-                var modal = document.createElement('div');
-                modal.style.position = 'fixed';
-                modal.style.zIndex = '1';
-                modal.style.left = '0';
-                modal.style.top = '0';
-                modal.style.width = '100%';
-                modal.style.height = '100%';
-                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-                modal.style.display = 'flex';
-                modal.style.justifyContent = 'center';
-                modal.style.alignItems = 'center';
-                var img = document.createElement('img');
-                img.src = imgSrc;
-                img.style.maxWidth = '80%';
-                img.style.maxHeight = '80%';
-                modal.appendChild(img);
-                modal.onclick = function() {
-                    modal.remove();
-                };
-                document.body.appendChild(modal);
+            function check_out(tableNum) {
+                fetch(`http://localhost:8000/table/${tableNum}/checkout`, {
+                    method: 'PUT',
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Check out successful');
+                        window.location.reload();
+                    } else {
+                        console.error('Error checking out');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking out:', error);
+                });
             }
-
-        function check_out(tableNum) {
-            fetch(`http://localhost:8000/table/${tableNum}/checkout`, {
-                method: 'PUT',
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log('Check out successful');
-                    window.location.reload();
-                } else {
-                    console.error('Error checking out');
-                }
-            })
-            .catch(error => {
-                console.error('Error checking out:', error);
-            });
-        }
         """
         document.body.appendChild(script)
 
@@ -1282,6 +1220,16 @@ class Receipt(AbstractWidget):
         self.orders = orders
         self.table_num = table_num
         self.modal_content = None
+        self.show_table_payment(table_num)
+        self.payment_image = f"https://promptpay.io/0824468446/{self.payment}.png"
+        
+    def show_table_payment(self, table_num):
+        url = f"http://localhost:8000/table/{table_num}/payment"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.payment = str(response.json()["total_payment"])
+        else:
+            print("Error fetching table info:", response.text)
 
     def close_modal(self, event=None):
         if self.modal_content:
@@ -1294,7 +1242,7 @@ class Receipt(AbstractWidget):
 
         modal_content = "<ul class='list-disc font-extralight text-sm'>"
         for order in self.orders:
-            modal_content += f"<li class='font-medium mr-1'>{order['name']} - Quantity: {order['quantity']}, Price: {order['price']}</li>"
+            modal_content += f"<li class='font-medium mr-1'>{order['name']} - ฿{order['price']} - x {order['quantity']} = ฿{order['price']*order['quantity']}</li>"
         modal_content += "</ul>"
 
         self.modal_content.innerHTML = f"""
@@ -1303,6 +1251,10 @@ class Receipt(AbstractWidget):
                 <div class="flex flex-col justify-center items-center text-white gap-6">
                     <p class="font-semibold text-lg">Table {self.table_num} | Orders</p>
                     {modal_content}
+                    <p class="font-semibold text-base">Total: ฿{self.payment}</p>
+                    {
+                       f'<img src="{self.payment_image}" alt="Payment" style="max-width: 80%; max-height: 80%;">' if self.payment != "0" else ''
+                    }
                 </div>
             </div>
         """
