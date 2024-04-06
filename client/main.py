@@ -654,7 +654,7 @@ class Detail(AbstractWidget):
         username = fetch_user_info()
         food_name = self.item["name"]
 
-        url = f"http://localhost:8000/users/{username}/orders?food_name={food_name}&quantity={quantity}"
+        url = f"http://localhost:8000/users/{username}/cart?food_name={food_name}&quantity={quantity}"
         headers = {
             "Content-Type": "application/json",
         }
@@ -727,21 +727,10 @@ class Cart(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.username = fetch_user_info()
-        self.orders = None
+        self.cart = None
         self.subtotal = 0
         self.check = 0
-
-        self.fetch_orders_info()
-
-    def redirect_to_menu(self, event):
-        self.orders = []  # Empty the cart
-        self.subtotal = 0  # Reset the subtotal to zero
-        self.check = 1
-        self.drawWidget()
-        # self.element.innerHTML = ' '
-
-        # Use JavaScript to reload the page after clearing the cart
-        js.window.location.href = "/menu"
+        self.fetch_cart_info()
 
     def fetch_menu_item_info(self, menu_name):
         url = f"http://localhost:8000/menus/{menu_name}"
@@ -751,17 +740,17 @@ class Cart(AbstractWidget):
         else:
             print("Error fetching menu item:", response.text)
 
-    def fetch_orders_info(self):
+    def fetch_cart_info(self):
         if self.check == 0:
-            url = f"http://localhost:8000/users/{self.username}/orders"
+            url = f"http://localhost:8000/users/{self.username}/cart"
             response = requests.get(url)
             if response.status_code == 200:
-                self.orders = response.json()["orders"]
+                self.cart = response.json()["cart"]
             else:
                 print("Error fetching menu:", response.text)
 
-    def delete_order(self, food_name, quantity):
-        url = f"http://localhost:8000/users/{self.username}/orders/{food_name}?quantity={quantity}"
+    def delete_cart(self, food_name, quantity):
+        url = f"http://localhost:8000/users/{self.username}/cart/{food_name}?quantity={quantity}"
         headers = {
             "Content-Type": "application/json",
         }
@@ -771,24 +760,21 @@ class Cart(AbstractWidget):
         else:
             print("Error:", response.text)
 
-    def place_order(self):
-        url = f"http://localhost:8000/place_order"
-        response = requests.post(
-            url, json={"username": self.username, "orders": self.orders}
-        )
+    def place_order(self, event):
+        url = f"http://localhost:8000/users/{self.username}/orders/place_order"
+        response = requests.post(url)
         if response.status_code == 200:
-            redirect_url = response.json()["redirect_url"]
-            # Clear orders and subtotal after placing the order
-            self.orders = []
-            self.subtotal = 0
-            return redirect_url
+            print("Successfully Placed Order")
+            self.cart = []  # Empty the cart
+            self.subtotal = 0  # Reset the subtotal to zero
+            self.check = 1
+            self.drawWidget()
         else:
             print("Error placing order:", response.text)
-            return None
 
     def drawWidget(self):
         items_container = ""
-        for i, item in enumerate(self.orders):
+        for i, item in enumerate(self.cart):
             total = int(item["price"] * item["quantity"])
             menu = self.fetch_menu_item_info(item["name"])
             items_container += f"""
@@ -851,20 +837,20 @@ class Cart(AbstractWidget):
         self.element.appendChild(content)
 
         place_order_btn = self.element.querySelector(".place-order-btn")
-        place_order_btn.onclick = self.redirect_to_menu
+        place_order_btn.onclick = self.place_order
 
         def update_quantity(event, amount):
             item_index = int(event.target.dataset.index)
-            food_name = self.orders[item_index]["name"]
+            food_name = self.cart[item_index]["name"]
 
-            if self.orders[item_index]["quantity"] >= 1:
-                self.delete_order(food_name, -amount)
+            if self.cart[item_index]["quantity"] >= 1:
+                self.delete_cart(food_name, -amount)
 
-                self.orders[item_index]["quantity"] += amount
-                price_change = self.orders[item_index]["price"] * amount
+                self.cart[item_index]["quantity"] += amount
+                price_change = self.cart[item_index]["price"] * amount
 
                 quantity_element = event.target.parentElement.querySelector(".quantity")
-                quantity_element.textContent = self.orders[item_index]["quantity"]
+                quantity_element.textContent = self.cart[item_index]["quantity"]
 
                 total_element = event.target.parentElement.parentElement.nextElementSibling.querySelector(
                     ".total"
@@ -878,7 +864,7 @@ class Cart(AbstractWidget):
                     int(subtotal_element.textContent) + price_change
                 )
 
-                if self.orders[item_index]["quantity"] == 0:
+                if self.cart[item_index]["quantity"] == 0:
                     row = event.target.closest("tr")
                     row.parentNode.removeChild(row)
 
@@ -1155,6 +1141,7 @@ class AdminHome(AbstractWidget):
             {self.generate_daily_bar_graphs()}
         """
         self.element.appendChild(content)
+        
         
 class AdminTable(AbstractWidget):
     def __init__(self, element_id):

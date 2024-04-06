@@ -475,6 +475,88 @@ async def edit_menu(
         )
 
 
+# ------------ Cart ------------------
+async def get_cart(username: str):
+    try:
+        if username in connection.root.users:
+            user = connection.root.users[username]
+            cart = []
+            for food_name, quantity in user.cart.items():
+                cart.append(
+                    {
+                        "name": food_name,
+                        "quantity": quantity,
+                        "price": connection.root.menus[food_name].price,
+                    }
+                )
+            log.log_info(f"{username}: get_cart operation successful")
+            return {"cart": cart}
+        else:
+            log.log_error(f"get_cart: User not found")
+            return {"message": "User not found."}
+    except Exception as e:
+        log.log_error(f"Error in get_cart: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve user cart.",
+        )
+
+
+async def add_cart(username: str, food_name: str, quantity: int):
+    try:
+        if food_name not in connection.root.menus:
+            log.log_error(f"Error in add_cart: The menu doesn't have this food")
+            return {"message": "The menu doesn't have this food"}
+        if username in connection.root.users:
+            user = connection.root.users[username]
+            if food_name not in user.cart:
+                user.cart[food_name] = quantity
+            else:
+                user.cart[food_name] += quantity
+            connection.transaction_manager.commit()
+            log.log_info(
+                f"{food_name} added to {username}: add_cart operation successful"
+            )
+            return {"message": "Cart added successfully"}
+    except Exception as e:
+        log.log_error(f"Error in add_cart: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to add menu",
+        )
+
+
+async def delete_cart(username: str, food_name: str, quantity: int = 1):
+    try:
+        if username in connection.root.users:
+            user = connection.root.users[username]
+            if food_name in user.cart:
+                current_quantity = user.cart.get(food_name, 0)
+                if quantity >= current_quantity:
+                    del user.cart[food_name]
+                else:
+                    user.cart[food_name] -= quantity
+                connection.transaction_manager.commit()
+                log.log_info(
+                    f"{food_name} deleted from {username}: delete_cart operation successful"
+                )
+                return {"message": "Cart deleted successfully"}
+            else:
+                log.log_error(
+                    f"Error in delete_cart: Food item not found in user's cart list"
+                )
+                return {"error": "Food item not found in user's cart list"}
+        else:
+            log.log_error(f"Error in delete_cart: User not found")
+            return {"error": "User not found"}
+    except Exception as e:
+        log.log_error(f"Error in delete_cart: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete cart",
+        )
+
+
 # ------------ Customer Order ------------------
 async def get_orders(username: str):
     try:
@@ -555,7 +637,25 @@ async def delete_order(username: str, food_name: str, quantity: int = 1):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete order",
         )
-
+        
+        
+async def place_order(username: str):
+    try:
+        if username in connection.root.users:
+            user = connection.root.users[username]
+            user.orders = user.cart
+            connection.transaction_manager.commit()
+            log.log_info(
+                f"{username}: place_order operation successful"
+            )
+            return {"message": "Order placed successfully"}
+    except Exception as e:
+        log.log_error(f"Error in place_order: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to place order",
+        )
+    
 
 # --------------------Table-------------------------
 async def get_tables():
@@ -686,21 +786,6 @@ async def show_table_orders(table_num: int):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
-
-
-async def place_order():
-    redirect_url = "http://localhost:5173/menu"
-    return {"redirect_url": redirect_url}
-
-
-async def handle_place_order():
-    redirect_url = await place_order()
-    if redirect_url:
-        print("Redirecting to:", redirect_url["redirect_url"])
-        return JSONResponse(content=redirect_url)
-    else:
-        print("Failed to place order")
-        raise HTTPException(status_code=500, detail="Failed to place order")
 
 
 async def show_table_payment(table_num: int):

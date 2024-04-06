@@ -141,6 +141,22 @@ async def delete_menu(food_name: str):
     return await _services.delete_menu(food_name)
 
 
+# ------------------ cart ------------------
+@router.get("/users/{username}/cart")
+async def get_cart(username: str):
+    return await _services.get_cart(username)
+
+
+@router.post("/users/{username}/cart")
+async def add_cart(username: str, food_name: str, quantity: int):
+    return await _services.add_cart(username, food_name, quantity)
+
+
+@router.delete("/users/{username}/cart/{food_name}")
+async def delete_cart(username: str, food_name: str, quantity: int):
+    return await _services.delete_cart(username, food_name, quantity)
+
+
 # ------------------ order ------------------
 @router.get("/users/{username}/orders")
 async def get_orders(username: str):
@@ -156,13 +172,11 @@ async def add_order(username: str, food_name: str, quantity: int):
 async def delete_order(username: str, food_name: str, quantity: int):
     return await _services.delete_order(username, food_name, quantity)
 
-@router.post("/users/{username}/orders/place_order")
-async def place_order():
-    return await _services.place_order()
 
-@router.post("/handle_place_order")
-async def handle_place_order():
-    return await _services.handle_place_order()
+@router.post("/users/{username}/orders/place_order")
+async def place_order(username: str):
+    return await _services.place_order(username)
+
 
 # ------------------ Table ----------------------
 @router.get("/tables")
