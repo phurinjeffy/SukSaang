@@ -41,6 +41,15 @@ def init_db():
             root.tables[1] = Table(1, customers=[], available=True)
             root.tables[2] = Table(2, customers=[], available=True)
             root.tables[3] = Table(3, customers=[], available=True)
+            root.tables[4] = Table(4, customers=[], available=True)
+            root.tables[5] = Table(5, customers=[], available=True)
+            root.tables[6] = Table(6, customers=[], available=True)
+            root.tables[7] = Table(7, customers=[], available=True)
+            root.tables[8] = Table(8, customers=[], available=True)
+            root.tables[9] = Table(9, customers=[], available=True)
+            root.tables[10] = Table(10, customers=[], available=True)
+            root.tables[11] = Table(11, customers=[], available=True)
+            root.tables[12] = Table(12, customers=[], available=True)
             
         print("Database loaded from file.")
     except Exception as e:

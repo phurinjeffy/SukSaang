@@ -982,75 +982,67 @@ class Booking(AbstractWidget):
         js.window.location.href = "/menu"
 
     def drawWidget(self):
+        # Use Tailwind's flex, flex-wrap, and justify-center classes for the container
         tables_container = document.createElement("div")
-        tables_container.setAttribute("class", "w-full flex flex-wrap justify-center")
-
+        tables_container.setAttribute("class", "flex flex-wrap justify-center space-x-4 space-y-4")
         for table in self.tables:
             table_div = document.createElement("div")
             table_div.onclick = self.tableClicked
-            table_div.setAttribute(
-                "class", "table-item p-2 m-2 bg-lightgray rounded cursor-pointer"
-            )
-            table_div.setAttribute("data-table-id", str(table["table_num"]))
-            if table["customers"]:
-                table_div.style.backgroundColor = "lightblue"
+            # Add `cursor-not-allowed` and `opacity-50` for booked tables to make it clear they are not selectable
+            table_class_list = ["table-item", "p-4", "m-2", "rounded", "shadow", "transition-colors"]
+            if table['customers']:
+                table_class_list.extend(["bg-blue-500", "cursor-not-allowed", "opacity-50"])
             else:
-                table_div.style.backgroundColor = "lightgray"
-            table_div.innerHTML = f"""
-                <div class="text-lg font-semibold">Table {table['table_num']}</div>
-            """
+                table_class_list.append("bg-gray-300")
+            table_div.setAttribute("class", " ".join(table_class_list))
+            table_div.setAttribute("data-table-id", str(table['table_num']))
+            table_div.innerHTML = f"<div class='text-lg font-semibold'>{table['table_num']}</div>"
+            table_div.dataset.available = str(not table['customers'])
             tables_container.appendChild(table_div)
-
+        # Append table grid container
+        self.element.innerHTML = ""  # Clear the previous content
         self.element.appendChild(tables_container)
-
+        # Confirmation button with Tailwind classes
         confirm_button = document.createElement("button")
-        confirm_button.setAttribute("class", "confirm-button")
+        confirm_button.setAttribute("class", "mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded")
         confirm_button.innerHTML = "Confirm Table"
         confirm_button.onclick = self.confirmBooking
         self.element.appendChild(confirm_button)
 
     def tableClicked(self, event):
-        global prev_table_color
         table_div = event.target.closest(".table-item")
         if table_div:
+            # Remove selection class from previously selected table
+            if self.table_select:
+                prev_table_div = self.element.querySelector(f'.table-item[data-table-id="{self.table_select}"]')
+                prev_table_div.classList.remove("ring-2", "ring-yellow-500")
+            # Set the new selection
             table_id = table_div.getAttribute("data-table-id")
-            if self.table_select != table_id:
-                prev_table_div = self.element.querySelector(
-                    f'.table-item[data-table-id="{self.table_select}"]'
-                )
-                if prev_table_div:
-                    # print(prev_table_div.style.backgroundColor)
-                    if prev_table_color == "lightblue":
-                        prev_table_div.style.backgroundColor = "lightblue"
-                    elif prev_table_color == "lightgray":
-                        prev_table_div.style.backgroundColor = "lightgray"
             self.table_select = table_id
-            prev_table_color = table_div.style.backgroundColor
-            # print("prev_color_out: ", prev_table_color)
-            table_div.style.backgroundColor = "yellow"
-            # print("Table clicked:", table_id)
+            table_div.classList.add("ring-2", "ring-yellow-500")
 
     def confirmBooking(self, event):
-        if self.table_select is not None:
-            table_id = self.table_select
-            for table in self.tables:
-                if str(table["table_num"]) == self.table_select:
-                    if table["available"] and not table["customers"]:
+        if self.table_select:
+            selected_table_div = self.element.querySelector(f'[data-table-id="{self.table_select}"]')
+            # Only proceed if the selected table is available for booking
+            if selected_table_div.dataset.available == 'True':
+                table_id = self.table_select
+                # Run through each table to see if the selected one matches and is available
+                for table in self.tables:
+                    if str(table['table_num']) == table_id and not table['customers']:
                         self.table_add_customer()
-                    else:
-                        print(
-                            f"Table {table_id} is already booked or is not available for booking."
-                        )
-                    break
+                        break
+                js.window.location.href = "/home"
+            else:
+                print(f"Table {self.table_select} is already booked or is not available for booking.")
+            self.table_select = None  # Reset the selection
         else:
             print("No table selected.")
 
     def table_add_customer(self):
         table_num = self.table_select
-
-        url = f"http://localhost:8000/tables/{int(table_num)}/customers"
+        url = f"http://localhost:8000/tables/{table_num}/customers"
         response = requests.post(url, self.username)
-
         if response.status_code == 200:
             print(f"Customer added successfully")
             self.redirect_to_menu()
