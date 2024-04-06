@@ -739,6 +739,14 @@ class Cart(AbstractWidget):
 
         # Use JavaScript to reload the page after clearing the cart
         js.window.location.href = "/menu"
+        
+    def fetch_menu_item_info(self, menu_name):
+        url = f"http://localhost:8000/menus/{menu_name}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print("Error fetching menu item:", response.text)
 
     def fetch_orders_info(self):
         if self.check == 0:
@@ -779,11 +787,12 @@ class Cart(AbstractWidget):
         items_container = ""
         for i, item in enumerate(self.orders):
             total = int(item["price"] * item["quantity"])
+            menu = self.fetch_menu_item_info(item['name'])
             items_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td>
                         <div class="flex flex-row justify-start items-center gap-4 p-4 pr-0">
-                            <img class="w-14 w-14 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                            <img class="w-14 h-14 mb-1" src={menu['photo']} />
                             <p class="capitalize text-base sm:text-lg">{item['name']}</p>
                         </div>
                     </td>

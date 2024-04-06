@@ -710,7 +710,7 @@ async def show_table_payment(table_num: int):
 
             for customer in connection.root.tables[table_num].customers:
                 for order in customer.orders:
-                    total_payment += connection.root.menus[order].price
+                    total_payment += (connection.root.menus[order].price * int(customer.orders[order]))
 
             log.log_info(
                 f"Table {table_num}: Retrieved payment information successfully"
