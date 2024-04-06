@@ -209,6 +209,10 @@ async def show_table_payment(table_num: int):
     return await _services.show_table_payment(table_num)
 
 @router.put("/table/{table_num}/checkout")
-async def show_table_payment(table_num: int):
+async def table_checkout(table_num: int):
     return await _services.table_checkout(table_num)
 
+# --------------- stat ------------
+@router.get("/stats")
+async def show_stats():
+    return await _services.get_stats()

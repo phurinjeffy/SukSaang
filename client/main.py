@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import datetime
 from collections import defaultdict
 
+
 def check_token():
     location_path = js.window.location.pathname
     if location_path in ["/", "/login", "/register", "/admin_login", "/admin_register"]:
@@ -888,35 +889,36 @@ class TableUser(AbstractWidget):
         js.window.location.href = "/menu"
 
     def drawWidget(self):
+        content = document.createElement("div")
+        content.setAttribute("class", "flex flex-col justify-center items-center")
+
         tables_container = document.createElement("div")
-        tables_container.setAttribute("class", "w-full flex flex-wrap justify-center")
+        tables_container.setAttribute("class", "w-full grid grid-cols-3 gap-4 p-8")
 
         for table in self.tables:
             table_div = document.createElement("div")
             table_div.onclick = self.tableClicked
             table_div.setAttribute(
-                "class", "table-item p-2 m-2 bg-lightgray rounded cursor-pointer"
+                "class",
+                f"table-item p-4 rounded flex justify-center items-center {'bg-blue-100 hover:scale-105 duration-300 cursor-pointer' if not table['customers'] else 'bg-red-200 cursor-not-allowed'}",
             )
             table_div.setAttribute("data-table-id", str(table["table_num"]))
-            if table["customers"]:
-                table_div.style.backgroundColor = "lightblue"
-            else:
-                table_div.style.backgroundColor = "lightgray"
             table_div.innerHTML = f"""
                 <div class="text-lg font-semibold">Table {table['table_num']}</div>
             """
             tables_container.appendChild(table_div)
 
-        self.element.appendChild(tables_container)
+        content.appendChild(tables_container)
 
         confirm_button = document.createElement("button")
         confirm_button.setAttribute("class", "confirm-button")
         confirm_button.innerHTML = "Confirm Table"
         confirm_button.onclick = self.confirmBooking
-        self.element.appendChild(confirm_button)
+        content.appendChild(confirm_button)
+
+        self.element.appendChild(content)
 
     def tableClicked(self, event):
-        global prev_table_color
         table_div = event.target.closest(".table-item")
         if table_div:
             table_id = table_div.getAttribute("data-table-id")
@@ -925,16 +927,13 @@ class TableUser(AbstractWidget):
                     f'.table-item[data-table-id="{self.table_select}"]'
                 )
                 if prev_table_div:
-                    # print(prev_table_div.style.backgroundColor)
-                    if prev_table_color == "lightblue":
-                        prev_table_div.style.backgroundColor = "lightblue"
-                    elif prev_table_color == "lightgray":
-                        prev_table_div.style.backgroundColor = "lightgray"
+                    prev_table_color = prev_table_div.getAttribute("data-prev-color")
+                    prev_table_div.style.backgroundColor = prev_table_color
+
             self.table_select = table_id
-            prev_table_color = table_div.style.backgroundColor
-            # print("prev_color_out: ", prev_table_color)
+            # Store the current background color in a data attribute
+            table_div.setAttribute("data-prev-color", table_div.style.backgroundColor)
             table_div.style.backgroundColor = "yellow"
-            # print("Table clicked:", table_id)
 
     def confirmBooking(self, event):
         if self.table_select is not None:
@@ -942,12 +941,17 @@ class TableUser(AbstractWidget):
             for table in self.tables:
                 if str(table["table_num"]) == self.table_select:
                     if table["available"]:
-                        self.table_add_customer()
+                        confirm = js.confirm(f"Confirm for Table {table_id}?")
+                        if confirm:
+                            self.table_add_customer()
+                            js.alert("Successful")
                     else:
                         print(f"Table {table_id} is not available for booking.")
+                        js.alert(f"Table {table_id} is not available for booking.")
                     break
         else:
             print("No table selected.")
+            js.alert("No table selected.")
 
     def table_add_customer(self):
         table_num = self.table_select
@@ -984,27 +988,43 @@ class Booking(AbstractWidget):
     def drawWidget(self):
         # Use Tailwind's flex, flex-wrap, and justify-center classes for the container
         tables_container = document.createElement("div")
-        tables_container.setAttribute("class", "flex flex-wrap justify-center space-x-4 space-y-4")
+        tables_container.setAttribute(
+            "class", "flex flex-wrap justify-center space-x-4 space-y-4"
+        )
         for table in self.tables:
             table_div = document.createElement("div")
             table_div.onclick = self.tableClicked
             # Add `cursor-not-allowed` and `opacity-50` for booked tables to make it clear they are not selectable
-            table_class_list = ["table-item", "p-4", "m-2", "rounded", "shadow", "transition-colors"]
-            if table['customers']:
-                table_class_list.extend(["bg-blue-500", "cursor-not-allowed", "opacity-50"])
+            table_class_list = [
+                "table-item",
+                "p-4",
+                "m-2",
+                "rounded",
+                "shadow",
+                "transition-colors",
+            ]
+            if table["customers"]:
+                table_class_list.extend(
+                    ["bg-blue-500", "cursor-not-allowed", "opacity-50"]
+                )
             else:
                 table_class_list.append("bg-gray-300")
             table_div.setAttribute("class", " ".join(table_class_list))
-            table_div.setAttribute("data-table-id", str(table['table_num']))
-            table_div.innerHTML = f"<div class='text-lg font-semibold'>{table['table_num']}</div>"
-            table_div.dataset.available = str(not table['customers'])
+            table_div.setAttribute("data-table-id", str(table["table_num"]))
+            table_div.innerHTML = (
+                f"<div class='text-lg font-semibold'>{table['table_num']}</div>"
+            )
+            table_div.dataset.available = str(not table["customers"])
             tables_container.appendChild(table_div)
         # Append table grid container
         self.element.innerHTML = ""  # Clear the previous content
         self.element.appendChild(tables_container)
         # Confirmation button with Tailwind classes
         confirm_button = document.createElement("button")
-        confirm_button.setAttribute("class", "mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded")
+        confirm_button.setAttribute(
+            "class",
+            "mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
+        )
         confirm_button.innerHTML = "Confirm Table"
         confirm_button.onclick = self.confirmBooking
         self.element.appendChild(confirm_button)
@@ -1014,7 +1034,9 @@ class Booking(AbstractWidget):
         if table_div:
             # Remove selection class from previously selected table
             if self.table_select:
-                prev_table_div = self.element.querySelector(f'.table-item[data-table-id="{self.table_select}"]')
+                prev_table_div = self.element.querySelector(
+                    f'.table-item[data-table-id="{self.table_select}"]'
+                )
                 prev_table_div.classList.remove("ring-2", "ring-yellow-500")
             # Set the new selection
             table_id = table_div.getAttribute("data-table-id")
@@ -1023,18 +1045,22 @@ class Booking(AbstractWidget):
 
     def confirmBooking(self, event):
         if self.table_select:
-            selected_table_div = self.element.querySelector(f'[data-table-id="{self.table_select}"]')
+            selected_table_div = self.element.querySelector(
+                f'[data-table-id="{self.table_select}"]'
+            )
             # Only proceed if the selected table is available for booking
-            if selected_table_div.dataset.available == 'True':
+            if selected_table_div.dataset.available == "True":
                 table_id = self.table_select
                 # Run through each table to see if the selected one matches and is available
                 for table in self.tables:
-                    if str(table['table_num']) == table_id and not table['customers']:
+                    if str(table["table_num"]) == table_id and not table["customers"]:
                         self.table_add_customer()
                         break
                 js.window.location.href = "/home"
             else:
-                print(f"Table {self.table_select} is already booked or is not available for booking.")
+                print(
+                    f"Table {self.table_select} is already booked or is not available for booking."
+                )
             self.table_select = None  # Reset the selection
         else:
             print("No table selected.")
@@ -1053,43 +1079,59 @@ class Booking(AbstractWidget):
 class AdminHome(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        
+
     def generate_daily_bar_graphs(self):
         # Get all data needed from the tables
         tables_data = self.get_tables_data()
-        
+
         # Get orders from log file and calculate revenue and cost
-        daily_revenue, daily_cost = self.calculate_financials(tables_data, 'app.log')
-        
+        daily_revenue, daily_cost = self.calculate_financials(tables_data, "app.log")
+
         # Plot the bar graph
         self.plot_bar_graph(daily_revenue, daily_cost)
 
     def get_tables_data(self):
         # Code to fetch tables data from the '/tables' endpoint
-        response = requests.get('http://localhost:8000/tables')
+        response = requests.get("http://localhost:8000/tables")
         return response.json() if response.status_code == 200 else {}
 
     def get_menu_item_cost(self, item_name):
         # Code to fetch a menu item cost from the '/menus/{menu_item}' endpoint
-        response = requests.get(f'http://localhost:8000/menus/{item_name}')
-        return response.json()['cost'] if response.status_code == 200 else 0
+        response = requests.get(f"http://localhost:8000/menus/{item_name}")
+        return response.json()["cost"] if response.status_code == 200 else 0
 
     def calculate_financials(self, tables_data, log_file_path):
         daily_revenue = defaultdict(float)
         daily_cost = defaultdict(float)
-        
-        with open(log_file_path, 'r') as log_file:
+
+        with open(log_file_path, "r") as log_file:
             for line in log_file:
-                if 'Checked out successfully' in line:
-                    timestamp = line.split(' - ')[0]
-                    date = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S,%f').date()
-                    table_number = line.split('Table ')[1].split(':')[0].strip()
-                    table_info = next((t for t in tables_data['tables'] if str(t['table_num']) == table_number), None)
+                if "Checked out successfully" in line:
+                    timestamp = line.split(" - ")[0]
+                    date = datetime.datetime.strptime(
+                        timestamp, "%Y-%m-%d %H:%M:%S,%f"
+                    ).date()
+                    table_number = line.split("Table ")[1].split(":")[0].strip()
+                    table_info = next(
+                        (
+                            t
+                            for t in tables_data["tables"]
+                            if str(t["table_num"]) == table_number
+                        ),
+                        None,
+                    )
                     if table_info:
-                        for customer in table_info['customers']['data']:
-                            for item, quantity in customer['orders'].items():
+                        for customer in table_info["customers"]["data"]:
+                            for item, quantity in customer["orders"].items():
                                 item_cost = self.get_menu_item_cost(item)
-                                item_price = next((o['price'] for o in customer['orders'] if o['name'] == item), 0)
+                                item_price = next(
+                                    (
+                                        o["price"]
+                                        for o in customer["orders"]
+                                        if o["name"] == item
+                                    ),
+                                    0,
+                                )
                                 daily_revenue[date] += item_price * quantity
                                 daily_cost[date] += item_cost * quantity
         return daily_revenue, daily_cost
@@ -1103,18 +1145,18 @@ class AdminHome(AbstractWidget):
 
         x = range(len(dates))  # Create a list of x coordinates for each date
         width = 0.4
-        
-        fig, ax = plt.subplots()
-        ax.bar(x, revenue_values, width, label='Revenue', color='green')
-        ax.bar([i + width for i in x], cost_values, width, label='Cost', color='red')
 
-        ax.set_xlabel('Date')
-        ax.set_ylabel('Amount ($)')
-        ax.set_title('Daily Revenue and Costs')
+        fig, ax = plt.subplots()
+        ax.bar(x, revenue_values, width, label="Revenue", color="green")
+        ax.bar([i + width for i in x], cost_values, width, label="Cost", color="red")
+
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Amount ($)")
+        ax.set_title("Daily Revenue and Costs")
         ax.set_xticks([i + width / 2 for i in x])
-        ax.set_xticklabels([date.strftime('%Y-%m-%d') for date in dates], rotation=45)
+        ax.set_xticklabels([date.strftime("%Y-%m-%d") for date in dates], rotation=45)
         plt.legend()
-        
+
         plt.tight_layout()
         plt.show()
 
@@ -1124,8 +1166,8 @@ class AdminHome(AbstractWidget):
             {self.generate_daily_bar_graphs()}
         """
         self.element.appendChild(content)
-        
-        
+
+
 class AdminTable(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
@@ -1218,7 +1260,9 @@ class AdminTable(AbstractWidget):
 
         # Attach event handlers for the "View Order" buttons
         for table in self.table:
-            view_order_button = content.querySelector(f"#view-order-{table['table_num']}")
+            view_order_button = content.querySelector(
+                f"#view-order-{table['table_num']}"
+            )
             view_order_button.onclick = handle_view_order_click(int(table["table_num"]))
 
         script = document.createElement("script")
@@ -1232,11 +1276,11 @@ class AdminTable(AbstractWidget):
                         console.log('Check out successful');
                         window.location.reload();
                     } else {
-                        console.error('Error checking out');
+                        console.error('Error checking out DUMMY');
                     }
                 })
                 .catch(error => {
-                    console.error('Error checking out:', error);
+                    console.error('Error checking out DUMMY:', error);
                 });
             }
         """
@@ -1251,7 +1295,7 @@ class Receipt(AbstractWidget):
         self.modal_content = None
         self.show_table_payment(table_num)
         self.payment_image = f"https://promptpay.io/0824468446/{self.payment}.png"
-        
+
     def show_table_payment(self, table_num):
         url = f"http://localhost:8000/table/{table_num}/payment"
         response = requests.get(url)

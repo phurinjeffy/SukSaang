@@ -96,12 +96,12 @@ class Table(persistent.Persistent):
         self.customers.append(customer)
 
 
-class Statistic(persistent.Persistent):
-    def __init__(self, day, cost, income, popular):
-        self.day = day
+class Stat(persistent.Persistent):
+    def __init__(self, date=None, cost=0, income=0):
+        self.date = date
         self.cost = cost
         self.income = income
-        self.popular = popular
+        # self.popular = popular
 
     def generate_graph(self):
         pass

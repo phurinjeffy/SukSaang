@@ -10,7 +10,7 @@ from fastapi import HTTPException, status, Depends, UploadFile
 from fastapi.security import OAuth2PasswordBearer
 from database import connection
 from models import *
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Optional
 from fastapi.responses import JSONResponse
 
@@ -818,9 +818,15 @@ async def show_table_payment(table_num: int):
 
 async def table_checkout(table_num: int):
     try:
+        current_date = str(date.today())[5:]
         if table_num in connection.root.tables:
             table = connection.root.tables[table_num]
+            if current_date not in connection.root.stats:
+                connection.root.stats[current_date] = Stat(current_date, 0, 0)
+
             for customer in table.customers:
+                for order in customer.orders:
+                    connection.root.stats[current_date].income += (connection.root.menus[order].price * customer.orders[order])
                 customer.orders.clear()
             table.customers.clear()
             connection.transaction_manager.commit()
@@ -835,6 +841,24 @@ async def table_checkout(table_num: int):
         raise
     except Exception as e:
         log.log_error(f"Error in table_checkout: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+async def get_stats():
+    try:
+        all_stats = []
+        for date, stat in connection.root.stats.items():
+            all_stats.append({
+                "date": stat.date, 
+                "cost": stat.cost, 
+                "income": stat.income
+            })
+        log.log_info(f"get_users operation successful")
+        return {"stats": all_stats}
+    except Exception as e:
+        log.log_error(f"Error in get_users: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
