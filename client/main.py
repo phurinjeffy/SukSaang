@@ -495,8 +495,8 @@ class Home(AbstractWidget):
             <div class="mt-14 mb-10 text-3xl font-semibold text-blue-950">
                 Your food adventure starts here.
             </div>
-            <div class="booking-btn flex lg:flex-row flex-col justify-center items-center gap-6 bg-blue-400 py-10 px-14 rounded-xl text-white">
-                <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
+            <div class="flex lg:flex-row flex-col justify-center items-center gap-6 bg-blue-400 py-10 px-14 rounded-xl text-white">
+                <div class="booking-btn w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
                     <img class="" src="/table.svg" />
                     <p class="">Book Table</p>
                 </div>
@@ -1093,9 +1093,9 @@ class AdminTable(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
         self.table = None
         self.customers = None
-        self.orders = None
         self.payment = 0
         self.total_payment = None
+        self.opened_modal = None
         self.fetch_table_info()
 
     def fetch_table_info(self):
@@ -1105,14 +1105,20 @@ class AdminTable(AbstractWidget):
             self.table = response.json()["tables"]
         else:
             print("Error fetching menu:", response.text)
-
-    def fetch_table_customer_orders(self, table_num):
+            
+    def handle_view_order(self, table_num):
         url = f"http://localhost:8000/tables/{table_num}/orders"
         response = requests.get(url)
         if response.status_code == 200:
-            self.orders = response.json()
+            orders = response.json()
+            if self.opened_modal:
+                self.opened_modal.close_modal()
+            document.body.style.overflow = "hidden"
+            self.opened_modal = Receipt("content", orders, table_num)
+            self.opened_modal.drawWidget()
+
         else:
-            print("Error fetching table info:", response.text)
+            print("Error fetching orders:", response.text)
 
     def fetch_table_customer_info(self, table_num):
         url = f"http://localhost:8000/tables/{table_num}/customers"
@@ -1165,7 +1171,6 @@ class AdminTable(AbstractWidget):
         tables_container = ""
         for table in self.table:
             self.fetch_table_customer_info(int(table["table_num"]))
-            # self.fetch_table_customer_orders(int(table["table_num"]))
             self.show_table_payment(int(table["table_num"]))
             self.total_payment = str(self.payment["total_payment"])
 
@@ -1260,16 +1265,42 @@ class AdminTable(AbstractWidget):
         }
         """
         document.body.appendChild(script)
-    
-    def handle_view_order(self, table_num):
-        url = f"http://localhost:8000/tables/{table_num}/orders"
-        response = requests.get(url)
-        if response.status_code == 200:
-            orders = response.json()
-            # Display orders in a popup
-            js.alert(orders)
-        else:
-            print("Error fetching orders:", response.text)
+
+
+class Receipt(AbstractWidget):
+    def __init__(self, element_id, orders, table_num):
+        AbstractWidget.__init__(self, element_id)
+        self.orders = orders
+        self.table_num = table_num
+        self.modal_content = None
+
+    def close_modal(self, event=None):
+        if self.modal_content:
+            self.element.removeChild(self.modal_content)
+            document.body.style.overflow = "auto"
+            self.modal_content = None
+
+    def drawWidget(self):
+        self.modal_content = document.createElement("div")
+
+        modal_content = "<ul class='list-disc font-extralight text-sm'>"
+        for order in self.orders:
+            modal_content += f"<li class='font-medium mr-1'>{order['name']} - Quantity: {order['quantity']}, Price: {order['price']}</li>"
+        modal_content += "</ul>"
+
+        self.modal_content.innerHTML = f"""
+            <div class="w-2/5 bg-zinc-800 rounded-lg p-8 border border-white shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <span class="close text-white cursor-pointer">&times;</span>
+                <div class="flex flex-col justify-center items-center text-white gap-6">
+                    <p class="font-semibold text-lg">Table {self.table_num} | Orders</p>
+                    {modal_content}
+                </div>
+            </div>
+        """
+        self.element.appendChild(self.modal_content)
+
+        close_button = self.modal_content.querySelector(".close")
+        close_button.onclick = self.close_modal
 
 
 class AdminLog(AbstractWidget):
