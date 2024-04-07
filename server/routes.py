@@ -141,6 +141,22 @@ async def delete_menu(food_name: str):
     return await _services.delete_menu(food_name)
 
 
+# ------------------ cart ------------------
+@router.get("/users/{username}/cart")
+async def get_cart(username: str):
+    return await _services.get_cart(username)
+
+
+@router.post("/users/{username}/cart")
+async def add_cart(username: str, food_name: str, quantity: int):
+    return await _services.add_cart(username, food_name, quantity)
+
+
+@router.delete("/users/{username}/cart/{food_name}")
+async def delete_cart(username: str, food_name: str, quantity: int):
+    return await _services.delete_cart(username, food_name, quantity)
+
+
 # ------------------ order ------------------
 @router.get("/users/{username}/orders")
 async def get_orders(username: str):
@@ -155,6 +171,11 @@ async def add_order(username: str, food_name: str, quantity: int):
 @router.delete("/users/{username}/orders/{food_name}")
 async def delete_order(username: str, food_name: str, quantity: int):
     return await _services.delete_order(username, food_name, quantity)
+
+
+@router.post("/users/{username}/orders/place_order")
+async def place_order(username: str):
+    return await _services.place_order(username)
 
 
 # ------------------ Table ----------------------
@@ -186,3 +207,12 @@ async def show_table_orders(table_num: int):
 @router.get("/table/{table_num}/payment")
 async def show_table_payment(table_num: int):
     return await _services.show_table_payment(table_num)
+
+@router.put("/table/{table_num}/checkout")
+async def table_checkout(table_num: int):
+    return await _services.table_checkout(table_num)
+
+# --------------- stat ------------
+@router.get("/stats")
+async def show_stats():
+    return await _services.get_stats()

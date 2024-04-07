@@ -2,14 +2,17 @@ import jwt
 import os
 import ast
 import boto3
+import base64
+from io import BytesIO
 from dotenv import load_dotenv
 from tempfile import NamedTemporaryFile
 from fastapi import HTTPException, status, Depends, UploadFile
 from fastapi.security import OAuth2PasswordBearer
 from database import connection
 from models import *
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Optional
+from fastapi.responses import JSONResponse
 
 log = Log()
 
@@ -24,6 +27,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 s3 = boto3.resource("s3")
 bucket = s3.Bucket(S3_BUCKET_NAME)
+
 
 def create_access_token(username: str):
     expiration_time = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -357,20 +361,30 @@ async def add_menu(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Menu already exists"
             )
-        
-        if photo != None:
-            bucket.upload_fileobj(photo.file, photo.filename)
+
+        photo_url = None
+        if photo:
+            # Read the uploaded file content
+            photo_content = photo.file.read()
+            # Create a BytesIO object to wrap the content
+            photo_content_bytesio = BytesIO(photo_content)
+            # Decode the photo content from base64
+            decoded_photo = base64.b64decode(photo_content_bytesio.read())
+            # Upload the decoded photo content to the bucket
+            bucket.upload_fileobj(BytesIO(decoded_photo), photo.filename)
             photo_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{photo.filename}"
-        else:
-            photo_url = None
-        
+
         if category.upper() == "DRINK":
-            menu = Drink(name, price, description, type, cost, ingredients, photo_url, sweetness)
+            menu = Drink(
+                name, price, description, type, cost, ingredients, photo_url, sweetness
+            )
         elif category.upper() == "DESSERT":
             menu = Dessert(name, price, description, type, cost, ingredients, photo_url)
         else:
-            menu = MainDish(name, price, description, type, cost, ingredients, photo_url)
-            
+            menu = MainDish(
+                name, price, description, type, cost, ingredients, photo_url
+            )
+
         connection.root.menus[name] = menu
         connection.transaction_manager.commit()
         log.log_info(f"{name}: add_menu operation successful")
@@ -461,6 +475,88 @@ async def edit_menu(
         )
 
 
+# ------------ Cart ------------------
+async def get_cart(username: str):
+    try:
+        if username in connection.root.users:
+            user = connection.root.users[username]
+            cart = []
+            for food_name, quantity in user.cart.items():
+                cart.append(
+                    {
+                        "name": food_name,
+                        "quantity": quantity,
+                        "price": connection.root.menus[food_name].price,
+                    }
+                )
+            log.log_info(f"{username}: get_cart operation successful")
+            return {"cart": cart}
+        else:
+            log.log_error(f"get_cart: User not found")
+            return {"message": "User not found."}
+    except Exception as e:
+        log.log_error(f"Error in get_cart: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve user cart.",
+        )
+
+
+async def add_cart(username: str, food_name: str, quantity: int):
+    try:
+        if food_name not in connection.root.menus:
+            log.log_error(f"Error in add_cart: The menu doesn't have this food")
+            return {"message": "The menu doesn't have this food"}
+        if username in connection.root.users:
+            user = connection.root.users[username]
+            if food_name not in user.cart:
+                user.cart[food_name] = quantity
+            else:
+                user.cart[food_name] += quantity
+            connection.transaction_manager.commit()
+            log.log_info(
+                f"{food_name} added to {username}: add_cart operation successful"
+            )
+            return {"message": "Cart added successfully"}
+    except Exception as e:
+        log.log_error(f"Error in add_cart: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to add menu",
+        )
+
+
+async def delete_cart(username: str, food_name: str, quantity: int = 1):
+    try:
+        if username in connection.root.users:
+            user = connection.root.users[username]
+            if food_name in user.cart:
+                current_quantity = user.cart.get(food_name, 0)
+                if quantity >= current_quantity:
+                    del user.cart[food_name]
+                else:
+                    user.cart[food_name] -= quantity
+                connection.transaction_manager.commit()
+                log.log_info(
+                    f"{food_name} deleted from {username}: delete_cart operation successful"
+                )
+                return {"message": "Cart deleted successfully"}
+            else:
+                log.log_error(
+                    f"Error in delete_cart: Food item not found in user's cart list"
+                )
+                return {"error": "Food item not found in user's cart list"}
+        else:
+            log.log_error(f"Error in delete_cart: User not found")
+            return {"error": "User not found"}
+    except Exception as e:
+        log.log_error(f"Error in delete_cart: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete cart",
+        )
+
+
 # ------------ Customer Order ------------------
 async def get_orders(username: str):
     try:
@@ -541,7 +637,26 @@ async def delete_order(username: str, food_name: str, quantity: int = 1):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete order",
         )
-
+        
+        
+async def place_order(username: str):
+    try:
+        if username in connection.root.users:
+            user = connection.root.users[username]
+            user.orders = user.cart
+            user.cart = {}
+            connection.transaction_manager.commit()
+            log.log_info(
+                f"{username}: place_order operation successful"
+            )
+            return {"message": "Order placed successfully"}
+    except Exception as e:
+        log.log_error(f"Error in place_order: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to place order",
+        )
+    
 
 # --------------------Table-------------------------
 async def get_tables():
@@ -597,13 +712,14 @@ async def add_table_customer(table_num: str, user: str):
                 status_code=status.HTTP_404_NOT_FOUND, detail="Table not found"
             )
 
-        table = connection.root.tables[table_num]
-        if any(user == customer.username for customer in table.customers):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"User '{user}' is already at table '{table_num}'",
-            )
-        table.customers.append(connection.root.users[user])
+        for table in connection.root.tables.values():
+            if any(user == customer.username for customer in table.customers):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"User '{user}' is already booked at another table",
+                )
+
+        connection.root.tables[table_num].customers.append(connection.root.users[user])
         connection.transaction_manager.commit()
 
         log.log_info(f"Table {table_num}: User '{user}' added to table successfully")
@@ -647,7 +763,14 @@ async def show_table_orders(table_num: int):
             all_orders = []
 
             for customer in connection.root.tables[table_num].customers:
-                customer_orders = [order for order in customer.orders]
+                customer_orders = []
+                for order_name in customer.orders:
+                    order = {
+                        "name": order_name,
+                        "quantity": customer.orders[order_name],
+                        "price": connection.root.menus[order_name].price
+                    }
+                    customer_orders.append(order)
                 all_orders.extend(customer_orders)
 
             log.log_info(f"Table {table_num}: Retrieved orders successfully")
@@ -673,7 +796,7 @@ async def show_table_payment(table_num: int):
 
             for customer in connection.root.tables[table_num].customers:
                 for order in customer.orders:
-                    total_payment += order.price
+                    total_payment += (connection.root.menus[order].price * int(customer.orders[order]))
 
             log.log_info(
                 f"Table {table_num}: Retrieved payment information successfully"
@@ -688,6 +811,55 @@ async def show_table_payment(table_num: int):
         raise
     except Exception as e:
         log.log_error(f"Error in show_table_payment: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+async def table_checkout(table_num: int):
+    try:
+        current_date = str(date.today())[5:]
+        if table_num in connection.root.tables:
+            table = connection.root.tables[table_num]
+            if current_date not in connection.root.stats:
+                connection.root.stats[current_date] = Stat(current_date, 0, 0)
+
+            for customer in table.customers:
+                for order in customer.orders:
+                    connection.root.stats[current_date].income += (connection.root.menus[order].price * customer.orders[order])
+                    connection.root.stats[current_date].cost += (connection.root.menus[order].cost * customer.orders[order])
+                customer.orders.clear()
+            table.customers.clear()
+            connection.transaction_manager.commit()
+            log.log_info(f"Table {table_num}: Checked out successfully")
+            return {"message": f"Table {table_num} checked out successfully"}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Table not found"
+            )
+    except HTTPException as he:
+        log.log_error(f"HTTPException in table_checkout: {he.detail}")
+        raise
+    except Exception as e:
+        log.log_error(f"Error in table_checkout: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+
+async def get_stats():
+    try:
+        all_stats = []
+        for date, stat in connection.root.stats.items():
+            all_stats.append({
+                "date": stat.date, 
+                "cost": stat.cost, 
+                "income": stat.income
+            })
+        log.log_info(f"get_users operation successful")
+        return {"stats": all_stats}
+    except Exception as e:
+        log.log_error(f"Error in get_users: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

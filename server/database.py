@@ -30,10 +30,10 @@ def init_db():
         if not hasattr(root, "menus"):
             root.menus = BTrees.OOBTree.BTree()
             # Adding default menu items
-            root.menus["Pasta"] = MainDish("Pasta", 10, "Spaghetti with tomato sauce", "Italian", 5, ["spaghetti", "tomato sauce", "garlic", "basil"])
-            root.menus["Burger"] = MainDish("Burger", 12, "Beef burger with fries", "American", 6, ["beef patty", "burger bun", "lettuce", "tomato", "onion", "pickles"])
-            root.menus["Coke"] = Drink("Coke", 2, "Carbonated beverage", "Soft Drink", 1, ["cola", "ice"], sweetness=0.5)
-            root.menus["Ice Cream"] =  Dessert("Ice Cream", 5, "Vanilla ice cream with chocolate sauce", "Dessert", 2, ["vanilla ice cream", "chocolate sauce"])
+            root.menus["Pasta"] = MainDish("Pasta", 10, "Spaghetti with tomato sauce", "Italian", 5, ["spaghetti", "tomato sauce", "garlic", "basil"], photo="https://food.fnr.sndimg.com/content/dam/images/food/fullset/2021/02/05/Baked-Feta-Pasta-4_s4x3.jpg.rend.hgtvcom.1280.1280.suffix/1615916524567.jpeg")
+            root.menus["Burger"] = MainDish("Burger", 12, "Beef burger with fries", "American", 6, ["beef patty", "burger bun", "lettuce", "tomato", "onion", "pickles"], photo="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwDExpkw1h_HE8snvuV5fSRA-uTf3MMpnwpv7BEnCfdQ&s")
+            root.menus["Coke"] = Drink("Coke", 2, "Carbonated beverage", "Soft Drink", 1, ["cola", "ice"], sweetness=0.5, photo="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgjGimql4X_n9_6KM-V7l0cgokXjbMTtztQrgD21-ebA&s")
+            root.menus["Ice Cream"] =  Dessert("Ice Cream", 5, "Vanilla ice cream with chocolate sauce", "Dessert", 2, ["vanilla ice cream", "chocolate sauce"], photo="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Ice_cream_with_whipped_cream%2C_chocolate_syrup%2C_and_a_wafer_%28cropped%29.jpg/640px-Ice_cream_with_whipped_cream%2C_chocolate_syrup%2C_and_a_wafer_%28cropped%29.jpg")
 
         if not hasattr(root, "tables"):
             root.tables = BTrees.OOBTree.BTree()
@@ -41,6 +41,21 @@ def init_db():
             root.tables[1] = Table(1, customers=[], available=True)
             root.tables[2] = Table(2, customers=[], available=True)
             root.tables[3] = Table(3, customers=[], available=True)
+            root.tables[4] = Table(4, customers=[], available=True)
+            root.tables[5] = Table(5, customers=[], available=True)
+            root.tables[6] = Table(6, customers=[], available=True)
+            root.tables[7] = Table(7, customers=[], available=True)
+            root.tables[8] = Table(8, customers=[], available=True)
+            root.tables[9] = Table(9, customers=[], available=True)
+            root.tables[10] = Table(10, customers=[], available=True)
+            root.tables[11] = Table(11, customers=[], available=True)
+            root.tables[12] = Table(12, customers=[], available=True)
+        
+        if not hasattr(root, "stats"):
+            root.stats = BTrees.OOBTree.BTree()
+            root.stats['04-01'] = Stat(date='04-01', cost=100, income=200)
+            root.stats['04-02'] = Stat(date='04-02', cost=100, income=200)
+            root.stats['04-03'] = Stat(date='04-03', cost=100, income=200)
             
         print("Database loaded from file.")
     except Exception as e:
@@ -50,6 +65,7 @@ def init_db():
         root.admins = BTrees.OOBTree.BTree()
         root.menus = BTrees.OOBTree.BTree()
         root.tables = BTrees.OOBTree.BTree()
+        root.stats = BTrees.OOBTree.BTree()
 
 
 def close_db_connection():

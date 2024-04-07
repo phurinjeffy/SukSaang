@@ -8,6 +8,12 @@ class Account(ABC):
         self.username = username
         self.password = password
         self.hashed_password = hashed_password
+        
+        
+class Order(persistent.Persistent):
+    def __init__(self, food, quantity):
+        self.food = food
+        self.quantity = quantity
 
 
 class User(Account, persistent.Persistent):
@@ -18,11 +24,13 @@ class User(Account, persistent.Persistent):
         hashed_password="",
         address="",
         table=0,
+        cart=None,
         orders=None,
     ):
         Account.__init__(self, username, password, hashed_password)
         self.address = address
         self.table = table
+        self.cart = cart if cart is not None else {}
         self.orders = orders if orders is not None else {}
 
     def add_order(self, order):
@@ -88,12 +96,12 @@ class Table(persistent.Persistent):
         self.customers.append(customer)
 
 
-class Statistic(persistent.Persistent):
-    def __init__(self, day, cost, income, popular):
-        self.day = day
+class Stat(persistent.Persistent):
+    def __init__(self, date=None, cost=0, income=0):
+        self.date = date
         self.cost = cost
         self.income = income
-        self.popular = popular
+        # self.popular = popular
 
     def generate_graph(self):
         pass

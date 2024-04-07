@@ -4,6 +4,12 @@ from pyscript import document
 import requests
 from abc import ABC, abstractmethod
 
+import matplotlib.pyplot as plt
+import datetime
+from collections import defaultdict
+import base64
+from io import BytesIO
+
 
 def check_token():
     location_path = js.window.location.pathname
@@ -450,6 +456,9 @@ class Home(AbstractWidget):
     def redirect_to_menu(self, event):
         js.window.location.href = "/menu"
 
+    def redirect_to_user_walkin(self, event):
+        js.window.location.href = "/tables"
+
     def drawWidget(self):
         current_hour = js.Date.new().getHours()
 
@@ -490,17 +499,13 @@ class Home(AbstractWidget):
                 Your food adventure starts here.
             </div>
             <div class="flex lg:flex-row flex-col justify-center items-center gap-6 bg-blue-400 py-10 px-14 rounded-xl text-white">
-                <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
-                    <img class="" src="/table.svg" />
-                    <p class="">Book Table</p>
-                </div>
-                <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
-                    <img class="" src="/delivery.svg" />
-                    <p class="">Delivery</p>
-                </div>
-                <div class="w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
+                <div class="walkin-btn w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
                     <img class="" src="/walkin.svg" />
                     <p class="">Walk In</p>
+                </div>
+                <div onclick="window.location.href='/menu'" class="menu-btn w-24 flex flex-col justify-center items-center mx-10 gap-4 cursor-pointer hover:scale-105 duration-300">
+                    <img class="" src="/table.svg" />
+                    <p class="">Menu</p>
                 </div>
             </div>
         """
@@ -509,13 +514,15 @@ class Home(AbstractWidget):
         menu_btn = content.querySelector(".menu-btn")
         menu_btn.onclick = self.redirect_to_menu
 
+        walkin_btn = content.querySelector(".walkin-btn")
+        walkin_btn.onclick = self.redirect_to_user_walkin
+
+
 class Menu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.menu = None
         self.categories = ["rice", "noodle", "pasta", "steak", "soup", "sides"]
         self.selected_category = None
-        self.fetch_menu_info()
         self.opened_modal = None
 
     def fetch_menu_info(self):
@@ -540,9 +547,16 @@ class Menu(AbstractWidget):
         self.drawWidget()
 
     def drawWidget(self):
+        # Fetch menu information every time drawWidget is called
+        self.fetch_menu_info()
+
         # Filter menu items based on selected category
         if self.selected_category:
-            filtered_menu = [item for item in self.menu if item.get('type', '').lower() == self.selected_category]
+            filtered_menu = [
+                item
+                for item in self.menu
+                if item.get("type", "").lower() == self.selected_category
+            ]
         else:
             filtered_menu = self.menu
 
@@ -559,7 +573,7 @@ class Menu(AbstractWidget):
         for item in filtered_menu:
             menu_container += f"""
                 <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer">
-                    <img class="w-36 h-36 mb-1" src="{item['photo']}" />
+                    <img class="w-32 h-32 mb-1" src="{item['photo']}" />
                     <h3 class="capitalize font-light text-sm sm:text-lg">{item['name']}</h3>
                     <p class="text-sm font-light">฿ {item['price']}</p>
                 </div>
@@ -590,7 +604,6 @@ class Menu(AbstractWidget):
                 </div>
                 <div class="fixed bottom-0 right-0 rounded-lg bg-blue-400 z-10 py-4 px-6 flex justify-center items-center gap-4 cursor-pointer" onclick="window.location.href='/cart'">
                     <img class="w-10 h-10" src="/cart.svg"/>
-                    <p class="hidden sm:block text-white">Total Amount: ฿ {0}</p>
                 </div>
             </div>
         """
@@ -605,7 +618,6 @@ class Menu(AbstractWidget):
         menu_items = self.element.querySelectorAll(".menu-item")
         for menu_item in menu_items:
             menu_item.onclick = self.handle_menu_item_click
-
 
 
 class Detail(AbstractWidget):
@@ -635,7 +647,7 @@ class Detail(AbstractWidget):
         username = fetch_user_info()
         food_name = self.item["name"]
 
-        url = f"http://localhost:8000/users/{username}/orders?food_name={food_name}&quantity={quantity}"
+        url = f"http://localhost:8000/users/{username}/cart?food_name={food_name}&quantity={quantity}"
         headers = {
             "Content-Type": "application/json",
         }
@@ -654,7 +666,7 @@ class Detail(AbstractWidget):
             <div class="w-2/5 bg-blue-300 rounded-lg p-8 border border-white shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <span class="close text-white cursor-pointer">&times;</span>
                 <div class="flex flex-col justify-center items-center text-white gap-6">
-                    <img class="w-44 w-44" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                    <img class="w-44 w-44" src={self.item['photo']} />
                     <p class="font-semibold text-lg">{self.item['name']}</p>
                     <ul class="list-disc font-extralight text-sm">
                         <li>
@@ -708,38 +720,62 @@ class Cart(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.username = fetch_user_info()
-        self.orders = None
+        self.cart = None
         self.subtotal = 0
-        self.fetch_orders_info()
+        self.check = 0
+        self.fetch_cart_info()
 
-    def fetch_orders_info(self):
-        url = f"http://localhost:8000/users/{self.username}/orders"
+    def fetch_menu_item_info(self, menu_name):
+        url = f"http://localhost:8000/menus/{menu_name}"
         response = requests.get(url)
         if response.status_code == 200:
-            self.orders = response.json()["orders"]
+            return response.json()
         else:
-            print("Error fetching menu:", response.text)
+            print("Error fetching menu item:", response.text)
 
-    def delete_order(self, food_name, quantity):
-        url = f"http://localhost:8000/users/{self.username}/orders/{food_name}?quantity={quantity}"
+    def fetch_cart_info(self):
+        if self.check == 0:
+            url = f"http://localhost:8000/users/{self.username}/cart"
+            response = requests.get(url)
+            if response.status_code == 200:
+                self.cart = response.json()["cart"]
+            else:
+                print("Error fetching menu:", response.text)
+
+    def delete_cart(self, food_name, quantity):
+        url = f"http://localhost:8000/users/{self.username}/cart/{food_name}?quantity={quantity}"
         headers = {
             "Content-Type": "application/json",
         }
         response = requests.delete(url, headers=headers)
         if response.status_code == 200:
-            print("Succesfully Updated Quantity")
+            print("Successfully Updated Quantity")
         else:
             print("Error:", response.text)
 
+    def place_order(self, event):
+        url = f"http://localhost:8000/users/{self.username}/orders/place_order"
+        response = requests.post(url)
+        if response.status_code == 200:
+            print("Successfully Placed Order")
+            self.cart = []  # Empty the cart
+            self.subtotal = 0  # Reset the subtotal to zero
+            self.check = 1
+            self.drawWidget()
+            js.alert("Placed Order Successfully")
+        else:
+            print("Error placing order:", response.text)
+
     def drawWidget(self):
         items_container = ""
-        for i, item in enumerate(self.orders):
+        for i, item in enumerate(self.cart):
             total = int(item["price"] * item["quantity"])
+            menu = self.fetch_menu_item_info(item["name"])
             items_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td>
                         <div class="flex flex-row justify-start items-center gap-4 p-4 pr-0">
-                            <img class="w-14 w-14 mb-1" src="https://img.freepik.com/free-vector/illustration-gallery-icon_53876-27002.jpg" />
+                            <img class="w-14 h-14 mb-1" src={menu['photo']} />
                             <p class="capitalize text-base sm:text-lg">{item['name']}</p>
                         </div>
                     </td>
@@ -784,25 +820,31 @@ class Cart(AbstractWidget):
                 <div class="font-base">
                     Subtotal: ฿ <span class="subtotal">{self.subtotal}</span>
                 </div>
-                <div class="mt-10 text-white bg-blue-500 rounded-full p-8 cursor-pointer">
+                <button class="place-order-btn mt-10 text-white bg-blue-500 rounded-full p-8 cursor-pointer">
                     Place Order
-                </div>
+                </button>
             </div>
         """
+        self.element.innerHTML = (
+            ""  # Clear the content of the element before appending the new content
+        )
         self.element.appendChild(content)
+
+        place_order_btn = self.element.querySelector(".place-order-btn")
+        place_order_btn.onclick = self.place_order
 
         def update_quantity(event, amount):
             item_index = int(event.target.dataset.index)
-            food_name = self.orders[item_index]["name"]
+            food_name = self.cart[item_index]["name"]
 
-            if self.orders[item_index]["quantity"] >= 1:
-                self.delete_order(food_name, -amount)
+            if self.cart[item_index]["quantity"] >= 1:
+                self.delete_cart(food_name, -amount)
 
-                self.orders[item_index]["quantity"] += amount
-                price_change = self.orders[item_index]["price"] * amount
+                self.cart[item_index]["quantity"] += amount
+                price_change = self.cart[item_index]["price"] * amount
 
                 quantity_element = event.target.parentElement.querySelector(".quantity")
-                quantity_element.textContent = self.orders[item_index]["quantity"]
+                quantity_element.textContent = self.cart[item_index]["quantity"]
 
                 total_element = event.target.parentElement.parentElement.nextElementSibling.querySelector(
                     ".total"
@@ -816,7 +858,7 @@ class Cart(AbstractWidget):
                     int(subtotal_element.textContent) + price_change
                 )
 
-                if self.orders[item_index]["quantity"] == 0:
+                if self.cart[item_index]["quantity"] == 0:
                     row = event.target.closest("tr")
                     row.parentNode.removeChild(row)
 
@@ -832,25 +874,257 @@ class Cart(AbstractWidget):
 class TableUser(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        self.tables = None
+        self.fetch_table_info()
+        self.username = fetch_user_info()
+        self.table_select = 0
+
+    def fetch_table_info(self):
+        url = "http://localhost:8000/tables"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.tables = response.json()["tables"]
+        else:
+            print("Error fetching logs:", response.text)
+
+    def redirect_to_menu(self):
+        js.window.location.href = "/menu"
 
     def drawWidget(self):
-        pass
+        content = document.createElement("div")
+        content.setAttribute("class", "flex flex-col justify-center items-center")
+
+        tables_container = document.createElement("div")
+        tables_container.setAttribute("class", "w-full grid grid-cols-3 gap-4 p-8")
+
+        for table in self.tables:
+            table_div = document.createElement("div")
+            table_div.onclick = self.tableClicked
+            table_div.setAttribute(
+                "class",
+                f"table-item p-4 rounded flex justify-center items-center {'bg-blue-100 hover:scale-105 duration-300 cursor-pointer' if not table['customers'] else 'bg-red-200 cursor-not-allowed'}",
+            )
+            table_div.setAttribute("data-table-id", str(table["table_num"]))
+            table_div.innerHTML = f"""
+                <div class="text-lg font-semibold">Table {table['table_num']}</div>
+            """
+            tables_container.appendChild(table_div)
+
+        content.appendChild(tables_container)
+
+        confirm_button = document.createElement("button")
+        confirm_button.setAttribute("class", "confirm-button")
+        confirm_button.innerHTML = "Confirm Table"
+        confirm_button.onclick = self.confirmBooking
+        content.appendChild(confirm_button)
+
+        self.element.appendChild(content)
+
+    def tableClicked(self, event):
+        table_div = event.target.closest(".table-item")
+        if table_div:
+            table_id = table_div.getAttribute("data-table-id")
+            if self.table_select != table_id:
+                prev_table_div = self.element.querySelector(
+                    f'.table-item[data-table-id="{self.table_select}"]'
+                )
+                if prev_table_div:
+                    prev_table_color = prev_table_div.getAttribute("data-prev-color")
+                    prev_table_div.style.backgroundColor = prev_table_color
+
+            self.table_select = table_id
+            # Store the current background color in a data attribute
+            table_div.setAttribute("data-prev-color", table_div.style.backgroundColor)
+            table_div.style.backgroundColor = "yellow"
+
+    def confirmBooking(self, event):
+        if self.table_select is not None:
+            table_id = self.table_select
+            for table in self.tables:
+                if str(table["table_num"]) == self.table_select:
+                    if table["available"]:
+                        confirm = js.confirm(f"Confirm for Table {table_id}?")
+                        if confirm:
+                            self.table_add_customer()
+                            js.alert("Successful")
+                    else:
+                        print(f"Table {table_id} is not available for booking.")
+                        js.alert(f"Table {table_id} is not available for booking.")
+                    break
+        else:
+            print("No table selected.")
+            js.alert("No table selected.")
+
+    def table_add_customer(self):
+        table_num = self.table_select
+
+        url = f"http://localhost:8000/tables/{int(table_num)}/customers"
+        response = requests.post(url, self.username)
+
+        if response.status_code == 200:
+            print(f"Customer added successfully")
+            self.redirect_to_menu()
+        else:
+            print(f"Failed to add customer:", response.text)
+
+
+class Booking(AbstractWidget):
+    def __init__(self, element_id):
+        AbstractWidget.__init__(self, element_id)
+        self.tables = None
+        self.fetch_table_info()
+        self.username = fetch_user_info()
+        self.table_select = 0
+
+    def fetch_table_info(self):
+        url = "http://localhost:8000/tables"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.tables = response.json()["tables"]
+        else:
+            print("Error fetching logs:", response.text)
+
+    def redirect_to_menu(self):
+        js.window.location.href = "/menu"
+
+    def drawWidget(self):
+        # Use Tailwind's flex, flex-wrap, and justify-center classes for the container
+        tables_container = document.createElement("div")
+        tables_container.setAttribute(
+            "class", "flex flex-wrap justify-center space-x-4 space-y-4"
+        )
+        for table in self.tables:
+            table_div = document.createElement("div")
+            table_div.onclick = self.tableClicked
+            # Add `cursor-not-allowed` and `opacity-50` for booked tables to make it clear they are not selectable
+            table_class_list = [
+                "table-item",
+                "p-4",
+                "m-2",
+                "rounded",
+                "shadow",
+                "transition-colors",
+            ]
+            if table["customers"]:
+                table_class_list.extend(
+                    ["bg-blue-500", "cursor-not-allowed", "opacity-50"]
+                )
+            else:
+                table_class_list.append("bg-gray-300")
+            table_div.setAttribute("class", " ".join(table_class_list))
+            table_div.setAttribute("data-table-id", str(table["table_num"]))
+            table_div.innerHTML = (
+                f"<div class='text-lg font-semibold'>{table['table_num']}</div>"
+            )
+            table_div.dataset.available = str(not table["customers"])
+            tables_container.appendChild(table_div)
+        # Append table grid container
+        self.element.innerHTML = ""  # Clear the previous content
+        self.element.appendChild(tables_container)
+        # Confirmation button with Tailwind classes
+        confirm_button = document.createElement("button")
+        confirm_button.setAttribute(
+            "class",
+            "mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
+        )
+        confirm_button.innerHTML = "Confirm Table"
+        confirm_button.onclick = self.confirmBooking
+        self.element.appendChild(confirm_button)
+
+    def tableClicked(self, event):
+        table_div = event.target.closest(".table-item")
+        if table_div:
+            # Remove selection class from previously selected table
+            if self.table_select:
+                prev_table_div = self.element.querySelector(
+                    f'.table-item[data-table-id="{self.table_select}"]'
+                )
+                prev_table_div.classList.remove("ring-2", "ring-yellow-500")
+            # Set the new selection
+            table_id = table_div.getAttribute("data-table-id")
+            self.table_select = table_id
+            table_div.classList.add("ring-2", "ring-yellow-500")
+
+    def confirmBooking(self, event):
+        if self.table_select:
+            selected_table_div = self.element.querySelector(
+                f'[data-table-id="{self.table_select}"]'
+            )
+            # Only proceed if the selected table is available for booking
+            if selected_table_div.dataset.available == "True":
+                table_id = self.table_select
+                # Run through each table to see if the selected one matches and is available
+                for table in self.tables:
+                    if str(table["table_num"]) == table_id and not table["customers"]:
+                        self.table_add_customer()
+                        break
+                js.window.location.href = "/home"
+            else:
+                print(
+                    f"Table {self.table_select} is already booked or is not available for booking."
+                )
+            self.table_select = None  # Reset the selection
+        else:
+            print("No table selected.")
+
+    def table_add_customer(self):
+        table_num = self.table_select
+        url = f"http://localhost:8000/tables/{table_num}/customers"
+        response = requests.post(url, self.username)
+        if response.status_code == 200:
+            print(f"Customer added successfully")
+            self.redirect_to_menu()
+        else:
+            print(f"Failed to add customer:", response.text)
 
 
 class AdminHome(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        self.stats = None
+        self.fetch_stats_info()
+
+    def fetch_stats_info(self):
+        url = f"http://localhost:8000/stats"
+        response = requests.get(url)
+        if response.status_code == 200:
+            print(f"Stats fetched successfully")
+            self.stats = response.json()["stats"]
+        else:
+            print(f"Failed to get stats:", response.text)
 
     def drawWidget(self):
+        dates = [data["date"] for data in self.stats]
+        incomes = [data["income"] for data in self.stats]
+        costs = [data["cost"] for data in self.stats]
+        
+        bar_width = 0.35
+
+        x = range(len(dates))
+        x1 = [i - bar_width / 2 for i in x]  # Position for the income bars
+        x2 = [i + bar_width / 2 for i in x]  # Position for the cost bars
+
+        plt.bar(x1, incomes, width=bar_width, label="Income")
+        plt.bar(x2, costs, width=bar_width, label="Cost")
+
+        plt.xlabel("Date")
+        plt.ylabel("Amount")
+        plt.xticks(x, dates)
+        plt.legend()
+
+        # Convert the Matplotlib plot to a base64-encoded string
+        buffer = BytesIO()
+        plt.savefig(buffer, format="png")
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.getvalue()).decode()
+        plt.close()
+
+        # Embed the base64-encoded image into the HTML
         content = document.createElement("div")
         content.innerHTML = f"""
-            <div class="w-full flex flex-col items-center text-white gap-8 py-10">
-                <div class="text-4xl font-semibold">
-                    Statistics
-                </div>
-                <div class="w-screen px-10 my-6">
-
-                </div>
+            <div class="flex flex-col justify-center items-center text-white gap-4">
+                <h3 class="font-semibold text-3xl">Income and Cost Chart</h3>
+                <img src="data:image/png;base64,{image_base64}" alt="Income and Cost Chart">
             </div>
         """
         self.element.appendChild(content)
@@ -860,6 +1134,8 @@ class AdminTable(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
         self.table = None
+        self.customers = None
+        self.opened_modal = None
         self.fetch_table_info()
 
     def fetch_table_info(self):
@@ -870,14 +1146,50 @@ class AdminTable(AbstractWidget):
         else:
             print("Error fetching menu:", response.text)
 
+    def fetch_table_customer_info(self, table_num):
+        url = f"http://localhost:8000/tables/{table_num}/customers"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.customers = response.json()
+        else:
+            print("Error fetching table info:", response.text)
+
+    def view_order(self, table_num):
+        url = f"http://localhost:8000/tables/{table_num}/orders"
+        response = requests.get(url)
+        if response.status_code == 200:
+            orders = response.json()
+            if self.opened_modal:
+                self.opened_modal.close_modal()
+            document.body.style.overflow = "hidden"
+            self.opened_modal = Receipt("content", orders, table_num)
+            self.opened_modal.drawWidget()
+
+        else:
+            print("Error fetching orders:", response.text)
+
+    def check_out(self, table_num):
+        url = f"http://localhost:8000/table/{table_num}/checkout"
+        response = requests.put(url)
+        if response.status_code == 200:
+            print("Check out successful")
+            js.alert("Check out successful")
+            js.window.location.reload()
+        else:
+            print("Error checking out")
+            js.alert("Error:", response.text)
+
     def drawWidget(self):
         tables_container = ""
         for table in self.table:
+            self.fetch_table_customer_info(int(table["table_num"]))
+
             tables_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td class="p-4 pr-0">{table['table_num']}</td>
-                    <td>{table['customers']}</td>
-                    <td>{table['available']}</td>
+                    <td>{self.customers}</td>
+                    <td class="view-order cursor-pointer" id="view-order-{table['table_num']}">View Order</td>
+                    <td><button id="check-out-{table['table_num']}">Check Out</button></td>
                 </tr>
             """
 
@@ -893,7 +1205,8 @@ class AdminTable(AbstractWidget):
                             <tr class="border-b border-gray-500">
                                 <th class="font-light text-left p-4 pr-0">Table</th>
                                 <th class="font-light text-left">Customers</th>
-                                <th class="font-light text-left">Availability</th>
+                                <th class="font-light text-left">Orders</th>
+                                <th class="font-light text-left">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -904,6 +1217,69 @@ class AdminTable(AbstractWidget):
             </div>
         """
         self.element.appendChild(content)
+
+        def handle_view_order_click(table_num):
+            return lambda event: self.view_order(table_num)
+
+        def handle_check_out_click(table_num):
+            return lambda event: self.check_out(table_num)
+
+        # Attach event handlers for the buttons
+        for table in self.table:
+            view_order_button = content.querySelector(f"#view-order-{table['table_num']}")
+            view_order_button.onclick = handle_view_order_click(int(table["table_num"]))
+            check_out_button = content.querySelector(f"#check-out-{table['table_num']}")
+            check_out_button.onclick = handle_check_out_click(int(table["table_num"]))
+
+
+class Receipt(AbstractWidget):
+    def __init__(self, element_id, orders, table_num):
+        AbstractWidget.__init__(self, element_id)
+        self.orders = orders
+        self.table_num = table_num
+        self.modal_content = None
+        self.show_table_payment(table_num)
+        self.payment_image = f"https://promptpay.io/0824468446/{self.payment}.png"
+
+    def show_table_payment(self, table_num):
+        url = f"http://localhost:8000/table/{table_num}/payment"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.payment = str(response.json()["total_payment"])
+        else:
+            print("Error fetching table info:", response.text)
+
+    def close_modal(self, event=None):
+        if self.modal_content:
+            self.element.removeChild(self.modal_content)
+            document.body.style.overflow = "auto"
+            self.modal_content = None
+
+    def drawWidget(self):
+        self.modal_content = document.createElement("div")
+
+        modal_content = "<ul class='list-disc font-extralight text-sm'>"
+        for order in self.orders:
+            modal_content += f"<li class='font-medium mr-1'>{order['name']} - ฿{order['price']} - x {order['quantity']} = ฿{order['price']*order['quantity']}</li>"
+        modal_content += "</ul>"
+
+        self.modal_content.innerHTML = f"""
+            <div class="w-2/5 bg-zinc-800 rounded-lg p-8 border border-white shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <span class="close text-white cursor-pointer">&times;</span>
+                <div class="flex flex-col justify-center items-center text-white gap-6">
+                    <p class="font-semibold text-lg">Table {self.table_num} | Orders</p>
+                    {modal_content}
+                    <p class="font-semibold text-base">Total: ฿{self.payment}</p>
+                    {
+                       f'<img src="{self.payment_image}" alt="Payment" style="max-width: 80%; max-height: 80%;">' if self.payment != "0" else ''
+                    }
+                </div>
+            </div>
+        """
+        self.element.appendChild(self.modal_content)
+
+        close_button = self.modal_content.querySelector(".close")
+        close_button.onclick = self.close_modal
 
 
 class AdminLog(AbstractWidget):
@@ -972,7 +1348,7 @@ class AdminMenu(AbstractWidget):
             self.menu = response.json()["menus"]
         else:
             print("Error fetching menu:", response.text)
-            
+
     def toggle_edit_mode(self, event):
         row = event.target.closest("tr")
         cells = list(row.querySelectorAll("td"))
@@ -980,11 +1356,13 @@ class AdminMenu(AbstractWidget):
 
         if edit_button.innerHTML == "Save":
             updated_data = {}
-            food_name = cells[0].dataset.originalValue
+            food_name = cells[1].dataset.originalValue
             updated_cells = []
 
             for cell in cells[:-2]:
                 field_name = cell.dataset.field
+                if field_name == "photo":
+                    continue
                 value = cell.querySelector("input").value
                 updated_data[field_name] = value
                 updated_cells.append((cell, value))
@@ -1004,7 +1382,8 @@ class AdminMenu(AbstractWidget):
                 cell.classList.add("edit-mode")
                 cell.dataset.originalValue = cell.innerHTML.strip()
                 if cell.dataset.field:
-                    cell.innerHTML = f'<input class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
+                    if cell.dataset.field != "photo":
+                        cell.innerHTML = f'<input class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" value="{cell.innerHTML.strip()}" />'
             edit_button.innerHTML = "Save"
             delete_button = document.createElement("td")
             delete_button.className = "delete-btn cursor-pointer"
@@ -1034,8 +1413,21 @@ class AdminMenu(AbstractWidget):
             new_container.classList.add("hidden")
 
     def add_menu(self, event):
+        def upload_file():
+            url = "http://localhost:8000/menus"
+            response = requests.post(url, data=form_data, files=files)
+
+            if response.status_code == 200:
+                print(f"Menu added successfully")
+                form.classList.add("hidden")
+                js.window.location.reload(True)
+            else:
+                print(f"Failed to add menu:", response.text)
+                error = document.querySelector(".error-msg")
+                error.innerHTML = f"Failed to add menu: {response.text}"
+
         form = document.querySelector(".new-container")
-        
+
         form_data = {
             "category": form.querySelector("#new-category").value,
             "name": form.querySelector("#new-name").value,
@@ -1045,37 +1437,28 @@ class AdminMenu(AbstractWidget):
             "cost": form.querySelector("#new-cost").value,
             "ingredients": form.querySelector("#new-ingredients").value.split(","),
         }
-        
-        # photo_file = form.querySelector("#new-photo").files.item(0)
-        # files = {
-        #     "photo": (photo_file.name, photo_file, photo_file.type)
-        # }
 
-        url = "http://localhost:8000/menus"
-        response = requests.post(url, data=form_data)
+        files = {}
+        photo_input = form.querySelector("#new-photo")
+        if photo_input and photo_input.files.length > 0:
+            photo_file = photo_input.files.item(0)
 
-        if response.status_code == 200:
-            print(f"Menu added successfully")
-            # form.classList.add("hidden")
-            # self.append_menu_to_table(form_data)
+            # Use FileReader API to read the file as base64 encoded string
+            reader = js.FileReader.new()
+            reader.readAsDataURL(photo_file)
+
+            # Define a callback function to handle the file reading completion
+            def file_loaded(event):
+                file_data = reader.result.split(",")[1]  # Extract base64 data
+                files["photo"] = (photo_file.name, file_data, photo_file.type)
+                form_data["photo"] = (photo_file.name, file_data, photo_file.type)
+                upload_file()
+
+            reader.onload = file_loaded
+
         else:
-            print(f"Failed to add menu:", response.text)
-
-    # def append_menu_to_table(self, new_menu_data):
-    #     self.menu.append(new_menu_data)
-    #     tbody = document.querySelector("tbody")
-    #     item_row = document.createElement("tr")
-    #     item_row.className = "border-b border-gray-500 font-light"
-    #     item_row.innerHTML = f"""
-    #         <td class="p-4 pr-0" data-field="name">{new_menu_data['name']}</td>
-    #         <td class="text-left" data-field="description">{new_menu_data['description']}</td>
-    #         <td class="text-left" data-field="type">{new_menu_data['type']}</td>
-    #         <td class="text-left" data-field="ingredients">{new_menu_data['ingredients']}</td>
-    #         <td class="text-right" data-field="price">{new_menu_data['price']}</td>
-    #         <td class="text-right" data-field="cost">{new_menu_data['cost']}</td>
-    #         <td class="edit-btn text-right cursor-pointer">Edit</td>
-    #     """
-    #     tbody.appendChild(item_row)
+            print("No photo selected.")
+            upload_file()
 
     def delete_menu(self, food_name):
         url = f"http://localhost:8000/menus/{food_name}"
@@ -1089,7 +1472,8 @@ class AdminMenu(AbstractWidget):
 
     def delete_menu_row(self, event):
         row = event.target.closest("tr")
-        food_name = row.querySelector("td").dataset.originalValue
+        cells = list(row.querySelectorAll("td"))
+        food_name = cells[1].dataset.originalValue
         confirm = js.window.confirm(f"Are you sure you want to remove '{food_name}'?")
         if confirm:
             success = self.delete_menu(food_name)
@@ -1101,7 +1485,10 @@ class AdminMenu(AbstractWidget):
         for item in self.menu:
             items_container += f"""
                 <tr class="border-b border-gray-500 font-light">
-                    <td class="p-4 pr-0" data-field="name">
+                    <td class="p-4 pr-0 flex gap-4 items-center" data-field="photo">
+                        <img class="w-10 h-10" src="{item['photo']}" />
+                    </td>
+                    <td class="text-left" data-field="name">
                         {item['name']}
                     </td>
                     <td class="text-left" data-field="description">
@@ -1136,6 +1523,7 @@ class AdminMenu(AbstractWidget):
                         <thead>
                             <tr class="border-b border-gray-500">
                                 <th class="font-light text-left p-4 pr-0">Name</th>
+                                <th class="font-light text-left"></th>
                                 <th class="font-light text-left">Description</th>
                                 <th class="font-light text-left">Type</th>
                                 <th class="font-light text-left">Ingredients</th>
@@ -1149,7 +1537,7 @@ class AdminMenu(AbstractWidget):
                         </tbody>
                     </table>
                 </div>
-                <form class="new-container hidden flex flex-row justify-center items-center gap-2">
+                <div class="new-container hidden flex flex-col justify-center items-center gap-2">
                     <select id="new-category" class="w-full text-black border border-gray-300 rounded px-3 py-1">
                         <option value="MAIN">Main</option>
                         <option value="DRINK">Drink</option>
@@ -1163,11 +1551,12 @@ class AdminMenu(AbstractWidget):
                     <input id="new-price" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Price">
                     <input id="new-cost" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Cost">
                     <button class="add-btn">Add</button>
-                </form>
+                </div>
                 <div class="new-btn cursor-pointer flex flex-col justify-center items-center hover:scale-105 duration-300 gap-2">
                     <img src="/add.svg" class="w-10" />
                     Add Item
                 </div>
+                <div class="error-msg text-red-500 text-center"></div>
             </div>
         """
         self.element.appendChild(content)
@@ -1194,6 +1583,10 @@ if __name__ == "__main__":
         content.drawWidget([Register("content")])
     elif location_path == "/home":
         content.drawWidget([Home("content")])
+    elif location_path == "/tables":
+        content.drawWidget([TableUser("content")])
+    elif location_path == "/booking":
+        content.drawWidget([Booking("content")])
     elif location_path == "/menu":
         content.drawWidget([Menu("content")])
     elif location_path == "/cart":
