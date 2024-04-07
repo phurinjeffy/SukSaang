@@ -1217,9 +1217,7 @@ class AdminHome(AbstractWidget):
                 </div>
                 <div class="populars-container my-8">
                     <h3 class="font-semibold text-xl mb-4">All Time Favourites</h3>
-                    <ul>
-                        {self.get_popular_items()}
-                    </ul>
+                    {self.get_popular_items()}
                 </div>
             </div>
         """
@@ -1233,17 +1231,20 @@ class AdminHome(AbstractWidget):
 
         top_5_populars = sorted_populars[:5]
 
-        popular_items = "<div class='flex flex-col items-center justify-center gap-6'>"
+        popular_items = "<table>"
         for popular_item in top_5_populars:
             popular_items += f"""
-                <li class="flex flex-row items-center gap-2">
-                    <img class="w-20 h-20 rounded-xl" src="{popular_item['photo']}" alt="{popular_item['name']}">
-                    <div>
-                        <p class="text-center font-semibold">{popular_item['name']}</p>
-                        <p class="text-center font-light">{popular_item['point']} sold</p>
-                    </div>
-                </li>
+                <tr>
+                    <td>
+                        <img class="w-20 h-20 rounded-xl" src="{popular_item['photo']}" alt="{popular_item['name']}">
+                    </td>
+                    <td class="p-4">
+                        <p class="text-left font-semibold">{popular_item['name']}</p>
+                        <p class="text-left font-light">{popular_item['point']} sold</p>
+                    </td>
+                </tr>
             """
+        popular_items += "</table>"
         return popular_items
 
     def onMonthSelectChange(self, event):
