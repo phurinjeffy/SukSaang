@@ -567,7 +567,7 @@ class Menu(AbstractWidget):
                 if item.get("type", "").lower() == self.selected_category
             ]
         else:
-            
+
             filtered_menu = self.menu
             # pass
 
