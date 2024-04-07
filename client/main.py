@@ -925,7 +925,7 @@ class TableUser(AbstractWidget):
             table_div.onclick = self.tableClicked
             table_div.setAttribute(
                 "class",
-                f"table-item p-4 rounded flex justify-center items-center {'bg-blue-100 hover:scale-105 hover:bg-blue-200 duration-300 cursor-pointer' if not table['customers'] else 'bg-red-200 cursor-not-allowed'}",
+                f"table-item p-4 rounded flex justify-center items-center {'bg-blue-100 hover:scale-105 hover:bg-blue-200 duration-500 cursor-pointer' if not table['customers'] else 'bg-red-200 cursor-not-allowed'}",
             )
             table_div.setAttribute("data-table-id", str(table["table_num"]))
             table_div.innerHTML = f"""
@@ -936,7 +936,7 @@ class TableUser(AbstractWidget):
         content.appendChild(tables_container)
 
         confirm_button = document.createElement("button")
-        confirm_button.setAttribute("class", "confirm-button")
+        confirm_button.setAttribute("class", "confirm-button bg-green-300 rounded-lg p-6 hover:scale-105 hover:bg-green-400 duration-300")
         confirm_button.innerHTML = "Confirm Table"
         confirm_button.onclick = self.confirmBooking
         content.appendChild(confirm_button)
