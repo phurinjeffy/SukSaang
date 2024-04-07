@@ -596,7 +596,7 @@ class Menu(AbstractWidget):
         for item in filtered_menu:
             menu_container += f"""
                 <div class="menu-item flex flex-col justify-center items-center hover:scale-105 duration-300 cursor-pointer">
-                    <img class="w-32 h-32 mb-1" src="{item['photo']}" />
+                    <img class="w-32 h-32 mb-1 rounded-2xl" src="{item['photo']}" />
                     <h3 class="capitalize font-light text-sm sm:text-lg">{item['name']}</h3>
                     <p class="text-sm font-light">฿ {item['price']}</p>
                 </div>
@@ -689,7 +689,7 @@ class Detail(AbstractWidget):
             <div class="w-2/5 bg-blue-300 rounded-lg p-8 border border-white shadow-lg fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                 <span class="close text-white cursor-pointer">&times;</span>
                 <div class="flex flex-col justify-center items-center text-white gap-6">
-                    <img class="w-44 w-44" src={self.item['photo']} />
+                    <img class="w-44 w-44 rounded-2xl" src={self.item['photo']} />
                     <p class="font-semibold text-lg">{self.item['name']}</p>
                     <ul class="list-disc font-extralight text-sm">
                         <li>
@@ -798,7 +798,7 @@ class Cart(AbstractWidget):
                 <tr class="border-b border-gray-500 font-light">
                     <td>
                         <div class="flex flex-row justify-start items-center gap-4 p-4 pr-0">
-                            <img class="w-14 h-14 mb-1" src={menu['photo']} />
+                            <img class="w-14 h-14 mb-1 rounded-2xl" src={menu['photo']} />
                             <p class="capitalize text-base sm:text-lg">{item['name']}</p>
                         </div>
                     </td>
@@ -936,7 +936,10 @@ class TableUser(AbstractWidget):
         content.appendChild(tables_container)
 
         confirm_button = document.createElement("button")
-        confirm_button.setAttribute("class", "confirm-button bg-green-300 rounded-lg p-6 hover:scale-105 hover:bg-green-400 duration-300")
+        confirm_button.setAttribute(
+            "class",
+            "confirm-button bg-green-300 rounded-lg p-6 hover:scale-105 hover:bg-green-400 duration-300",
+        )
         confirm_button.innerHTML = "Confirm Table"
         confirm_button.onclick = self.confirmBooking
         content.appendChild(confirm_button)
@@ -1234,7 +1237,7 @@ class AdminHome(AbstractWidget):
         for popular_item in top_5_populars:
             popular_items += f"""
                 <li class="flex flex-row items-center gap-2">
-                    <img class="w-20 h-20 rounded" src="{popular_item['photo']}" alt="{popular_item['name']}">
+                    <img class="w-20 h-20 rounded-xl" src="{popular_item['photo']}" alt="{popular_item['name']}">
                     <div>
                         <p class="text-center font-semibold">{popular_item['name']}</p>
                         <p class="text-center font-light">{popular_item['point']} sold</p>
@@ -1625,7 +1628,7 @@ class AdminMenu(AbstractWidget):
             items_container += f"""
                 <tr class="border-b border-gray-500 font-light">
                     <td class="p-4 pr-0 flex gap-4 items-center" data-field="photo">
-                        <img class="w-10 h-10" src="{item['photo']}" />
+                        <img class="w-10 h-10 rounded-xl" src="{item['photo']}" />
                     </td>
                     <td class="text-left" data-field="name">
                         {item['name']}
