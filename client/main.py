@@ -1152,9 +1152,14 @@ class AdminHome(AbstractWidget):
         plt.bar(x1, self.incomes, width=bar_width, label="Income")
         plt.bar(x2, self.costs, width=bar_width, label="Cost")
 
+        date_string = self.dates[0]
+        year = datetime.datetime.strptime(date_string, "%Y-%m-%d").year
+        month_name = datetime.datetime.strptime(date_string, "%Y-%m-%d").strftime("%B")
+
         plt.xlabel("Date")
         plt.ylabel("Amount")
-        plt.xticks(x, self.dates)
+        plt.title(f"{month_name} {year}")
+        plt.xticks(x, [date[8:] for date in self.dates])
         plt.legend()
 
         # Convert the Matplotlib plot to a base64-encoded string
