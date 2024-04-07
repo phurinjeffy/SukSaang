@@ -1097,13 +1097,19 @@ class AdminHome(AbstractWidget):
         dates = [data["date"] for data in self.stats]
         incomes = [data["income"] for data in self.stats]
         costs = [data["cost"] for data in self.stats]
+        
+        bar_width = 0.35
 
-        plt.bar(dates, incomes, label="Income")
-        plt.bar(dates, costs, bottom=incomes, label="Cost")
+        x = range(len(dates))
+        x1 = [i - bar_width / 2 for i in x]  # Position for the income bars
+        x2 = [i + bar_width / 2 for i in x]  # Position for the cost bars
+
+        plt.bar(x1, incomes, width=bar_width, label="Income")
+        plt.bar(x2, costs, width=bar_width, label="Cost")
 
         plt.xlabel("Date")
         plt.ylabel("Amount")
-        plt.title("Income and Cost by Date")
+        plt.xticks(x, dates)
         plt.legend()
 
         # Convert the Matplotlib plot to a base64-encoded string
