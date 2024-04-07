@@ -827,6 +827,7 @@ async def table_checkout(table_num: int):
             for customer in table.customers:
                 for order in customer.orders:
                     connection.root.stats[current_date].income += (connection.root.menus[order].price * customer.orders[order])
+                    connection.root.stats[current_date].cost += (connection.root.menus[order].cost * customer.orders[order])
                 customer.orders.clear()
             table.customers.clear()
             connection.transaction_manager.commit()
