@@ -157,3 +157,11 @@ class Log:
 
     def log_debug(self, message):
         self.logger.debug(message)
+        
+class Popular:
+    def __init__(self, dish=None, point=0):
+        self.dish = dish
+        self.point = point
+
+    def get_popular(self, popular):
+        return popular.point

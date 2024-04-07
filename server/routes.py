@@ -216,3 +216,7 @@ async def table_checkout(table_num: int):
 @router.get("/stats")
 async def show_stats():
     return await _services.get_stats()
+
+@router.get("/populars")
+async def show_popularities():
+    return await _services.get_popularities()

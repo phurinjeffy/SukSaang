@@ -533,6 +533,14 @@ class Menu(AbstractWidget):
         else:
             print("Error fetching menu:", response.text)
 
+    def fetch_popular_info(self):
+        url = "http://localhost:8000/populars"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.populars = response.json()["populars"]
+        else:
+            print("Error fetching populars:", response.text)
+
     def handle_menu_item_click(self, event):
         if self.opened_modal:
             self.opened_modal.close_modal()
@@ -547,8 +555,9 @@ class Menu(AbstractWidget):
         self.drawWidget()
 
     def drawWidget(self):
-        # Fetch menu information every time drawWidget is called
+        # Fetch menu,popular information every time drawWidget is called
         self.fetch_menu_info()
+        self.fetch_popular_info()
 
         # Filter menu items based on selected category
         if self.selected_category:
@@ -558,7 +567,9 @@ class Menu(AbstractWidget):
                 if item.get("type", "").lower() == self.selected_category
             ]
         else:
+            
             filtered_menu = self.menu
+            # pass
 
         svg_images = ""
         for category in self.categories:
@@ -1097,7 +1108,7 @@ class AdminHome(AbstractWidget):
         dates = [data["date"] for data in self.stats]
         incomes = [data["income"] for data in self.stats]
         costs = [data["cost"] for data in self.stats]
-        
+
         bar_width = 0.35
 
         x = range(len(dates))
@@ -1226,7 +1237,9 @@ class AdminTable(AbstractWidget):
 
         # Attach event handlers for the buttons
         for table in self.table:
-            view_order_button = content.querySelector(f"#view-order-{table['table_num']}")
+            view_order_button = content.querySelector(
+                f"#view-order-{table['table_num']}"
+            )
             view_order_button.onclick = handle_view_order_click(int(table["table_num"]))
             check_out_button = content.querySelector(f"#check-out-{table['table_num']}")
             check_out_button.onclick = handle_check_out_click(int(table["table_num"]))

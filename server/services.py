@@ -828,6 +828,13 @@ async def table_checkout(table_num: int):
                 for order in customer.orders:
                     connection.root.stats[current_date].income += (connection.root.menus[order].price * customer.orders[order])
                     connection.root.stats[current_date].cost += (connection.root.menus[order].cost * customer.orders[order])
+
+                    point = customer.orders[order]
+                    if order not in connection.root.popular:
+                        connection.root.popular[order] = Popular(order, point)
+                    else:
+                        connection.root.popular[order].point += point
+                        
                 customer.orders.clear()
             table.customers.clear()
             connection.transaction_manager.commit()
@@ -856,10 +863,26 @@ async def get_stats():
                 "cost": stat.cost, 
                 "income": stat.income
             })
-        log.log_info(f"get_users operation successful")
+        log.log_info(f"get_stats operation successful")
         return {"stats": all_stats}
     except Exception as e:
         log.log_error(f"Error in get_users: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+    
+async def get_popularities():
+    try:
+        all_populars = []
+        for dish, popular in connection.root.popular.items():
+            all_populars.append({
+                "dish": popular.dish, 
+                "point": popular.point, 
+            })
+        log.log_info(f"get_popularities operation successful")
+        return {"populars": all_populars}
+    except Exception as e:
+        log.log_error(f"Error in get_popularities: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

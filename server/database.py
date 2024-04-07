@@ -56,6 +56,10 @@ def init_db():
             root.stats['04-01'] = Stat(date='04-01', cost=100, income=200)
             root.stats['04-02'] = Stat(date='04-02', cost=100, income=200)
             root.stats['04-03'] = Stat(date='04-03', cost=100, income=200)
+
+        if not hasattr(root, "popular"):
+            root.popular = BTrees.OOBTree.BTree()
+            root.popular['Coke'] = Popular(dish="Coke", point=2)
             
         print("Database loaded from file.")
     except Exception as e:
@@ -66,6 +70,7 @@ def init_db():
         root.menus = BTrees.OOBTree.BTree()
         root.tables = BTrees.OOBTree.BTree()
         root.stats = BTrees.OOBTree.BTree()
+        root.popular = BTrees.OOBTree.BTree()
 
 
 def close_db_connection():
