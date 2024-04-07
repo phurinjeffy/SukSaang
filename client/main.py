@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 import matplotlib.pyplot as plt
 import datetime
 from collections import defaultdict
+import base64
+from io import BytesIO
 
 
 def check_token():
@@ -1079,91 +1081,45 @@ class Booking(AbstractWidget):
 class AdminHome(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        self.stats = None
+        self.fetch_stats_info()
 
-    def generate_daily_bar_graphs(self):
-        # Get all data needed from the tables
-        tables_data = self.get_tables_data()
-
-        # Get orders from log file and calculate revenue and cost
-        daily_revenue, daily_cost = self.calculate_financials(tables_data, "app.log")
-
-        # Plot the bar graph
-        self.plot_bar_graph(daily_revenue, daily_cost)
-
-    def get_tables_data(self):
-        # Code to fetch tables data from the '/tables' endpoint
-        response = requests.get("http://localhost:8000/tables")
-        return response.json() if response.status_code == 200 else {}
-
-    def get_menu_item_cost(self, item_name):
-        # Code to fetch a menu item cost from the '/menus/{menu_item}' endpoint
-        response = requests.get(f"http://localhost:8000/menus/{item_name}")
-        return response.json()["cost"] if response.status_code == 200 else 0
-
-    def calculate_financials(self, tables_data, log_file_path):
-        daily_revenue = defaultdict(float)
-        daily_cost = defaultdict(float)
-
-        with open(log_file_path, "r") as log_file:
-            for line in log_file:
-                if "Checked out successfully" in line:
-                    timestamp = line.split(" - ")[0]
-                    date = datetime.datetime.strptime(
-                        timestamp, "%Y-%m-%d %H:%M:%S,%f"
-                    ).date()
-                    table_number = line.split("Table ")[1].split(":")[0].strip()
-                    table_info = next(
-                        (
-                            t
-                            for t in tables_data["tables"]
-                            if str(t["table_num"]) == table_number
-                        ),
-                        None,
-                    )
-                    if table_info:
-                        for customer in table_info["customers"]["data"]:
-                            for item, quantity in customer["orders"].items():
-                                item_cost = self.get_menu_item_cost(item)
-                                item_price = next(
-                                    (
-                                        o["price"]
-                                        for o in customer["orders"]
-                                        if o["name"] == item
-                                    ),
-                                    0,
-                                )
-                                daily_revenue[date] += item_price * quantity
-                                daily_cost[date] += item_cost * quantity
-        return daily_revenue, daily_cost
-
-    def plot_bar_graph(self, daily_revenue, daily_cost):
-        # Assuming daily_revenue and daily_cost are defaultdicts with date keys and float values
-
-        dates = sorted(daily_revenue.keys())
-        revenue_values = [daily_revenue[date] for date in dates]
-        cost_values = [daily_cost[date] for date in dates]
-
-        x = range(len(dates))  # Create a list of x coordinates for each date
-        width = 0.4
-
-        fig, ax = plt.subplots()
-        ax.bar(x, revenue_values, width, label="Revenue", color="green")
-        ax.bar([i + width for i in x], cost_values, width, label="Cost", color="red")
-
-        ax.set_xlabel("Date")
-        ax.set_ylabel("Amount ($)")
-        ax.set_title("Daily Revenue and Costs")
-        ax.set_xticks([i + width / 2 for i in x])
-        ax.set_xticklabels([date.strftime("%Y-%m-%d") for date in dates], rotation=45)
-        plt.legend()
-
-        plt.tight_layout()
-        plt.show()
+    def fetch_stats_info(self):
+        url = f"http://localhost:8000/stats"
+        response = requests.get(url)
+        if response.status_code == 200:
+            print(f"Stats fetched successfully")
+            self.stats = response.json()["stats"]
+        else:
+            print(f"Failed to get stats:", response.text)
 
     def drawWidget(self):
+        dates = [data["date"] for data in self.stats]
+        incomes = [data["income"] for data in self.stats]
+        costs = [data["cost"] for data in self.stats]
+
+        plt.bar(dates, incomes, label="Income")
+        plt.bar(dates, costs, bottom=incomes, label="Cost")
+
+        plt.xlabel("Date")
+        plt.ylabel("Amount")
+        plt.title("Income and Cost by Date")
+        plt.legend()
+
+        # Convert the Matplotlib plot to a base64-encoded string
+        buffer = BytesIO()
+        plt.savefig(buffer, format="png")
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.getvalue()).decode()
+        plt.close()
+
+        # Embed the base64-encoded image into the HTML
         content = document.createElement("div")
         content.innerHTML = f"""
-            {self.generate_daily_bar_graphs()}
+            <div class="flex flex-col justify-center items-center text-white gap-4">
+                <h3 class="font-semibold text-3xl">Income and Cost Chart</h3>
+                <img src="data:image/png;base64,{image_base64}" alt="Income and Cost Chart">
+            </div>
         """
         self.element.appendChild(content)
 
