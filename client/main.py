@@ -1140,7 +1140,15 @@ class AdminTable(AbstractWidget):
         else:
             print("Error fetching menu:", response.text)
 
-    def handle_view_order(self, table_num):
+    def fetch_table_customer_info(self, table_num):
+        url = f"http://localhost:8000/tables/{table_num}/customers"
+        response = requests.get(url)
+        if response.status_code == 200:
+            self.customers = response.json()
+        else:
+            print("Error fetching table info:", response.text)
+
+    def view_order(self, table_num):
         url = f"http://localhost:8000/tables/{table_num}/orders"
         response = requests.get(url)
         if response.status_code == 200:
@@ -1154,22 +1162,16 @@ class AdminTable(AbstractWidget):
         else:
             print("Error fetching orders:", response.text)
 
-    def fetch_table_customer_info(self, table_num):
-        url = f"http://localhost:8000/tables/{table_num}/customers"
-        response = requests.get(url)
-        if response.status_code == 200:
-            self.customers = response.json()
-        else:
-            print("Error fetching table info:", response.text)
-
-    def check_out(self, tableNum):
-        url = f"http://localhost:8000/table/{tableNum}/checkout"
+    def check_out(self, table_num):
+        url = f"http://localhost:8000/table/{table_num}/checkout"
         response = requests.put(url)
-        if response.ok:
+        if response.status_code == 200:
             print("Check out successful")
+            js.alert("Check out successful")
+            js.window.location.reload()
         else:
             print("Error checking out")
-            print("Error:", response.text)
+            js.alert("Error:", response.text)
 
     def drawWidget(self):
         tables_container = ""
@@ -1181,7 +1183,7 @@ class AdminTable(AbstractWidget):
                     <td class="p-4 pr-0">{table['table_num']}</td>
                     <td>{self.customers}</td>
                     <td class="view-order cursor-pointer" id="view-order-{table['table_num']}">View Order</td>
-                    <td><button onclick="check_out({int(table['table_num'])})">Check Out</button></td>
+                    <td><button id="check-out-{table['table_num']}">Check Out</button></td>
                 </tr>
             """
 
@@ -1210,37 +1212,18 @@ class AdminTable(AbstractWidget):
         """
         self.element.appendChild(content)
 
-        # Define a function to handle the click event for viewing orders
         def handle_view_order_click(table_num):
-            return lambda event: self.handle_view_order(table_num)
+            return lambda event: self.view_order(table_num)
 
-        # Attach event handlers for the "View Order" buttons
+        def handle_check_out_click(table_num):
+            return lambda event: self.check_out(table_num)
+
+        # Attach event handlers for the buttons
         for table in self.table:
-            view_order_button = content.querySelector(
-                f"#view-order-{table['table_num']}"
-            )
+            view_order_button = content.querySelector(f"#view-order-{table['table_num']}")
             view_order_button.onclick = handle_view_order_click(int(table["table_num"]))
-
-        script = document.createElement("script")
-        script.innerHTML = """
-            function check_out(tableNum) {
-                fetch(`http://localhost:8000/table/${tableNum}/checkout`, {
-                    method: 'PUT',
-                })
-                .then(response => {
-                    if (response.ok) {
-                        console.log('Check out successful');
-                        window.location.reload();
-                    } else {
-                        console.error('Error checking out DUMMY');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error checking out DUMMY:', error);
-                });
-            }
-        """
-        document.body.appendChild(script)
+            check_out_button = content.querySelector(f"#check-out-{table['table_num']}")
+            check_out_button.onclick = handle_check_out_click(int(table["table_num"]))
 
 
 class Receipt(AbstractWidget):
