@@ -362,7 +362,7 @@ async def add_menu(
                 status_code=status.HTTP_409_CONFLICT, detail="Menu already exists"
             )
 
-        photo_url = None
+        photo_url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2DDqkuF0t9bK0vpEV8Zv3urtChp26877tRSgHga4v7Q&s"
         if photo:
             # Read the uploaded file content
             photo_content = photo.file.read()
