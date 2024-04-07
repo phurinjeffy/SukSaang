@@ -521,7 +521,19 @@ class Home(AbstractWidget):
 class Menu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.categories = ["all", "popular", "rice", "noodle", "pasta", "steak", "junk", "soup", "sides", "drink", "dessert"]
+        self.categories = [
+            "all",
+            "popular",
+            "rice",
+            "noodle",
+            "pasta",
+            "steak",
+            "junk",
+            "soup",
+            "sides",
+            "drink",
+            "dessert",
+        ]
         self.selected_category = "all"
         self.opened_modal = None
 
@@ -609,7 +621,7 @@ class Menu(AbstractWidget):
                     <div class="text-2xl font-extralight bg-blue-100 p-6">
                         {self.selected_category.capitalize() if self.selected_category else 'Menu'}
                     </div>
-                    <div class="flex flex-row gap-8 bg-white border-b border-slate-400 border-opacity-75 p-10">
+                    <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 bg-white border-b border-slate-400 border-opacity-75 p-10">
                         {menu_container}
                     </div>
                 </div>
@@ -913,7 +925,7 @@ class TableUser(AbstractWidget):
             table_div.onclick = self.tableClicked
             table_div.setAttribute(
                 "class",
-                f"table-item p-4 rounded flex justify-center items-center {'bg-blue-100 hover:scale-105 duration-300 cursor-pointer' if not table['customers'] else 'bg-red-200 cursor-not-allowed'}",
+                f"table-item p-4 rounded flex justify-center items-center {'bg-blue-100 hover:scale-105 hover:bg-blue-200 duration-300 cursor-pointer' if not table['customers'] else 'bg-red-200 cursor-not-allowed'}",
             )
             table_div.setAttribute("data-table-id", str(table["table_num"]))
             table_div.innerHTML = f"""
@@ -946,7 +958,7 @@ class TableUser(AbstractWidget):
             self.table_select = table_id
             # Store the current background color in a data attribute
             table_div.setAttribute("data-prev-color", table_div.style.backgroundColor)
-            table_div.style.backgroundColor = "yellow"
+            table_div.style.backgroundColor = "orange"
 
     def confirmBooking(self, event):
         if self.table_select is not None:
@@ -1105,7 +1117,7 @@ class AdminHome(AbstractWidget):
             self.updateStats()
         else:
             print(f"Failed to get stats:", response.text)
-            
+
     def fetch_populars_info(self):
         url = f"http://localhost:8000/populars"
         response = requests.get(url)
@@ -1166,7 +1178,7 @@ class AdminHome(AbstractWidget):
         costsElement = document.querySelector("#costs_total")
         if costsElement:
             costsElement.textContent = str(self.costs_total)
-            
+
         profitElement = document.querySelector("#profit")
         if profitElement:
             profitElement.textContent = str(self.profit)
@@ -1212,10 +1224,10 @@ class AdminHome(AbstractWidget):
 
         month_select = content.querySelector("#month-select")
         month_select.onchange = lambda event: self.onMonthSelectChange(event)
-        
+
     def get_popular_items(self):
-        sorted_populars = sorted(self.populars, key=lambda x: x['point'], reverse=True)
-        
+        sorted_populars = sorted(self.populars, key=lambda x: x["point"], reverse=True)
+
         top_5_populars = sorted_populars[:5]
 
         popular_items = "<div class='flex flex-col items-center justify-center gap-6'>"
@@ -1234,7 +1246,7 @@ class AdminHome(AbstractWidget):
     def onMonthSelectChange(self, event):
         selected_month = event.target.value
         self.updateStats(int(selected_month))
-        
+
     def get_month_options(self):
         options = ""
         for i in range(1, 13):
@@ -1453,7 +1465,17 @@ class AdminLog(AbstractWidget):
 class AdminMenu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.categories = ["rice", "noodle", "pasta", "steak", "junk", "soup", "sides", "drink", "dessert"]
+        self.categories = [
+            "rice",
+            "noodle",
+            "pasta",
+            "steak",
+            "junk",
+            "soup",
+            "sides",
+            "drink",
+            "dessert",
+        ]
         self.menu = []
         self.add_toggle = False
         self.fetch_menu_info()
@@ -1628,10 +1650,12 @@ class AdminMenu(AbstractWidget):
                     </td>
                 </tr>
             """
-            
+
         type_options = ""
         for option in self.categories:
-            type_options += f"<option value='{option.capitalize()}'>{option.capitalize()}</option>"
+            type_options += (
+                f"<option value='{option.capitalize()}'>{option.capitalize()}</option>"
+            )
 
         content = document.createElement("div")
         content.innerHTML = f"""
