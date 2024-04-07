@@ -1453,7 +1453,7 @@ class AdminLog(AbstractWidget):
 class AdminMenu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        # self.categories = ["rice", "noodle", "pasta", "steak", "junk", "soup", "sides", "drink", "dessert"]
+        self.categories = ["rice", "noodle", "pasta", "steak", "junk", "soup", "sides", "drink", "dessert"]
         self.menu = []
         self.add_toggle = False
         self.fetch_menu_info()
@@ -1628,6 +1628,10 @@ class AdminMenu(AbstractWidget):
                     </td>
                 </tr>
             """
+            
+        type_options = ""
+        for option in self.categories:
+            type_options += f"<option value='{option.capitalize()}'>{option.capitalize()}</option>"
 
         content = document.createElement("div")
         content.innerHTML = f"""
@@ -1663,7 +1667,9 @@ class AdminMenu(AbstractWidget):
                     <input id="new-photo" class="w-full border border-gray-300 rounded px-3 py-1" type="file" accept="image/*">
                     <input id="new-name" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Name">
                     <input id="new-description" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Description">
-                    <input id="new-type" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Type">
+                    <select id="new-type" class="w-full text-black border border-gray-300 rounded px-3 py-1">
+                        {type_options}
+                    </select>
                     <input id="new-ingredients" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Ingredients">
                     <input id="new-price" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Price">
                     <input id="new-cost" class="w-full text-black border border-gray-300 rounded px-3 py-1" type="text" placeholder="Cost">
