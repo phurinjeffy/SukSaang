@@ -1101,44 +1101,113 @@ class AdminHome(AbstractWidget):
         if response.status_code == 200:
             print(f"Stats fetched successfully")
             self.stats = response.json()["stats"]
+            self.updateStats()
         else:
             print(f"Failed to get stats:", response.text)
 
-    def drawWidget(self):
-        dates = [data["date"] for data in self.stats]
-        incomes = [data["income"] for data in self.stats]
-        costs = [data["cost"] for data in self.stats]
+    def updateStats(self, selected_month=datetime.date.today().month):
+        self.month = selected_month
+
+        filtered_stats = [
+            data
+            for data in self.stats
+            if datetime.datetime.strptime(data["date"], "%Y-%m-%d").month == self.month
+        ]
+
+        self.dates = [data["date"] for data in filtered_stats]
+        self.incomes = [data["income"] for data in filtered_stats]
+        self.costs = [data["cost"] for data in filtered_stats]
 
         bar_width = 0.35
 
-        x = range(len(dates))
+        x = range(len(self.dates))
         x1 = [i - bar_width / 2 for i in x]  # Position for the income bars
         x2 = [i + bar_width / 2 for i in x]  # Position for the cost bars
 
-        plt.bar(x1, incomes, width=bar_width, label="Income")
-        plt.bar(x2, costs, width=bar_width, label="Cost")
+        plt.bar(x1, self.incomes, width=bar_width, label="Income")
+        plt.bar(x2, self.costs, width=bar_width, label="Cost")
 
         plt.xlabel("Date")
         plt.ylabel("Amount")
-        plt.xticks(x, dates)
+        plt.xticks(x, self.dates)
         plt.legend()
 
         # Convert the Matplotlib plot to a base64-encoded string
         buffer = BytesIO()
         plt.savefig(buffer, format="png")
         buffer.seek(0)
-        image_base64 = base64.b64encode(buffer.getvalue()).decode()
+        self.image_base64 = base64.b64encode(buffer.getvalue()).decode()
         plt.close()
 
-        # Embed the base64-encoded image into the HTML
+        self.incomes_total = sum(self.incomes)
+        self.costs_total = sum(self.costs)
+        self.profit = float(self.incomes_total) - float(self.costs_total)
+
+        chartElement = document.querySelector("#chart")
+        if chartElement:
+            chartElement.setAttribute(
+                "src", f"data:image/png;base64,{self.image_base64}"
+            )
+
+        incomesElement = document.querySelector("#incomes_total")
+        if incomesElement:
+            incomesElement.textContent = str(self.incomes_total)
+
+        costsElement = document.querySelector("#costs_total")
+        if costsElement:
+            costsElement.textContent = str(self.costs_total)
+            
+        profitElement = document.querySelector("#profit")
+        if profitElement:
+            profitElement.textContent = str(self.profit)
+
+    def drawWidget(self):
         content = document.createElement("div")
         content.innerHTML = f"""
             <div class="flex flex-col justify-center items-center text-white gap-4">
-                <h3 class="font-semibold text-3xl">Income and Cost Chart</h3>
-                <img src="data:image/png;base64,{image_base64}" alt="Income and Cost Chart">
+                <h3 class="font-semibold text-3xl my-4">Statistics</h3>
+                <img id="chart" src="data:image/png;base64,{self.image_base64}" alt="Income and Cost Chart">
+                <div class="flex flex-col">
+                    <h2 class="font-semibold text-xl">Stats for 
+                        <span>
+                            <select id="month-select" class="text-right bg-transparent border-0 rounded py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-500">
+                                {self.get_month_options()}
+                            </select>
+                        </span>
+                    </h2>
+                    <table>
+                        <tr>
+                            <td class="text-left text-sm font-light">Total Incomes:</td>
+                            <td class="text-right text-base font-semibold">฿<span id="incomes_total">{self.incomes_total}</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-left text-sm font-light">Total Costs:</td>
+                            <td class="text-right text-base font-semibold">฿<span id="costs_total">{self.costs_total}</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-left text-sm font-light">Profit:</td>
+                            <td class="text-right text-base font-semibold">฿<span id="profit">{self.profit}</span></td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         """
         self.element.appendChild(content)
+
+        month_select = content.querySelector("#month-select")
+        month_select.onchange = lambda event: self.onMonthSelectChange(event)
+
+    def onMonthSelectChange(self, event):
+        selected_month = event.target.value
+        self.updateStats(int(selected_month))
+        
+    def get_month_options(self):
+        options = ""
+        for i in range(1, 13):
+            month_name = datetime.date(1900, i, 1).strftime("%B")
+            selected = "selected" if i == self.month else ""
+            options += f'<option value="{i}" {selected}>{month_name}</option>'
+        return options
 
 
 class AdminTable(AbstractWidget):
