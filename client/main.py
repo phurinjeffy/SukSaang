@@ -777,17 +777,19 @@ class Cart(AbstractWidget):
             print("Error:", response.text)
 
     def place_order(self, event):
-        url = f"http://localhost:8000/users/{self.username}/orders/place_order"
-        response = requests.post(url)
-        if response.status_code == 200:
-            print("Successfully Placed Order")
-            self.cart = []  # Empty the cart
-            self.subtotal = 0  # Reset the subtotal to zero
-            self.check = 1
-            self.drawWidget()
-            js.alert("Placed Order Successfully")
-        else:
-            print("Error placing order:", response.text)
+        confirm = js.confirm("Confirm to Place Order")
+        if confirm:
+            url = f"http://localhost:8000/users/{self.username}/orders/place_order"
+            response = requests.post(url)
+            if response.status_code == 200:
+                print("Successfully Placed Order")
+                self.cart = []  # Empty the cart
+                self.subtotal = 0  # Reset the subtotal to zero
+                self.check = 1
+                self.drawWidget()
+                js.alert("Placed Order Successfully")
+            else:
+                print("Error placing order:", response.text)
 
     def drawWidget(self):
         items_container = ""
@@ -1304,15 +1306,17 @@ class AdminTable(AbstractWidget):
             print("Error fetching orders:", response.text)
 
     def check_out(self, table_num):
-        url = f"http://localhost:8000/table/{table_num}/checkout"
-        response = requests.put(url)
-        if response.status_code == 200:
-            print("Check out successful")
-            js.alert("Check out successful")
-            js.window.location.reload()
-        else:
-            print("Error checking out")
-            js.alert("Error:", response.text)
+        confirm = js.confirm("Confirm to Check Out")
+        if confirm:
+            url = f"http://localhost:8000/table/{table_num}/checkout"
+            response = requests.put(url)
+            if response.status_code == 200:
+                print("Check out successful")
+                js.alert("Check out successful")
+                js.window.location.reload()
+            else:
+                print("Error checking out")
+                js.alert("Error:", response.text)
 
     def drawWidget(self):
         tables_container = ""
