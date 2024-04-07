@@ -1130,6 +1130,7 @@ class AdminHome(AbstractWidget):
 
         self.incomes_total = sum(self.incomes)
         self.costs_total = sum(self.costs)
+        self.profit = float(self.incomes_total) - float(self.costs_total)
 
         chartElement = document.querySelector("#chart")
         if chartElement:
@@ -1144,6 +1145,10 @@ class AdminHome(AbstractWidget):
         costsElement = document.querySelector("#costs_total")
         if costsElement:
             costsElement.textContent = str(self.costs_total)
+            
+        profitElement = document.querySelector("#profit")
+        if profitElement:
+            profitElement.textContent = str(self.profit)
 
     def drawWidget(self):
         content = document.createElement("div")
@@ -1152,15 +1157,25 @@ class AdminHome(AbstractWidget):
                 <h3 class="font-semibold text-3xl my-4">Statistics</h3>
                 <img id="chart" src="data:image/png;base64,{self.image_base64}" alt="Income and Cost Chart">
                 <div class="flex flex-col">
-                    <h2>Stats for <span class="text-black"><select id="month-select">{self.get_month_options()}</select></span></h2>
+                    <h2 class="font-semibold text-xl">Stats for 
+                        <span>
+                            <select id="month-select" class="text-right bg-transparent border-0 rounded py-2 px-3 text-white leading-tight focus:outline-none focus:border-blue-500">
+                                {self.get_month_options()}
+                            </select>
+                        </span>
+                    </h2>
                     <table>
                         <tr>
-                            <td>Total Incomes:</td>
-                            <td class="text-right">฿<span id="incomes_total" >{self.incomes_total}</span></td>
+                            <td class="text-left text-sm font-light">Total Incomes:</td>
+                            <td class="text-right text-base font-semibold">฿<span id="incomes_total">{self.incomes_total}</span></td>
                         </tr>
                         <tr>
-                            <td>Total Costs:</td>
-                            <td class="text-right">฿<span id="costs_total">{self.costs_total}</span></td>
+                            <td class="text-left text-sm font-light">Total Costs:</td>
+                            <td class="text-right text-base font-semibold">฿<span id="costs_total">{self.costs_total}</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-left text-sm font-light">Profit:</td>
+                            <td class="text-right text-base font-semibold">฿<span id="profit">{self.profit}</span></td>
                         </tr>
                     </table>
                 </div>
