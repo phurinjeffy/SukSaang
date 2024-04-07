@@ -1094,6 +1094,7 @@ class AdminHome(AbstractWidget):
         AbstractWidget.__init__(self, element_id)
         self.stats = None
         self.fetch_stats_info()
+        self.fetch_populars_info()
 
     def fetch_stats_info(self):
         url = f"http://localhost:8000/stats"
@@ -1104,6 +1105,15 @@ class AdminHome(AbstractWidget):
             self.updateStats()
         else:
             print(f"Failed to get stats:", response.text)
+            
+    def fetch_populars_info(self):
+        url = f"http://localhost:8000/populars"
+        response = requests.get(url)
+        if response.status_code == 200:
+            print(f"Populars fetched successfully")
+            self.populars = response.json()["populars"]
+        else:
+            print(f"Failed to get populars:", response.text)
 
     def updateStats(self, selected_month=datetime.date.today().month):
         self.month = selected_month
@@ -1190,12 +1200,36 @@ class AdminHome(AbstractWidget):
                         </tr>
                     </table>
                 </div>
+                <div class="populars-container my-8">
+                    <h3 class="font-semibold text-xl mb-4">All Time Favourites</h3>
+                    <ul>
+                        {self.get_popular_items()}
+                    </ul>
+                </div>
             </div>
         """
         self.element.appendChild(content)
 
         month_select = content.querySelector("#month-select")
         month_select.onchange = lambda event: self.onMonthSelectChange(event)
+        
+    def get_popular_items(self):
+        sorted_populars = sorted(self.populars, key=lambda x: x['point'], reverse=True)
+        
+        top_5_populars = sorted_populars[:5]
+
+        popular_items = "<div class='flex flex-col items-center justify-center gap-6'>"
+        for popular_item in top_5_populars:
+            popular_items += f"""
+                <li class="flex flex-row items-center gap-2">
+                    <img class="w-20 h-20 rounded" src="{popular_item['photo']}" alt="{popular_item['name']}">
+                    <div>
+                        <p class="text-center font-semibold">{popular_item['name']}</p>
+                        <p class="text-center font-light">{popular_item['point']} sold</p>
+                    </div>
+                </li>
+            """
+        return popular_items
 
     def onMonthSelectChange(self, event):
         selected_month = event.target.value
