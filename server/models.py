@@ -159,8 +159,8 @@ class Log:
         self.logger.debug(message)
         
 class Popular:
-    def __init__(self, dish=None, point=0):
-        self.dish = dish
+    def __init__(self, name=None, point=0):
+        self.name = name
         self.point = point
 
     def get_popular(self, popular):

@@ -68,7 +68,9 @@ def init_db():
             
         if not hasattr(root, "popular"):
             root.popular = BTrees.OOBTree.BTree()
-            root.popular['Coke'] = Popular(dish="Coke", point=2)
+            root.popular['Coke'] = Popular(name="Coke", point=2)
+            root.popular['Pasta'] = Popular(name="Pasta", point=4)
+            root.popular['Burger'] = Popular(name="Burger", point=3)
             
         print("Database loaded from file.")
     except Exception as e:

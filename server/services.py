@@ -874,9 +874,16 @@ async def get_stats():
 async def get_popularities():
     try:
         all_populars = []
-        for dish, popular in connection.root.popular.items():
+        for name, popular in connection.root.popular.items():
+            item = connection.root.menus.get(popular.name)
             all_populars.append({
-                "dish": popular.dish, 
+                "name": popular.name,
+                "price": item.price,
+                "description": item.description,
+                "type": item.type,
+                "cost": item.cost,
+                "ingredients": item.ingredients,
+                "photo": item.photo,
                 "point": popular.point, 
             })
         log.log_info(f"get_popularities operation successful")

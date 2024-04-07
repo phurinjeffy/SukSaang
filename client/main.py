@@ -521,8 +521,8 @@ class Home(AbstractWidget):
 class Menu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.categories = ["rice", "noodle", "pasta", "steak", "soup", "sides"]
-        self.selected_category = None
+        self.categories = ["all", "popular", "rice", "noodle", "pasta", "steak", "soup", "sides"]
+        self.selected_category = "all"
         self.opened_modal = None
 
     def fetch_menu_info(self):
@@ -555,21 +555,21 @@ class Menu(AbstractWidget):
         self.drawWidget()
 
     def drawWidget(self):
-        # Fetch menu,popular information every time drawWidget is called
         self.fetch_menu_info()
         self.fetch_popular_info()
 
-        # Filter menu items based on selected category
-        if self.selected_category:
+        if self.selected_category == "all":
+            filtered_menu = self.menu
+        elif self.selected_category == "popular":
+            filtered_menu = self.populars
+        elif self.selected_category:
             filtered_menu = [
                 item
                 for item in self.menu
                 if item.get("type", "").lower() == self.selected_category
             ]
         else:
-            
             filtered_menu = self.menu
-            # pass
 
         svg_images = ""
         for category in self.categories:
@@ -607,7 +607,7 @@ class Menu(AbstractWidget):
                 </div>
                 <div class="w-full">
                     <div class="text-2xl font-extralight bg-blue-100 p-6">
-                        {self.selected_category.capitalize() if self.selected_category else 'Recommended'}
+                        {self.selected_category.capitalize() if self.selected_category else 'Menu'}
                     </div>
                     <div class="flex flex-row gap-8 bg-white border-b border-slate-400 border-opacity-75 p-10">
                         {menu_container}
