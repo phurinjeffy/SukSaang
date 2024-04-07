@@ -818,7 +818,7 @@ async def show_table_payment(table_num: int):
 
 async def table_checkout(table_num: int):
     try:
-        current_date = str(date.today())[5:]
+        current_date = str(date.today())
         if table_num in connection.root.tables:
             table = connection.root.tables[table_num]
             if current_date not in connection.root.stats:

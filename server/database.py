@@ -53,9 +53,18 @@ def init_db():
         
         if not hasattr(root, "stats"):
             root.stats = BTrees.OOBTree.BTree()
-            root.stats['04-01'] = Stat(date='04-01', cost=100, income=200)
-            root.stats['04-02'] = Stat(date='04-02', cost=100, income=200)
-            root.stats['04-03'] = Stat(date='04-03', cost=100, income=200)
+            # Febuary
+            root.stats['2024-02-01'] = Stat(date='2024-02-01', cost=50, income=120)
+            root.stats['2024-02-02'] = Stat(date='2024-02-02', cost=45, income=280)
+            root.stats['2024-02-03'] = Stat(date='2024-02-03', cost=30, income=160)
+            # March
+            root.stats['2024-03-01'] = Stat(date='2024-03-01', cost=70, income=700)
+            root.stats['2024-03-02'] = Stat(date='2024-03-02', cost=55, income=530)
+            root.stats['2024-03-03'] = Stat(date='2024-03-03', cost=20, income=450)
+            # April
+            root.stats['2024-04-01'] = Stat(date='2024-04-01', cost=100, income=200)
+            root.stats['2024-04-02'] = Stat(date='2024-04-02', cost=35, income=75)
+            root.stats['2024-04-03'] = Stat(date='2024-04-03', cost=65, income=185)
             
         print("Database loaded from file.")
     except Exception as e:
