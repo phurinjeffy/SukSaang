@@ -1,6 +1,7 @@
 import logging
 import persistent
 from abc import ABC, abstractmethod
+import matplotlib as plt
 
 
 class Account(ABC):
@@ -8,12 +9,24 @@ class Account(ABC):
         self.username = username
         self.password = password
         self.hashed_password = hashed_password
+
+    def get_username(self):
+        return self.username
+    
+    def get_hashPassword(self):
+        return self.hashed_password
         
         
 class Order(persistent.Persistent):
     def __init__(self, food, quantity):
         self.food = food
         self.quantity = quantity
+
+    def get_food(self):
+        return self.food
+    
+    def get_price(self):
+        return self.food.price
 
 
 class User(Account, persistent.Persistent):
@@ -43,11 +56,13 @@ class User(Account, persistent.Persistent):
     def view_cart(self):
         return self.orders
 
-    def confirm_order(self):
-        pass
+    def confirm_order(self, order):
+        self.orders[order].status = 'ordered'
 
     def check_out(self):
-        pass
+        self.cart = None
+        self.orders = None
+        table = 0
 
     def clear_cart(self):
         self.orders.clear()
@@ -58,18 +73,21 @@ class Admin(Account, persistent.Persistent):
         Account.__init__(self, username, password, hashed_password)
         self.tables = tables
         self.statistic = statistic
+        self.menu_list = {}
 
-    def add_menu(self):
-        pass
+    def add_menu(self, menu):
+        self.menu_list[menu.name] = menu
+    def delete_menu(self, menu):
+        self.menu_list.delete(menu)
 
-    def delete_menu(self):
-        pass
-
-    def edit_menu(self, menu):
-        pass
+    def edit_menu(self, menu, detail):
+        self.menu_list[menu] = detail
 
     def generate_payment(self):
-        pass
+        sum = 0
+        for order in self.tables:
+            sum += order.price
+        return sum
 
 
 class Menu(persistent.Persistent):
@@ -82,8 +100,8 @@ class Menu(persistent.Persistent):
     def delete_menu(self, food):
         self.menus.remove(food)
 
-    def edit_menu(self, detail, amount=0):
-        pass
+    def edit_menu(self, new_detail):
+        self.menu.part = new_detail
 
 
 class Table(persistent.Persistent):
@@ -97,14 +115,33 @@ class Table(persistent.Persistent):
 
 
 class Stat(persistent.Persistent):
-    def __init__(self, date=None, cost=0, income=0):
+    def __init__(self, date=None, cost=0, income=0, popular=[]):
         self.date = date
         self.cost = cost
         self.income = income
-        # self.popular = popular
+        self.popular = popular
 
-    def generate_graph(self):
-        pass
+    def plot_bar_graph(self, daily_revenue, daily_cost):
+        dates = sorted(daily_revenue.keys())
+        revenue_values = [daily_revenue[date] for date in dates]
+        cost_values = [daily_cost[date] for date in dates]
+
+        x = range(len(dates))  # Create a list of x coordinates for each date
+        width = 0.4
+        
+        fig, ax = plt.subplots()
+        ax.bar(x, revenue_values, width, label='Revenue', color='green')
+        ax.bar([i + width for i in x], cost_values, width, label='Cost', color='red')
+
+        ax.set_xlabel('Date')
+        ax.set_ylabel('Amount ($)')
+        ax.set_title('Daily Revenue and Costs')
+        ax.set_xticks([i + width / 2 for i in x])
+        ax.set_xticklabels([date.strftime('%Y-%m-%d') for date in dates], rotation=45)
+        plt.legend()
+        
+        plt.tight_layout()
+        plt.show()
 
 
 class Food(ABC):
@@ -157,7 +194,7 @@ class Log:
 
     def log_debug(self, message):
         self.logger.debug(message)
-        
+
 class Popular:
     def __init__(self, name=None, point=0):
         self.name = name
