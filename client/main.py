@@ -521,7 +521,7 @@ class Home(AbstractWidget):
 class Menu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
-        self.categories = ["all", "popular", "rice", "noodle", "pasta", "steak", "soup", "sides"]
+        self.categories = ["all", "popular", "rice", "noodle", "pasta", "steak", "junk", "soup", "sides", "drink", "dessert"]
         self.selected_category = "all"
         self.opened_modal = None
 
@@ -1453,6 +1453,7 @@ class AdminLog(AbstractWidget):
 class AdminMenu(AbstractWidget):
     def __init__(self, element_id):
         AbstractWidget.__init__(self, element_id)
+        # self.categories = ["rice", "noodle", "pasta", "steak", "junk", "soup", "sides", "drink", "dessert"]
         self.menu = []
         self.add_toggle = False
         self.fetch_menu_info()

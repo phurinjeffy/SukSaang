@@ -30,9 +30,9 @@ def init_db():
         if not hasattr(root, "menus"):
             root.menus = BTrees.OOBTree.BTree()
             # Adding default menu items
-            root.menus["Pasta"] = MainDish("Pasta", 10, "Spaghetti with tomato sauce", "Italian", 5, ["spaghetti", "tomato sauce", "garlic", "basil"], photo="https://food.fnr.sndimg.com/content/dam/images/food/fullset/2021/02/05/Baked-Feta-Pasta-4_s4x3.jpg.rend.hgtvcom.1280.1280.suffix/1615916524567.jpeg")
-            root.menus["Burger"] = MainDish("Burger", 12, "Beef burger with fries", "American", 6, ["beef patty", "burger bun", "lettuce", "tomato", "onion", "pickles"], photo="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwDExpkw1h_HE8snvuV5fSRA-uTf3MMpnwpv7BEnCfdQ&s")
-            root.menus["Coke"] = Drink("Coke", 2, "Carbonated beverage", "Soft Drink", 1, ["cola", "ice"], sweetness=0.5, photo="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgjGimql4X_n9_6KM-V7l0cgokXjbMTtztQrgD21-ebA&s")
+            root.menus["Pasta"] = MainDish("Pasta", 10, "Spaghetti with tomato sauce", "Pasta", 5, ["spaghetti", "tomato sauce", "garlic", "basil"], photo="https://food.fnr.sndimg.com/content/dam/images/food/fullset/2021/02/05/Baked-Feta-Pasta-4_s4x3.jpg.rend.hgtvcom.1280.1280.suffix/1615916524567.jpeg")
+            root.menus["Burger"] = MainDish("Burger", 12, "Beef burger with fries", "Junk", 6, ["beef patty", "burger bun", "lettuce", "tomato", "onion", "pickles"], photo="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwDExpkw1h_HE8snvuV5fSRA-uTf3MMpnwpv7BEnCfdQ&s")
+            root.menus["Coke"] = Drink("Coke", 2, "Carbonated beverage", "Drink", 1, ["cola", "ice"], sweetness=0.5, photo="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTgjGimql4X_n9_6KM-V7l0cgokXjbMTtztQrgD21-ebA&s")
             root.menus["Ice Cream"] =  Dessert("Ice Cream", 5, "Vanilla ice cream with chocolate sauce", "Dessert", 2, ["vanilla ice cream", "chocolate sauce"], photo="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Ice_cream_with_whipped_cream%2C_chocolate_syrup%2C_and_a_wafer_%28cropped%29.jpg/640px-Ice_cream_with_whipped_cream%2C_chocolate_syrup%2C_and_a_wafer_%28cropped%29.jpg")
 
         if not hasattr(root, "tables"):
